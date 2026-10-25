@@ -85,4 +85,4 @@ Inizia oggi a vendere in modo smart e a massimizzare i tuoi margini con ResellTr
 2. Crea una nuova applicazione inserendo il nome `ResellTracker: Vinted & eBay`.
 3. Incolla i testi sopra riportati nella sezione **"Presenza nello Store" -> "Scheda dello Store principale"**.
 4. Inserisci l'email di supporto: `reselltrackersupport@gmail.com`.
-5. Allega il link della Privacy Policy (vedi file `PRIVACY_POLICY.md`).
+5. Inserisci il link ufficiale della Privacy Policy: `https://amentadavide6-sudo.github.io/resell-tracker/`

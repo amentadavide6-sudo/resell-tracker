@@ -321,6 +321,17 @@ export const SettingsScreen: React.FC<{
               100% Riservata • Zero Server • Offline First
             </Text>
           </View>
+          <TouchableOpacity
+            style={[styles.privacyLinkButton, { borderColor: isDark ? '#334155' : '#E2E8F0' }]}
+            onPress={() => Linking.openURL('https://amentadavide6-sudo.github.io/resell-tracker/')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="shield-outline" size={14} color={colors.primary} />
+            <Text style={[styles.privacyLinkText, { color: colors.primary }]}>
+              Informativa sulla Privacy online
+            </Text>
+            <Ionicons name="open-outline" size={12} color={colors.primary} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -604,5 +615,19 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#166534',
+  },
+  privacyLinkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  privacyLinkText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });
