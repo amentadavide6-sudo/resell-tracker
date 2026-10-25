@@ -103,20 +103,12 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Top Header with safe margins to avoid any Expo / device overlay overlap */}
+        {/* Top Header: Left-aligned only, top-right completely empty to avoid Expo Go / camera overlaps */}
         <View style={styles.header}>
           <View style={styles.headerTitles}>
             <Text style={styles.headerSubtitle}>CALCOLATORE MARGINI</Text>
             <Text style={styles.headerTitle}>ResellTracker</Text>
           </View>
-          <TouchableOpacity
-            onPress={handleReset}
-            style={styles.resetBtn}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="refresh" size={14} color="#475569" style={{ marginRight: 4 }} />
-            <Text style={styles.resetBtnText}>Azzera</Text>
-          </TouchableOpacity>
         </View>
 
         <ScrollView
@@ -163,7 +155,17 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
 
           {/* Inputs Section */}
           <View style={styles.inputsSection}>
-            <Text style={styles.sectionHeading}>DATI TRANSAZIONE</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionHeading}>DATI TRANSAZIONE</Text>
+              <TouchableOpacity
+                onPress={handleReset}
+                style={styles.resetLink}
+                activeOpacity={0.6}
+              >
+                <Ionicons name="refresh" size={13} color="#6366F1" style={{ marginRight: 4 }} />
+                <Text style={styles.resetLinkText}>Azzera Campi</Text>
+              </TouchableOpacity>
+            </View>
 
             <CustomInput
               label="Prezzo di Vendita Previsto"
@@ -229,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 110, // Generous padding so contents are never behind bottom tab bar
+    paddingBottom: 110,
   },
   header: {
     flexDirection: 'row',
@@ -255,20 +257,6 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     letterSpacing: -0.5,
   },
-  resetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 10,
-    marginLeft: 8,
-  },
-  resetBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#475569',
-  },
   section: {
     paddingHorizontal: 16,
   },
@@ -276,12 +264,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginTop: 6,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   sectionHeading: {
     fontSize: 12,
     fontWeight: '800',
     color: '#64748B',
     letterSpacing: 0.8,
-    marginBottom: 6,
+  },
+  resetLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 6,
+  },
+  resetLinkText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6366F1',
   },
   customCard: {
     marginHorizontal: 16,

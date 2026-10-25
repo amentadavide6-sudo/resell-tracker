@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { InventoryScreen } from './src/screens/InventoryScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { insertInventoryItem } from './src/services/db';
 import { PlatformId } from './src/types';
 
@@ -70,13 +71,7 @@ function MainApp() {
           </SafeAreaView>
         )}
         {activeTab === 'settings' && (
-          <SafeAreaView style={styles.placeholderContainer}>
-            <Ionicons name="sparkles-outline" size={54} color="#F59E0B" />
-            <Text style={styles.placeholderTitle}>Versione Pro & Impostazioni</Text>
-            <Text style={styles.placeholderSubtitle}>
-              In arrivo nello Sprint 4: Google Play Billing (sblocco Pro a vita), gestione valute e backup dei dati su file.
-            </Text>
-          </SafeAreaView>
+          <SettingsScreen onDataRestored={() => setInventoryRefreshKey((prev) => prev + 1)} />
         )}
       </View>
 
@@ -148,7 +143,7 @@ function MainApp() {
           activeOpacity={0.7}
         >
           <Ionicons
-            name={activeTab === 'settings' ? 'settings' : 'settings-outline'}
+            name={activeTab === 'settings' ? 'help-circle' : 'help-circle-outline'}
             size={22}
             color={activeTab === 'settings' ? '#6366F1' : '#94A3B8'}
           />
@@ -158,7 +153,7 @@ function MainApp() {
               activeTab === 'settings' && styles.tabLabelActive,
             ]}
           >
-            Impostazioni
+            Aiuto & Info
           </Text>
         </TouchableOpacity>
       </View>
