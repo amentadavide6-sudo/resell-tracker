@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CalculationResult, PlatformConfig } from '../types';
 import { formatEuro } from '../services/feeCalculator';
+import { useTheme } from '../context/ThemeContext';
 
 interface FeeBreakdownCardProps {
   result: CalculationResult;
@@ -12,14 +13,19 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
   result,
   platform,
 }) => {
+  const { colors, isDark } = useTheme();
   const [showDetails, setShowDetails] = useState(false);
 
   const isProfit = result.netProfit > 0;
   const isLoss = result.netProfit < 0;
 
-  const profitColor = isProfit ? '#10B981' : isLoss ? '#EF4444' : '#64748B';
-  const profitBg = isProfit ? '#ECFDF5' : isLoss ? '#FEF2F2' : '#F8FAFC';
-  const profitBorder = isProfit ? '#A7F3D0' : isLoss ? '#FECACA' : '#E2E8F0';
+  const profitColor = isProfit ? '#10B981' : isLoss ? '#EF4444' : (isDark ? '#94A3B8' : '#64748B');
+  const profitBg = isDark
+    ? isProfit ? '#06281E' : isLoss ? '#2A0E0E' : '#161F30'
+    : isProfit ? '#ECFDF5' : isLoss ? '#FEF2F2' : '#F8FAFC';
+  const profitBorder = isDark
+    ? isProfit ? '#059669' : isLoss ? '#DC2626' : '#283548'
+    : isProfit ? '#A7F3D0' : isLoss ? '#FECACA' : '#E2E8F0';
 
   // Calculate percentages for visual split bar
   const totalBar = Math.max(result.sellingPrice, result.totalCosts, 1);
@@ -149,16 +155,16 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
       </TouchableOpacity>
 
       {showDetails && (
-        <View style={styles.detailsCard}>
-          <Text style={styles.detailsTitle}>DETTAGLIO TRASPARENTE</Text>
+        <View style={[styles.detailsCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.detailsTitle, { color: colors.textMuted }]}>DETTAGLIO TRASPARENTE</Text>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailText}>Prezzo di vendita fissato</Text>
-            <Text style={styles.detailValueBold}>{formatEuro(result.sellingPrice)}</Text>
+            <Text style={[styles.detailText, { color: colors.textPrimary }]}>Prezzo di vendita fissato</Text>
+            <Text style={[styles.detailValueBold, { color: colors.textPrimary }]}>{formatEuro(result.sellingPrice)}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailText}>Commissione venditore {platform.name}</Text>
+            <Text style={[styles.detailText, { color: colors.textPrimary }]}>Commissione venditore {platform.name}</Text>
             <Text style={[styles.detailValue, { color: '#EF4444' }]}>
               -{formatEuro(result.sellerPlatformFee)}
             </Text>
@@ -166,7 +172,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
 
           {result.paymentFee > 0 && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailText}>Costi gestione pagamento / PayPal</Text>
+              <Text style={[styles.detailText, { color: colors.textPrimary }]}>Costi gestione pagamento / PayPal</Text>
               <Text style={[styles.detailValue, { color: '#EF4444' }]}>
                 -{formatEuro(result.paymentFee)}
               </Text>
@@ -174,7 +180,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
           )}
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailText}>Costo d'acquisto articolo</Text>
+            <Text style={[styles.detailText, { color: colors.textPrimary }]}>Costo d'acquisto articolo</Text>
             <Text style={[styles.detailValue, { color: '#F59E0B' }]}>
               -{formatEuro(result.purchaseCost)}
             </Text>
@@ -182,28 +188,28 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
 
           {(result.sellerShippingCost > 0 || result.packagingCost > 0) && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailText}>Spedizione / Imballaggio a tuo carico</Text>
+              <Text style={[styles.detailText, { color: colors.textPrimary }]}>Spedizione / Imballaggio a tuo carico</Text>
               <Text style={[styles.detailValue, { color: '#FB923C' }]}>
                 -{formatEuro(result.sellerShippingCost + result.packagingCost)}
               </Text>
             </View>
           )}
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.cardBorder }]} />
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailTextSub}>Protezione pagata dall'acquirente</Text>
-            <Text style={styles.detailValueSub}>
+            <Text style={[styles.detailTextSub, { color: colors.textSecondary }]}>Protezione pagata dall'acquirente</Text>
+            <Text style={[styles.detailValueSub, { color: colors.textSecondary }]}>
               {result.buyerProtectionFee > 0 ? `+${formatEuro(result.buyerProtectionFee)}` : '0,00 €'}
             </Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailTextSub}>Totale speso dall'acquirente (stimato)</Text>
-            <Text style={styles.detailValueSub}>{formatEuro(result.buyerTotalEstimated)}</Text>
+            <Text style={[styles.detailTextSub, { color: colors.textSecondary }]}>Totale speso dall'acquirente (stimato)</Text>
+            <Text style={[styles.detailValueSub, { color: colors.textSecondary }]}>{formatEuro(result.buyerTotalEstimated)}</Text>
           </View>
 
-          <Text style={styles.platformNote}>{platform.description}</Text>
+          <Text style={[styles.platformNote, isDark && { backgroundColor: '#111827', color: '#94A3B8' }]}>{platform.description}</Text>
         </View>
       )}
     </View>

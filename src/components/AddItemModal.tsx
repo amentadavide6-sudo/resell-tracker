@@ -17,6 +17,7 @@ import { PlatformSelector } from './PlatformSelector';
 import { CustomInput } from './CustomInput';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { insertInventoryItem } from '../services/db';
+import { useTheme } from '../context/ThemeContext';
 import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
 interface AddItemModalProps {
@@ -37,6 +38,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   onItemAdded,
   initialValues,
 }) => {
+  const { colors, isDark } = useTheme();
   const [title, setTitle] = useState(initialValues?.title || '');
   const [platformId, setPlatformId] = useState<PlatformId>(initialValues?.platformId || 'vinted');
   const [sellingPrice, setSellingPrice] = useState(
@@ -144,14 +146,14 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={styles.keyboardContainer}
+        style={[styles.keyboardContainer, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.cardBorder }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color="#64748B" />
+            <Ionicons name="close" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Nuovo Articolo</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Nuovo Articolo</Text>
           <TouchableOpacity onPress={handleSave} style={styles.saveTopBtn}>
             <Text style={styles.saveTopBtnText}>Salva</Text>
           </TouchableOpacity>
@@ -214,21 +216,21 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Status Selector */}
           <View style={styles.statusSection}>
-            <Text style={styles.sectionLabel}>STATO INIZIALE</Text>
-            <View style={styles.statusTabs}>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>STATO INIZIALE</Text>
+            <View style={[styles.statusTabs, { backgroundColor: isDark ? '#111827' : '#E2E8F0' }]}>
               <TouchableOpacity
-                style={[styles.statusTab, status === 'listed' && styles.statusTabActive]}
+                style={[styles.statusTab, status === 'listed' && { backgroundColor: colors.card }]}
                 onPress={() => setStatus('listed')}
               >
-                <Text style={[styles.statusTabText, status === 'listed' && styles.statusTabTextActive]}>
+                <Text style={[styles.statusTabText, status === 'listed' && { color: colors.textPrimary, fontWeight: '700' }]}>
                   In Vendita
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.statusTab, status === 'draft' && styles.statusTabActive]}
+                style={[styles.statusTab, status === 'draft' && { backgroundColor: colors.card }]}
                 onPress={() => setStatus('draft')}
               >
-                <Text style={[styles.statusTabText, status === 'draft' && styles.statusTabTextActive]}>
+                <Text style={[styles.statusTabText, status === 'draft' && { color: colors.textPrimary, fontWeight: '700' }]}>
                   Bozza
                 </Text>
               </TouchableOpacity>
@@ -237,7 +239,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Financial Inputs */}
           <View style={styles.financialSection}>
-            <Text style={styles.sectionLabel}>COSTI & PREZZI</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>COSTI & PREZZI</Text>
 
             <CustomInput
               label="Prezzo di Vendita Listato (€)"

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 import { computeAnalytics, AnalyticsSummary } from '../services/analytics';
 import { exportInventoryToCSV } from '../services/csvExport';
 import { formatEuro } from '../services/feeCalculator';
@@ -17,6 +18,7 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
   onNavigateToInventory,
 }) => {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -47,21 +49,21 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
   const hasSales = stats.totalSoldItems > 0;
 
   return (
-    <View style={[styles.root, { paddingTop: Math.max(insets.top, 16) }]}>
+    <View style={[styles.root, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 16) }]}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
         <View>
-          <Text style={styles.headerSubtitle}>ANALISI & PERFORMANCE</Text>
-          <Text style={styles.headerTitle}>Dashboard Guadagni</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>ANALISI & PERFORMANCE</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Dashboard Guadagni</Text>
         </View>
 
         <TouchableOpacity
-          style={styles.refreshBtn}
+          style={[styles.refreshBtn, isDark && { backgroundColor: '#1E293B' }]}
           onPress={loadStats}
           activeOpacity={0.7}
         >
-          <Ionicons name="refresh" size={14} color="#6366F1" style={{ marginRight: 4 }} />
-          <Text style={styles.refreshBtnText}>Aggiorna</Text>
+          <Ionicons name="refresh" size={14} color={colors.primary} style={{ marginRight: 4 }} />
+          <Text style={[styles.refreshBtnText, { color: colors.primary }]}>Aggiorna</Text>
         </TouchableOpacity>
       </View>
 
@@ -71,7 +73,7 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
         showsVerticalScrollIndicator={false}
       >
         {/* Main Hero Profit Card */}
-        <View style={styles.heroCard}>
+        <View style={[styles.heroCard, isDark && { backgroundColor: '#161F30' }]}>
           <Text style={styles.heroSubtitle}>PROFITTO NETTO INCASSATO</Text>
           <Text style={styles.heroAmount}>{formatEuro(stats.totalNetProfit)}</Text>
 
@@ -94,20 +96,20 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
         </View>
 
         {/* Capital & Potential In Unsold Goods */}
-        <View style={styles.capitalCard}>
+        <View style={[styles.capitalCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.capitalRow}>
             <View style={styles.capitalCol}>
-              <Text style={styles.capitalLab}>Capitale in Giacenza</Text>
-              <Text style={styles.capitalVal}>{formatEuro(stats.unsoldCapital)}</Text>
-              <Text style={styles.capitalSub}>{stats.totalActiveItems} capi ancora in vendita</Text>
+              <Text style={[styles.capitalLab, { color: colors.textSecondary }]}>Capitale in Giacenza</Text>
+              <Text style={[styles.capitalVal, { color: colors.textPrimary }]}>{formatEuro(stats.unsoldCapital)}</Text>
+              <Text style={[styles.capitalSub, { color: colors.textMuted }]}>{stats.totalActiveItems} capi ancora in vendita</Text>
             </View>
-            <View style={styles.capitalDivider} />
+            <View style={[styles.capitalDivider, { backgroundColor: colors.cardBorder }]} />
             <View style={styles.capitalCol}>
-              <Text style={styles.capitalLab}>Profitto Potenziale</Text>
+              <Text style={[styles.capitalLab, { color: colors.textSecondary }]}>Profitto Potenziale</Text>
               <Text style={[styles.capitalVal, { color: '#059669' }]}>
                 {formatEuro(stats.potentialProfitUnsold)}
               </Text>
-              <Text style={styles.capitalSub}>Se venduti al prezzo fissato</Text>
+              <Text style={[styles.capitalSub, { color: colors.textMuted }]}>Se venduti al prezzo fissato</Text>
             </View>
           </View>
         </View>
@@ -157,20 +159,20 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
         {/* Platform Breakdown */}
         {stats.platformStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionHeading}>DISTRIBUZIONE PROFITTO PER PIATTAFORMA</Text>
-            <View style={styles.breakdownCard}>
+            <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>DISTRIBUZIONE PROFITTO PER PIATTAFORMA</Text>
+            <View style={[styles.breakdownCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
               {stats.platformStats.map((p) => (
                 <View key={p.platformId} style={styles.platformRow}>
                   <View style={styles.platformLabelRow}>
                     <View style={styles.platformNameGroup}>
                       <View style={[styles.platformDot, { backgroundColor: p.color }]} />
-                      <Text style={styles.platformName}>{p.name}</Text>
-                      <Text style={styles.platformCount}>({p.soldCount} venduti)</Text>
+                      <Text style={[styles.platformName, { color: colors.textPrimary }]}>{p.name}</Text>
+                      <Text style={[styles.platformCount, { color: colors.textMuted }]}>({p.soldCount} venduti)</Text>
                     </View>
-                    <Text style={styles.platformProfit}>{formatEuro(p.totalProfit)}</Text>
+                    <Text style={[styles.platformProfit, { color: colors.textPrimary }]}>{formatEuro(p.totalProfit)}</Text>
                   </View>
 
-                  <View style={styles.progressBarTrack}>
+                  <View style={[styles.progressBarTrack, isDark && { backgroundColor: '#111827' }]}>
                     <View
                       style={[
                         styles.progressBarFill,
@@ -190,13 +192,13 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
         {/* Monthly Breakdown History */}
         {stats.monthlyStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionHeading}>CRONOLOGIA MENSILE VENDITE</Text>
+            <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>CRONOLOGIA MENSILE VENDITE</Text>
             <View style={styles.monthlyList}>
               {stats.monthlyStats.map((m) => (
-                <View key={m.monthKey} style={styles.monthlyCard}>
+                <View key={m.monthKey} style={[styles.monthlyCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                   <View>
-                    <Text style={styles.monthlyLabel}>{m.monthLabel}</Text>
-                    <Text style={styles.monthlySub}>
+                    <Text style={[styles.monthlyLabel, { color: colors.textPrimary }]}>{m.monthLabel}</Text>
+                    <Text style={[styles.monthlySub, { color: colors.textSecondary }]}>
                       {m.soldCount} capi venduti • Ricavo: {formatEuro(m.totalRevenue)}
                     </Text>
                   </View>
@@ -209,19 +211,19 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
 
         {/* Empty State when no sales have been recorded yet */}
         {!hasSales && (
-          <View style={styles.emptyStateCard}>
-            <Ionicons name="analytics-outline" size={48} color="#CBD5E1" />
-            <Text style={styles.emptyStateTitle}>Nessuna vendita registrata finora</Text>
-            <Text style={styles.emptyStateSub}>
+          <View style={[styles.emptyStateCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <Ionicons name="analytics-outline" size={48} color={colors.textMuted} />
+            <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>Nessuna vendita registrata finora</Text>
+            <Text style={[styles.emptyStateSub, { color: colors.textSecondary }]}>
               Vai nell'Inventario e tocca il tasto verde "Venduto" su uno dei tuoi articoli: le tue statistiche, margini e cronologia mensile prenderanno vita all'istante!
             </Text>
             {onNavigateToInventory && (
               <TouchableOpacity
-                style={styles.emptyStateBtn}
+                style={[styles.emptyStateBtn, isDark && { backgroundColor: '#1E293B' }]}
                 onPress={onNavigateToInventory}
                 activeOpacity={0.8}
               >
-                <Text style={styles.emptyStateBtnText}>Vai all'Inventario</Text>
+                <Text style={[styles.emptyStateBtnText, { color: colors.primary }]}>Vai all'Inventario</Text>
               </TouchableOpacity>
             )}
           </View>

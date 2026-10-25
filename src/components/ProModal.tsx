@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { setProUser } from '../services/proManager';
+import { useTheme } from '../context/ThemeContext';
 
 interface ProModalProps {
   visible: boolean;
@@ -22,6 +23,7 @@ export const ProModal: React.FC<ProModalProps> = ({
   onClose,
   onProUnlocked,
 }) => {
+  const { colors, isDark } = useTheme();
   const handlePurchase = () => {
     // In production, this invokes Google Play Billing / In-App Purchase API.
     // For local testing and development, it unlocks Pro immediately.
@@ -50,11 +52,11 @@ export const ProModal: React.FC<ProModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <View style={styles.root}>
+      <View style={[styles.root, { backgroundColor: colors.card }]}>
         {/* Top Close button */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color="#64748B" />
+            <Ionicons name="close" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -69,8 +71,8 @@ export const ProModal: React.FC<ProModalProps> = ({
               <Ionicons name="sparkles" size={16} color="#F59E0B" />
               <Text style={styles.proBadgeText}>ACCESSO A VITA</Text>
             </View>
-            <Text style={styles.heroTitle}>ResellTracker Pro</Text>
-            <Text style={styles.heroSubtitle}>
+            <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>ResellTracker Pro</Text>
+            <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
               Porta il tuo business dell'usato a un livello professionale, senza canoni mensili.
             </Text>
           </View>
@@ -89,48 +91,48 @@ export const ProModal: React.FC<ProModalProps> = ({
           {/* Features List */}
           <View style={styles.featuresList}>
             <View style={styles.featureItem}>
-              <View style={[styles.featureIconWrap, { backgroundColor: '#EEF2FF' }]}>
+              <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF' }]}>
                 <Ionicons name="infinite" size={20} color="#6366F1" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={styles.featureTitle}>Inventario Capi Illimitato</Text>
-                <Text style={styles.featureDesc}>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Inventario Capi Illimitato</Text>
+                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
                   La versione Free è limitata a 15 capi contemporanei. Con Pro carichi tutti i capi che vuoi.
                 </Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
-              <View style={[styles.featureIconWrap, { backgroundColor: '#ECFDF5' }]}>
+              <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#064E3B' : '#ECFDF5' }]}>
                 <Ionicons name="document-text" size={20} color="#10B981" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={styles.featureTitle}>Esportazione Fiscale Excel & CSV</Text>
-                <Text style={styles.featureDesc}>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Esportazione Fiscale Excel & CSV</Text>
+                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
                   Scarica in qualsiasi momento il registro contabile completo delle tue vendite apribile su Excel.
                 </Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
-              <View style={[styles.featureIconWrap, { backgroundColor: '#FEF3C7' }]}>
+              <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#451A03' : '#FEF3C7' }]}>
                 <Ionicons name="shield-checkmark" size={20} color="#F59E0B" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={styles.featureTitle}>Zero Pubblicità (Ad-Free)</Text>
-                <Text style={styles.featureDesc}>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Zero Pubblicità (Ad-Free)</Text>
+                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
                   Rimozione istantanea e definitiva di qualsiasi banner o interruzione pubblicitaria.
                 </Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
-              <View style={[styles.featureIconWrap, { backgroundColor: '#F3E8FF' }]}>
+              <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#3B0764' : '#F3E8FF' }]}>
                 <Ionicons name="flash" size={20} color="#A855F7" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={styles.featureTitle}>Supporto Prioritario & Nuovi Mercatini</Text>
-                <Text style={styles.featureDesc}>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Supporto Prioritario & Nuovi Mercatini</Text>
+                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
                   Accesso prioritario per richiedere l'integrazione di nuove piattaforme e assistenza rapida.
                 </Text>
               </View>

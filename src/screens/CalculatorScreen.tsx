@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 import { PlatformSelector } from '../components/PlatformSelector';
 import { CustomInput } from '../components/CustomInput';
 import { FeeBreakdownCard } from '../components/FeeBreakdownCard';
@@ -29,6 +30,7 @@ interface CalculatorScreenProps {
 
 export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSuccess }) => {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [platformId, setPlatformId] = useState<PlatformId>('vinted');
   const [sellingPrice, setSellingPrice] = useState<string>('25');
   const [purchaseCost, setPurchaseCost] = useState<string>('5');
@@ -98,16 +100,16 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
   };
 
   return (
-    <View style={[styles.root, { paddingTop: Math.max(insets.top, 16) }]}>
+    <View style={[styles.root, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 16) }]}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Top Header: Left-aligned only, top-right completely empty to avoid Expo Go / camera overlaps */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
           <View style={styles.headerTitles}>
-            <Text style={styles.headerSubtitle}>CALCOLATORE MARGINI</Text>
-            <Text style={styles.headerTitle}>ResellTracker</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.primary }]}>CALCOLATORE MARGINI</Text>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>ResellTracker</Text>
           </View>
         </View>
 
@@ -125,8 +127,8 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
 
           {/* Custom Platform Extra Inputs */}
           {platformId === 'custom' && (
-            <View style={styles.customCard}>
-              <Text style={styles.customTitle}>PARAMETRI COMMISSIONE PERSONALIZZATA</Text>
+            <View style={[styles.customCard, isDark && { backgroundColor: '#1E1B4B', borderColor: '#312E81' }]}>
+              <Text style={[styles.customTitle, isDark && { color: '#C7D2FE' }]}>PARAMETRI COMMISSIONE PERSONALIZZATA</Text>
               <View style={styles.row}>
                 <View style={styles.col}>
                   <CustomInput
@@ -156,14 +158,14 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
           {/* Inputs Section */}
           <View style={styles.inputsSection}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>DATI TRANSAZIONE</Text>
+              <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>DATI TRANSAZIONE</Text>
               <TouchableOpacity
                 onPress={handleReset}
-                style={styles.resetLink}
+                style={[styles.resetLink, isDark && { backgroundColor: '#1E293B' }]}
                 activeOpacity={0.6}
               >
-                <Ionicons name="refresh" size={13} color="#6366F1" style={{ marginRight: 4 }} />
-                <Text style={styles.resetLinkText}>Azzera Campi</Text>
+                <Ionicons name="refresh" size={13} color={colors.primary} style={{ marginRight: 4 }} />
+                <Text style={[styles.resetLinkText, { color: colors.primary }]}>Azzera Campi</Text>
               </TouchableOpacity>
             </View>
 

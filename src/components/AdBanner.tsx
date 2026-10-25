@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isProUser } from '../services/proManager';
+import { useTheme } from '../context/ThemeContext';
 
 interface AdBannerProps {
   onUpgradePress: () => void;
 }
 
 export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
+  const { colors, isDark } = useTheme();
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
@@ -20,23 +22,37 @@ export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? '#111827' : '#F1F5F9',
+          borderTopColor: colors.cardBorder,
+        },
+      ]}
+    >
       <View style={styles.adContent}>
-        <View style={styles.adBadge}>
-          <Text style={styles.adBadgeText}>ANNUNCIO</Text>
+        <View style={[styles.adBadge, isDark && { backgroundColor: '#374151' }]}>
+          <Text style={[styles.adBadgeText, isDark && { color: '#9CA3AF' }]}>ANNUNCIO</Text>
         </View>
-        <Text style={styles.adText} numberOfLines={1}>
+        <Text style={[styles.adText, { color: colors.textMuted }]} numberOfLines={1}>
           Spazio riservato Google AdMob
         </Text>
       </View>
 
       <TouchableOpacity
-        style={styles.removeAdsBtn}
+        style={[
+          styles.removeAdsBtn,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.cardBorder,
+          },
+        ]}
         onPress={onUpgradePress}
         activeOpacity={0.7}
       >
         <Ionicons name="sparkles" size={12} color="#F59E0B" />
-        <Text style={styles.removeAdsText}>Rimuovi Ads (Pro)</Text>
+        <Text style={[styles.removeAdsText, { color: colors.textPrimary }]}>Rimuovi Ads (Pro)</Text>
       </TouchableOpacity>
     </View>
   );
@@ -47,9 +63,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F1F5F9',
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
     paddingHorizontal: 12,
     paddingVertical: 6,
     height: 38,
@@ -74,15 +88,12 @@ const styles = StyleSheet.create({
   },
   adText: {
     fontSize: 11,
-    color: '#64748B',
     fontStyle: 'italic',
   },
   removeAdsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -91,6 +102,5 @@ const styles = StyleSheet.create({
   removeAdsText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#334155',
   },
 });

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { exportBackup, importBackup } from '../services/backup';
 
 interface FAQItem {
@@ -50,6 +51,7 @@ export const SettingsScreen: React.FC<{
   onOpenProModal?: () => void;
 }> = ({ onDataRestored, onOpenProModal }) => {
   const insets = useSafeAreaInsets();
+  const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -114,12 +116,12 @@ export const SettingsScreen: React.FC<{
   };
 
   return (
-    <View style={[styles.root, { paddingTop: Math.max(insets.top, 16) }]}>
+    <View style={[styles.root, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 16) }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
         <View>
-          <Text style={styles.headerSubtitle}>IMPOSTAZIONI & ASSISTENZA</Text>
-          <Text style={styles.headerTitle}>Centro Aiuto</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>IMPOSTAZIONI & ASSISTENZA</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Centro Aiuto</Text>
         </View>
       </View>
 
@@ -150,22 +152,68 @@ export const SettingsScreen: React.FC<{
           </TouchableOpacity>
         )}
 
+        {/* Theme Selector Card */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={styles.cardHeaderRow}>
+            <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Tema & Aspetto</Text>
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Scegli il tema dell'interfaccia o sincronizzalo con le impostazioni del tuo telefono.
+          </Text>
+
+          <View style={[styles.themePillsRow, { backgroundColor: isDark ? '#111827' : '#F1F5F9' }]}>
+            {(['light', 'dark', 'system'] as const).map((mode) => {
+              const isSelected = themeMode === mode;
+              const label = mode === 'light' ? 'Chiaro' : mode === 'dark' ? 'Scuro' : 'Sistema';
+              const iconName = mode === 'light' ? 'sunny' : mode === 'dark' ? 'moon' : 'phone-portrait';
+              return (
+                <TouchableOpacity
+                  key={mode}
+                  style={[
+                    styles.themePill,
+                    isSelected && { backgroundColor: colors.card, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
+                  ]}
+                  onPress={() => setThemeMode(mode)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={iconName}
+                    size={15}
+                    color={isSelected ? colors.primary : colors.textMuted}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text
+                    style={[
+                      styles.themePillText,
+                      { color: isSelected ? colors.textPrimary : colors.textMuted },
+                      isSelected && { fontWeight: '700' },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         {/* Support Card */}
-        <View style={styles.supportCard}>
+        <View style={[styles.supportCard, isDark && { backgroundColor: '#1E1B4B', borderColor: '#312E81' }]}>
           <View style={styles.supportHeader}>
-            <View style={styles.supportIconWrap}>
-              <Ionicons name="chatbubbles" size={24} color="#6366F1" />
+            <View style={[styles.supportIconWrap, isDark && { backgroundColor: '#312E81' }]}>
+              <Ionicons name="chatbubbles" size={24} color={isDark ? '#A5B4FC' : '#6366F1'} />
             </View>
             <View style={styles.supportTitleWrap}>
-              <Text style={styles.supportTitle}>Hai bisogno di aiuto?</Text>
-              <Text style={styles.supportSubtitle}>
+              <Text style={[styles.supportTitle, isDark && { color: '#E0E7FF' }]}>Hai bisogno di aiuto?</Text>
+              <Text style={[styles.supportSubtitle, isDark && { color: '#C7D2FE' }]}>
                 Hai dubbi sui calcoli o suggerimenti su nuove funzioni?
               </Text>
             </View>
           </View>
 
           <TouchableOpacity
-            style={styles.supportBtn}
+            style={[styles.supportBtn, isDark && { backgroundColor: '#6366F1' }]}
             onPress={handleContactSupport}
             activeOpacity={0.8}
           >
@@ -173,42 +221,42 @@ export const SettingsScreen: React.FC<{
             <Text style={styles.supportBtnText}>Scrivi all'Assistenza</Text>
           </TouchableOpacity>
 
-          <Text style={styles.supportEmailText}>
+          <Text style={[styles.supportEmailText, isDark && { color: '#A5B4FC' }]}>
             Email: <Text style={styles.supportEmailBold}>assistenza.reselltracker@gmail.com</Text>
           </Text>
         </View>
 
         {/* Backup & Restore Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.cardHeaderRow}>
             <Ionicons name="cloud-done-outline" size={22} color="#059669" />
-            <Text style={styles.cardTitle}>Salvataggio & Backup Dati</Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Salvataggio & Backup Dati</Text>
           </View>
-          <Text style={styles.cardDescription}>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             I tuoi dati sono conservati sul telefono. Esporta regolarmente una copia di sicurezza per salvarla su Google Drive, WhatsApp o inviartela via email.
           </Text>
 
           <View style={styles.backupButtonsRow}>
             <TouchableOpacity
-              style={styles.exportBtn}
+              style={[styles.exportBtn, isDark && { backgroundColor: '#064E3B', borderColor: '#059669' }]}
               onPress={handleExport}
               disabled={isExporting}
               activeOpacity={0.8}
             >
-              <Ionicons name="share-outline" size={18} color="#059669" />
-              <Text style={styles.exportBtnText}>
+              <Ionicons name="share-outline" size={18} color={isDark ? '#34D399' : '#059669'} />
+              <Text style={[styles.exportBtnText, isDark && { color: '#34D399' }]}>
                 {isExporting ? 'Esportazione...' : 'Esporta Backup'}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.importBtn}
+              style={[styles.importBtn, isDark && { backgroundColor: '#1F2937', borderColor: '#374151' }]}
               onPress={handleImport}
               disabled={isImporting}
               activeOpacity={0.8}
             >
-              <Ionicons name="download-outline" size={18} color="#475569" />
-              <Text style={styles.importBtnText}>
+              <Ionicons name="download-outline" size={18} color={isDark ? '#9CA3AF' : '#475569'} />
+              <Text style={[styles.importBtnText, isDark && { color: '#E5E7EB' }]}>
                 {isImporting ? 'Ripristino...' : 'Ripristina'}
               </Text>
             </TouchableOpacity>
@@ -217,30 +265,40 @@ export const SettingsScreen: React.FC<{
 
         {/* FAQs Accordion */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeading}>DOMANDE FREQUENTI (FAQ)</Text>
+          <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>DOMANDE FREQUENTI (FAQ)</Text>
         </View>
 
         <View style={styles.faqsContainer}>
           {FAQS.map((faq, index) => {
             const isExpanded = expandedFaqIndex === index;
             return (
-              <View key={index} style={styles.faqCard}>
+              <View
+                key={index}
+                style={[
+                  styles.faqCard,
+                  { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                ]}
+              >
                 <TouchableOpacity
                   style={styles.faqQuestionRow}
                   onPress={() => toggleFaq(index)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.faqQuestionText}>{faq.question}</Text>
+                  <Text style={[styles.faqQuestionText, { color: colors.textPrimary }]}>
+                    {faq.question}
+                  </Text>
                   <Ionicons
                     name={isExpanded ? 'chevron-up' : 'chevron-down'}
                     size={20}
-                    color="#64748B"
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
 
                 {isExpanded && (
-                  <View style={styles.faqAnswerContainer}>
-                    <Text style={styles.faqAnswerText}>{faq.answer}</Text>
+                  <View style={[styles.faqAnswerContainer, { borderTopColor: colors.cardBorder }]}>
+                    <Text style={[styles.faqAnswerText, { color: colors.textSecondary }]}>
+                      {faq.answer}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -250,13 +308,15 @@ export const SettingsScreen: React.FC<{
 
         {/* App Info & Privacy */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>ResellTracker v1.0.0</Text>
-          <Text style={styles.infoSub}>
+          <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>ResellTracker v1.0.0</Text>
+          <Text style={[styles.infoSub, { color: colors.textMuted }]}>
             Progettata per venditori indipendenti su Vinted, eBay, Wallapop e Subito.
           </Text>
-          <View style={styles.privacyBadge}>
-            <Ionicons name="shield-checkmark" size={16} color="#059669" />
-            <Text style={styles.privacyBadgeText}>100% Riservata • Zero Server • Offline First</Text>
+          <View style={[styles.privacyBadge, isDark && { backgroundColor: '#064E3B', borderColor: '#047857' }]}>
+            <Ionicons name="shield-checkmark" size={16} color={isDark ? '#34D399' : '#059669'} />
+            <Text style={[styles.privacyBadgeText, isDark && { color: '#D1FAE5' }]}>
+              100% Riservata • Zero Server • Offline First
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -267,24 +327,20 @@ export const SettingsScreen: React.FC<{
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
   headerSubtitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#6366F1',
     letterSpacing: 1.2,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#0F172A',
     letterSpacing: -0.5,
   },
   scrollView: {
@@ -337,6 +393,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94A3B8',
     lineHeight: 16,
+  },
+  card: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  cardDescription: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  themePillsRow: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 10,
+    gap: 4,
+  },
+  themePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  themePillText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   supportCard: {
     backgroundColor: '#EEF2FF',
@@ -396,30 +490,6 @@ const styles = StyleSheet.create({
   supportEmailBold: {
     fontWeight: '700',
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  cardDescription: {
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 18,
-    marginBottom: 12,
-  },
   backupButtonsRow: {
     flexDirection: 'row',
     gap: 10,
@@ -464,17 +534,14 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#64748B',
     letterSpacing: 0.8,
   },
   faqsContainer: {
     gap: 8,
   },
   faqCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     overflow: 'hidden',
   },
   faqQuestionRow: {
@@ -486,7 +553,6 @@ const styles = StyleSheet.create({
   faqQuestionText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1E293B',
     flex: 1,
     marginRight: 8,
   },
@@ -494,11 +560,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingBottom: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F8FAFC',
   },
   faqAnswerText: {
     fontSize: 12,
-    color: '#475569',
     lineHeight: 18,
   },
   infoCard: {
@@ -508,11 +572,9 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#334155',
   },
   infoSub: {
     fontSize: 11,
-    color: '#94A3B8',
     textAlign: 'center',
     marginTop: 2,
   },

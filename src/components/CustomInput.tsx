@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 interface CustomInputProps {
   label: string;
@@ -19,6 +20,8 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   subtitle,
   quickAddAmounts = [],
 }) => {
+  const { colors, isDark } = useTheme();
+
   const handleQuickAdd = (amount: number) => {
     const current = parseFloat(value.replace(',', '.')) || 0;
     const updated = Math.max(0, current + amount);
@@ -29,20 +32,36 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     <View style={styles.container}>
       {/* Label and subtitle stacked vertically to avoid horizontal column collisions */}
       <View style={styles.labelContainer}>
-        <Text style={styles.label} numberOfLines={1} ellipsizeMode="tail">
+        <Text
+          style={[styles.label, { color: colors.textPrimary }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {label}
         </Text>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
+          <Text
+            style={[styles.subtitle, { color: colors.textSecondary }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {subtitle}
           </Text>
         ) : null}
       </View>
 
-      <View style={styles.inputWrapper}>
-        <Text style={styles.currencySymbol}>€</Text>
+      <View
+        style={[
+          styles.inputWrapper,
+          {
+            backgroundColor: colors.inputBg,
+            borderColor: colors.inputBorder,
+          },
+        ]}
+      >
+        <Text style={[styles.currencySymbol, { color: colors.textMuted }]}>€</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: colors.textPrimary }]}
           value={value}
           onChangeText={(txt) => {
             const sanitized = txt.replace(/[^0-9.,]/g, '');
@@ -50,16 +69,16 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           }}
           keyboardType="decimal-pad"
           placeholder={placeholder}
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.textMuted}
           selectTextOnFocus
         />
         {value !== '' && (
           <TouchableOpacity
             onPress={() => onChangeValue('')}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={styles.clearBtn}
+            style={[styles.clearBtn, isDark && { backgroundColor: '#374151' }]}
           >
-            <Text style={styles.clearBtnText}>✕</Text>
+            <Text style={[styles.clearBtnText, isDark && { color: '#9CA3AF' }]}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -70,10 +89,20 @@ export const CustomInput: React.FC<CustomInputProps> = ({
             <TouchableOpacity
               key={amt}
               onPress={() => handleQuickAdd(amt)}
-              style={styles.quickAddChip}
+              style={[
+                styles.quickAddChip,
+                isDark && { backgroundColor: '#1E293B', borderColor: '#334155' },
+              ]}
               activeOpacity={0.6}
             >
-              <Text style={styles.quickAddText}>+{amt}€</Text>
+              <Text
+                style={[
+                  styles.quickAddText,
+                  isDark && { color: '#94A3B8' },
+                ]}
+              >
+                +{amt}€
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -88,25 +117,21 @@ const styles = StyleSheet.create({
   },
   labelContainer: {
     marginBottom: 4,
-    minHeight: 32, // Consistent height for label + subtitle alignment across adjacent columns
+    minHeight: 32,
     justifyContent: 'center',
   },
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
   },
   subtitle: {
     fontSize: 11,
-    color: '#64748B',
     marginTop: 1,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
@@ -114,14 +139,12 @@ const styles = StyleSheet.create({
   currencySymbol: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#64748B',
     marginRight: 6,
   },
   input: {
     flex: 1,
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
     paddingVertical: 0,
   },
   clearBtn: {

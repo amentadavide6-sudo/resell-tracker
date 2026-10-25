@@ -21,10 +21,12 @@ import {
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
 import { canAddMoreItems, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
+import { useTheme } from '../context/ThemeContext';
 import { InventoryItem, ItemStatus } from '../types';
 
 export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onOpenProModal }) => {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -170,25 +172,25 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     const isSold = item.status === 'sold';
 
     return (
-      <View style={[styles.card, isSold && styles.cardSold]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }, isSold && (isDark ? { backgroundColor: '#111827' } : styles.cardSold)]}>
         <View style={styles.cardHeader}>
           {item.photoUri ? (
             <Image source={{ uri: item.photoUri }} style={styles.cardThumb} />
           ) : (
-            <View style={[styles.cardThumbPlaceholder, { backgroundColor: platform.badgeBg }]}>
+            <View style={[styles.cardThumbPlaceholder, { backgroundColor: isDark ? '#1E293B' : platform.badgeBg }]}>
               <Ionicons name="shirt-outline" size={26} color={platform.color} />
             </View>
           )}
 
           <View style={styles.cardInfo}>
             <View style={styles.cardTitleRow}>
-              <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={1} ellipsizeMode="tail">
                 {item.title}
               </Text>
             </View>
 
             <View style={styles.tagRow}>
-              <View style={[styles.platformBadge, { backgroundColor: platform.badgeBg }]}>
+              <View style={[styles.platformBadge, { backgroundColor: isDark ? '#1E293B' : platform.badgeBg }]}>
                 <Text style={[styles.platformBadgeText, { color: platform.color }]}>
                   {platform.name}
                 </Text>
@@ -197,13 +199,15 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               <View
                 style={[
                   styles.statusBadge,
-                  isSold ? { backgroundColor: '#ECFDF5' } : { backgroundColor: '#EFF6FF' },
+                  isSold
+                    ? (isDark ? { backgroundColor: '#064E3B' } : { backgroundColor: '#ECFDF5' })
+                    : (isDark ? { backgroundColor: '#1E3A8A' } : { backgroundColor: '#EFF6FF' }),
                 ]}
               >
                 <Text
                   style={[
                     styles.statusBadgeText,
-                    isSold ? { color: '#059669' } : { color: '#2563EB' },
+                    isSold ? { color: isDark ? '#34D399' : '#059669' } : { color: isDark ? '#93C5FD' : '#2563EB' },
                   ]}
                 >
                   {isSold ? 'Venduto' : item.status === 'draft' ? 'Bozza' : 'In Vendita'}
@@ -213,9 +217,9 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 
             {/* Financial comparison */}
             <View style={styles.pricesRow}>
-              <Text style={styles.priceAcquired}>Acquisto: {formatEuro(item.purchaseCost)}</Text>
+              <Text style={[styles.priceAcquired, { color: colors.textSecondary }]}>Acquisto: {formatEuro(item.purchaseCost)}</Text>
               <Text style={styles.priceArrow}>➔</Text>
-              <Text style={styles.priceTarget}>
+              <Text style={[styles.priceTarget, { color: colors.textPrimary }]}>
                 {isSold ? `Venduto: ${formatEuro(item.actualSellingPrice || item.targetSellingPrice)}` : `Prezzo: ${formatEuro(item.targetSellingPrice)}`}
               </Text>
             </View>
@@ -223,9 +227,9 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         </View>
 
         {/* Card Footer: Net profit and quick actions */}
-        <View style={styles.cardFooter}>
+        <View style={[styles.cardFooter, { borderTopColor: colors.cardBorder }]}>
           <View style={styles.profitBadge}>
-            <Text style={styles.profitBadgeLabel}>Guadagno Netto:</Text>
+            <Text style={[styles.profitBadgeLabel, { color: colors.textSecondary }]}>Guadagno Netto:</Text>
             <Text
               style={[
                 styles.profitBadgeValue,
@@ -264,12 +268,12 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   };
 
   return (
-    <View style={[styles.root, { paddingTop: Math.max(insets.top, 16) }]}>
+    <View style={[styles.root, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 16) }]}>
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerSubtitle}>INVENTARIO ARTICOLI</Text>
-          <Text style={styles.headerTitle}>I Miei Capi</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>INVENTARIO ARTICOLI</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>I Miei Capi</Text>
         </View>
 
         <TouchableOpacity
@@ -283,38 +287,38 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       </View>
 
       {/* KPI Overview Card */}
-      <View style={styles.kpiContainer}>
+      <View style={[styles.kpiContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
         <View style={styles.kpiBox}>
-          <Text style={styles.kpiValue}>{inventoryStats.activeCount}</Text>
-          <Text style={styles.kpiLabel}>Capi Attivi</Text>
+          <Text style={[styles.kpiValue, { color: colors.textPrimary }]}>{inventoryStats.activeCount}</Text>
+          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Capi Attivi</Text>
         </View>
-        <View style={styles.kpiDivider} />
+        <View style={[styles.kpiDivider, { backgroundColor: colors.cardBorder }]} />
         <View style={styles.kpiBox}>
-          <Text style={styles.kpiValue}>{formatEuro(inventoryStats.totalInvested)}</Text>
-          <Text style={styles.kpiLabel}>Capitale Fermo</Text>
+          <Text style={[styles.kpiValue, { color: colors.textPrimary }]}>{formatEuro(inventoryStats.totalInvested)}</Text>
+          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Capitale Fermo</Text>
         </View>
-        <View style={styles.kpiDivider} />
+        <View style={[styles.kpiDivider, { backgroundColor: colors.cardBorder }]} />
         <View style={styles.kpiBox}>
           <Text style={[styles.kpiValue, { color: '#10B981' }]}>
             {formatEuro(inventoryStats.potentialProfit)}
           </Text>
-          <Text style={styles.kpiLabel}>Profitto Previsto</Text>
+          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Profitto Previsto</Text>
         </View>
       </View>
 
       {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <Ionicons name="search" size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Cerca per titolo o piattaforma..."
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
           </TouchableOpacity>
         )}
       </View>
@@ -325,12 +329,17 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
           <TouchableOpacity
             key={tab}
             onPress={() => setActiveFilter(tab)}
-            style={[styles.filterChip, activeFilter === tab && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
+              activeFilter === tab && { backgroundColor: isDark ? colors.primary : '#0F172A' },
+            ]}
           >
             <Text
               style={[
                 styles.filterChipText,
-                activeFilter === tab && styles.filterChipTextActive,
+                { color: colors.textSecondary },
+                activeFilter === tab && { color: '#FFFFFF', fontWeight: '700' },
               ]}
             >
               {tab === 'all'
