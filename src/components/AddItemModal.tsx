@@ -17,6 +17,7 @@ import { PlatformSelector } from './PlatformSelector';
 import { CustomInput } from './CustomInput';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { insertInventoryItem } from '../services/db';
+import { addXP, XP_REWARDS } from '../services/gamification';
 import { useTheme } from '../context/ThemeContext';
 import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
@@ -124,6 +125,13 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
     try {
       insertInventoryItem(newItem);
+      const xpRes = addXP(XP_REWARDS.ITEM_ADDED, `Aggiunto: ${newItem.title}`);
+      if (xpRes.leveledUp) {
+        Alert.alert(
+          '🎉 LIVELLO SUPERATO!',
+          `Congratulazioni! Sei salito al livello ${xpRes.newLevel.levelNumber}: ${xpRes.newLevel.badge} ${xpRes.newLevel.title}!`
+        );
+      }
       onItemAdded();
       handleResetForm();
       onClose();
@@ -208,6 +216,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
               value={title}
               onChangeValue={setTitle}
               placeholder="Inserisci titolo..."
+              isCurrency={false}
             />
           </View>
 

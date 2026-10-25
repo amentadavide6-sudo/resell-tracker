@@ -13,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import { computeAnalytics, AnalyticsSummary } from '../services/analytics';
 import { exportInventoryToCSV } from '../services/csvExport';
 import { formatEuro } from '../services/feeCalculator';
+import { addXP, XP_REWARDS } from '../services/gamification';
 
 export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
   onNavigateToInventory,
@@ -39,7 +40,9 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
     setIsExporting(true);
     const result = await exportInventoryToCSV();
     setIsExporting(false);
-    if (!result.success && result.message !== 'Nessun file selezionato.') {
+    if (result.success) {
+      addXP(XP_REWARDS.EXPORT_CSV, 'Esportazione CSV');
+    } else if (result.message !== 'Nessun file selezionato.') {
       Alert.alert('Esportazione Registro', result.message);
     }
   };

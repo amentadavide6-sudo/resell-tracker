@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AddItemModal } from '../components/AddItemModal';
+import { MarkSoldModal } from '../components/MarkSoldModal';
 import {
   getAllInventoryItems,
   deleteInventoryItem,
@@ -20,7 +21,8 @@ import {
 } from '../services/db';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
-import { canAddMoreItems, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
+import { canAddMoreItems, isProUser, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
+import { getUserXP, getLevelInfo } from '../services/gamification';
 import { useTheme } from '../context/ThemeContext';
 import { InventoryItem, ItemStatus } from '../types';
 
@@ -31,32 +33,17 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [itemToSell, setItemToSell] = useState<InventoryItem | null>(null);
+  const [userXP, setUserXP] = useState(0);
 
-  const handleOpenAddModal = () => {
-    const totalCount = items.length;
-    if (!canAddMoreItems(totalCount)) {
-      Alert.alert(
-        'Limite Versione Free Raggiunto',
-        `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita. Passa a ResellTracker Pro a 3,49 € una tantum per sbloccare l'inventario illimitato!`,
-        [
-          { text: 'Più tardi', style: 'cancel' },
-          {
-            text: 'Passa a Pro',
-            onPress: () => {
-              if (onOpenProModal) onOpenProModal();
-            },
-          },
-        ]
-      );
-      return;
-    }
-    setModalVisible(true);
-  };
+  const isPro = isProUser();
+  const levelInfo = useMemo(() => getLevelInfo(userXP), [userXP]);
 
   const loadData = useCallback(() => {
     try {
       const data = getAllInventoryItems(activeFilter);
       setItems(data);
+      setUserXP(getUserXP());
     } catch (e) {
       console.error(e);
     }
@@ -120,43 +107,29 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     );
   };
 
+  const handleOpenAddModal = () => {
+    const totalCount = items.length;
+    if (!canAddMoreItems(totalCount)) {
+      Alert.alert(
+        'Limite Versione Free Raggiunto',
+        `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita. Passa a ResellTracker Pro a 3,49 € una tantum per sbloccare l'inventario illimitato!`,
+        [
+          { text: 'Più tardi', style: 'cancel' },
+          {
+            text: 'Passa a Pro',
+            onPress: () => {
+              if (onOpenProModal) onOpenProModal();
+            },
+          },
+        ]
+      );
+      return;
+    }
+    setModalVisible(true);
+  };
+
   const handleMarkAsSold = (item: InventoryItem) => {
-    Alert.prompt
-      ? Alert.prompt(
-          'Segna come Venduto',
-          `Prezzo finale incassato per "${item.title}":`,
-          [
-            { text: 'Annulla', style: 'cancel' },
-            {
-              text: 'Conferma Vendita',
-              onPress: (val) => {
-                const finalPrice = parseFloat(val?.replace(',', '.') || '') || item.targetSellingPrice;
-                if (item.id) {
-                  markItemAsSold(item.id, finalPrice);
-                  loadData();
-                }
-              },
-            },
-          ],
-          'plain-text',
-          item.targetSellingPrice.toString()
-        )
-      : Alert.alert(
-          'Segna come Venduto',
-          `Confermi di aver venduto "${item.title}" a ${formatEuro(item.targetSellingPrice)}?`,
-          [
-            { text: 'Annulla', style: 'cancel' },
-            {
-              text: 'Conferma',
-              onPress: () => {
-                if (item.id) {
-                  markItemAsSold(item.id, item.targetSellingPrice);
-                  loadData();
-                }
-              },
-            },
-          ]
-        );
+    setItemToSell(item);
   };
 
   const renderItemCard = ({ item }: { item: InventoryItem }) => {
@@ -286,6 +259,45 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         </TouchableOpacity>
       </View>
 
+      {/* Reseller XP & Level Pill */}
+      <View style={[styles.levelCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <View style={styles.levelRow}>
+          <View style={styles.levelInfoGroup}>
+            <Text style={styles.levelBadgeEmoji}>{levelInfo.badge}</Text>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.levelTitleText, { color: colors.textPrimary }]}>
+                  {levelInfo.title}
+                </Text>
+                {isPro && (
+                  <View style={styles.proBoostPill}>
+                    <Text style={styles.proBoostText}>2x XP ⚡</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.levelSubText, { color: colors.textMuted }]}>
+                {levelInfo.nextLevelTitle
+                  ? `Mancano ${levelInfo.xpToNextLevel} XP a "${levelInfo.nextLevelTitle}"`
+                  : 'Livello massimo raggiunto!'}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.levelXPBadge, { color: colors.primary }]}>
+            {levelInfo.currentXP} XP
+          </Text>
+        </View>
+
+        {/* Progress Bar */}
+        <View style={[styles.levelTrack, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]}>
+          <View
+            style={[
+              styles.levelFill,
+              { width: `${Math.round(levelInfo.progress * 100)}%`, backgroundColor: levelInfo.badgeColor },
+            ]}
+          />
+        </View>
+      </View>
+
       {/* KPI Overview Card */}
       <View style={[styles.kpiContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
         <View style={styles.kpiBox}>
@@ -388,6 +400,17 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         onClose={() => setModalVisible(false)}
         onItemAdded={loadData}
       />
+
+      {/* Mark As Sold Custom Modal */}
+      <MarkSoldModal
+        visible={itemToSell !== null}
+        item={itemToSell}
+        onClose={() => setItemToSell(null)}
+        onSuccess={() => {
+          setItemToSell(null);
+          loadData();
+        }}
+      />
     </View>
   );
 };
@@ -424,6 +447,61 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 10,
     gap: 4,
+  },
+  levelCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  levelInfoGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  levelBadgeEmoji: {
+    fontSize: 22,
+  },
+  levelTitleText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  levelSubText: {
+    fontSize: 10,
+    marginTop: 1,
+  },
+  levelXPBadge: {
+    fontSize: 13,
+    fontWeight: '900',
+    marginLeft: 6,
+  },
+  proBoostPill: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  proBoostText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#D97706',
+  },
+  levelTrack: {
+    height: 5,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  levelFill: {
+    height: '100%',
+    borderRadius: 3,
   },
   addBtnText: {
     fontSize: 13,

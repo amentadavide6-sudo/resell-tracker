@@ -127,6 +127,18 @@ export const ProModal: React.FC<ProModalProps> = ({
             </View>
 
             <View style={styles.featureItem}>
+              <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#78350F' : '#FEF3C7' }]}>
+                <Ionicons name="trophy" size={20} color="#F59E0B" />
+              </View>
+              <View style={styles.featureTextWrap}>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>2x XP Booster & Livello Rapido ⚡</Text>
+                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
+                  Guadagni doppi punti XP per ogni vendita o articolo per scalare rapidamente fino al titolo di Top Seller!
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.featureItem}>
               <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#3B0764' : '#F3E8FF' }]}>
                 <Ionicons name="flash" size={20} color="#A855F7" />
               </View>

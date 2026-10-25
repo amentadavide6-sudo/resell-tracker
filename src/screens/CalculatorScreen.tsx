@@ -136,6 +136,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                     value={customPercent}
                     onChangeValue={setCustomPercent}
                     placeholder="5.0"
+                    prefix="%"
                   />
                 </View>
                 <View style={styles.col}>

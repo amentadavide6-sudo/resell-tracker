@@ -9,8 +9,10 @@ import { InventoryScreen } from './src/screens/InventoryScreen';
 import { StatsScreen } from './src/screens/StatsScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { ProModal } from './src/components/ProModal';
+import { OnboardingModal } from './src/components/OnboardingModal';
 import { AdBanner } from './src/components/AdBanner';
 import { insertInventoryItem } from './src/services/db';
+import { hasSeenOnboarding } from './src/services/onboarding';
 import { PlatformId } from './src/types';
 
 type Tab = 'calculator' | 'inventory' | 'stats' | 'settings';
@@ -21,6 +23,7 @@ function MainApp() {
   const [activeTab, setActiveTab] = useState<Tab>('calculator');
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState<number>(0);
   const [proModalVisible, setProModalVisible] = useState<boolean>(false);
+  const [onboardingVisible, setOnboardingVisible] = useState<boolean>(() => !hasSeenOnboarding());
 
   const handleSaveFromCalculator = (itemData: {
     title: string;
@@ -84,6 +87,7 @@ function MainApp() {
           <SettingsScreen
             onDataRestored={() => setInventoryRefreshKey((prev) => prev + 1)}
             onOpenProModal={() => setProModalVisible(true)}
+            onOpenTutorial={() => setOnboardingVisible(true)}
           />
         )}
       </View>
@@ -194,6 +198,12 @@ function MainApp() {
         onProUnlocked={() => {
           setInventoryRefreshKey((prev) => prev + 1);
         }}
+      />
+
+      {/* Interactive Onboarding Tutorial */}
+      <OnboardingModal
+        visible={onboardingVisible}
+        onClose={() => setOnboardingVisible(false)}
       />
     </View>
   );

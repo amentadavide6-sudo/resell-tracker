@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { exportBackup, importBackup } from '../services/backup';
+import { addXP, XP_REWARDS } from '../services/gamification';
 
 interface FAQItem {
   question: string;
@@ -49,7 +50,8 @@ const FAQS: FAQItem[] = [
 export const SettingsScreen: React.FC<{
   onDataRestored?: () => void;
   onOpenProModal?: () => void;
-}> = ({ onDataRestored, onOpenProModal }) => {
+  onOpenTutorial?: () => void;
+}> = ({ onDataRestored, onOpenProModal, onOpenTutorial }) => {
   const insets = useSafeAreaInsets();
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
@@ -88,7 +90,9 @@ export const SettingsScreen: React.FC<{
     setIsExporting(true);
     const res = await exportBackup();
     setIsExporting(false);
-    if (!res.success && res.message !== 'Nessun file selezionato.') {
+    if (res.success) {
+      addXP(XP_REWARDS.BACKUP_SAVED, 'Backup archivio');
+    } else if (res.message !== 'Nessun file selezionato.') {
       Alert.alert('Backup', res.message);
     }
   };
@@ -225,6 +229,30 @@ export const SettingsScreen: React.FC<{
             Email: <Text style={styles.supportEmailBold}>reselltrackersupport@gmail.com</Text>
           </Text>
         </View>
+
+        {/* Tutorial & Walkthrough Card */}
+        {onOpenTutorial && (
+          <TouchableOpacity
+            style={[styles.card, styles.tutorialCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
+            onPress={onOpenTutorial}
+            activeOpacity={0.8}
+          >
+            <View style={styles.tutorialRow}>
+              <View style={[styles.tutorialIconWrap, { backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF' }]}>
+                <Ionicons name="sparkles" size={20} color="#6366F1" />
+              </View>
+              <View style={styles.tutorialTextGroup}>
+                <Text style={[styles.tutorialTitle, { color: colors.textPrimary }]}>
+                  Guida & Tutorial Introduttivo
+                </Text>
+                <Text style={[styles.tutorialSubtitle, { color: colors.textSecondary }]}>
+                  Rivedi come funzionano il calcolatore fee, l'inventario e i punti XP
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* Backup & Restore Card */}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
@@ -489,6 +517,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+  },
+  tutorialCard: {
+    padding: 14,
+  },
+  tutorialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  tutorialIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tutorialTextGroup: {
+    flex: 1,
+  },
+  tutorialTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  tutorialSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
   },
   supportBtnText: {
     fontSize: 14,

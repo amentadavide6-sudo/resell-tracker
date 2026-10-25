@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardTypeOptions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
 interface CustomInputProps {
@@ -10,22 +10,43 @@ interface CustomInputProps {
   subtitle?: string;
   iconName?: string;
   quickAddAmounts?: number[];
+  isCurrency?: boolean;
+  prefix?: string;
+  keyboardType?: KeyboardTypeOptions;
+  selectTextOnFocus?: boolean;
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({
   label,
   value,
   onChangeValue,
-  placeholder = '0.00',
+  placeholder,
   subtitle,
   quickAddAmounts = [],
+  isCurrency = true,
+  prefix,
+  keyboardType,
+  selectTextOnFocus,
 }) => {
   const { colors, isDark } = useTheme();
+
+  const effectivePlaceholder = placeholder !== undefined ? placeholder : (isCurrency ? '0.00' : '');
+  const effectivePrefix = prefix !== undefined ? prefix : (isCurrency ? '€' : undefined);
+  const effectiveKeyboardType = keyboardType || (isCurrency ? 'decimal-pad' : 'default');
 
   const handleQuickAdd = (amount: number) => {
     const current = parseFloat(value.replace(',', '.')) || 0;
     const updated = Math.max(0, current + amount);
     onChangeValue(updated.toString());
+  };
+
+  const handleChangeText = (txt: string) => {
+    if (isCurrency) {
+      const sanitized = txt.replace(/[^0-9.,]/g, '');
+      onChangeValue(sanitized);
+    } else {
+      onChangeValue(txt);
+    }
   };
 
   return (
@@ -59,18 +80,22 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           },
         ]}
       >
-        <Text style={[styles.currencySymbol, { color: colors.textMuted }]}>€</Text>
+        {effectivePrefix ? (
+          <Text style={[styles.currencySymbol, { color: colors.textMuted }]}>{effectivePrefix}</Text>
+        ) : null}
         <TextInput
-          style={[styles.input, { color: colors.textPrimary }]}
+          style={[
+            styles.input,
+            { color: colors.textPrimary },
+            !effectivePrefix && { paddingLeft: 12 },
+          ]}
           value={value}
-          onChangeText={(txt) => {
-            const sanitized = txt.replace(/[^0-9.,]/g, '');
-            onChangeValue(sanitized);
-          }}
-          keyboardType="decimal-pad"
-          placeholder={placeholder}
+          onChangeText={handleChangeText}
+          keyboardType={effectiveKeyboardType}
+          placeholder={effectivePlaceholder}
           placeholderTextColor={colors.textMuted}
-          selectTextOnFocus
+          selectTextOnFocus={selectTextOnFocus !== undefined ? selectTextOnFocus : isCurrency}
+          autoCapitalize={isCurrency ? 'none' : 'sentences'}
         />
         {value !== '' && (
           <TouchableOpacity
