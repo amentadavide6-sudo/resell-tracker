@@ -45,7 +45,10 @@ const FAQS: FAQItem[] = [
   },
 ];
 
-export const SettingsScreen: React.FC<{ onDataRestored?: () => void }> = ({ onDataRestored }) => {
+export const SettingsScreen: React.FC<{
+  onDataRestored?: () => void;
+  onOpenProModal?: () => void;
+}> = ({ onDataRestored, onOpenProModal }) => {
   const insets = useSafeAreaInsets();
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -125,6 +128,28 @@ export const SettingsScreen: React.FC<{ onDataRestored?: () => void }> = ({ onDa
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Pro Card */}
+        {onOpenProModal && (
+          <TouchableOpacity
+            style={styles.proUpgradeCard}
+            onPress={onOpenProModal}
+            activeOpacity={0.85}
+          >
+            <View style={styles.proHeaderRow}>
+              <View style={styles.proTitleGroup}>
+                <Ionicons name="sparkles" size={18} color="#F59E0B" />
+                <Text style={styles.proTitle}>Passa a ResellTracker Pro</Text>
+              </View>
+              <View style={styles.proPriceTag}>
+                <Text style={styles.proPriceText}>3,49 €</Text>
+              </View>
+            </View>
+            <Text style={styles.proDesc}>
+              Sblocca inventario illimitato, rimuovi la pubblicità e accedi al supporto prioritario con un unico acquisto a vita.
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Support Card */}
         <View style={styles.supportCard}>
           <View style={styles.supportHeader}>
@@ -270,6 +295,48 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 110,
     gap: 14,
+  },
+  proUpgradeCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  proHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  proTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  proTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  proPriceTag: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  proPriceText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  proDesc: {
+    fontSize: 12,
+    color: '#94A3B8',
+    lineHeight: 16,
   },
   supportCard: {
     backgroundColor: '#EEF2FF',

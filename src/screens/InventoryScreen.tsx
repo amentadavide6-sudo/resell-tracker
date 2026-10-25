@@ -20,14 +20,36 @@ import {
 } from '../services/db';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
+import { canAddMoreItems, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
 import { InventoryItem, ItemStatus } from '../types';
 
-export const InventoryScreen: React.FC = () => {
+export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onOpenProModal }) => {
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+
+  const handleOpenAddModal = () => {
+    const totalCount = items.length;
+    if (!canAddMoreItems(totalCount)) {
+      Alert.alert(
+        'Limite Versione Free Raggiunto',
+        `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita. Passa a ResellTracker Pro a 3,49 € una tantum per sbloccare l'inventario illimitato!`,
+        [
+          { text: 'Più tardi', style: 'cancel' },
+          {
+            text: 'Passa a Pro',
+            onPress: () => {
+              if (onOpenProModal) onOpenProModal();
+            },
+          },
+        ]
+      );
+      return;
+    }
+    setModalVisible(true);
+  };
 
   const loadData = useCallback(() => {
     try {
@@ -252,7 +274,7 @@ export const InventoryScreen: React.FC = () => {
 
         <TouchableOpacity
           style={styles.addBtn}
-          onPress={() => setModalVisible(true)}
+          onPress={handleOpenAddModal}
           activeOpacity={0.8}
         >
           <Ionicons name="add" size={20} color="#FFFFFF" />
@@ -342,7 +364,7 @@ export const InventoryScreen: React.FC = () => {
             {!searchQuery && (
               <TouchableOpacity
                 style={styles.emptyAddBtn}
-                onPress={() => setModalVisible(true)}
+                onPress={handleOpenAddModal}
               >
                 <Text style={styles.emptyAddBtnText}>+ Aggiungi il primo articolo</Text>
               </TouchableOpacity>

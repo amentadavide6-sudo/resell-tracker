@@ -44,10 +44,13 @@ Non serve installare Android Studio o emulatori pesanti:
   - Cronologia mensile automatica delle vendite.
   - Esportatore del Registro Vendite in formato CSV/Excel (con formattazione europea e supporto UTF-8).
 
-- [ ] **Sprint 4: Monetizzazione & Google Play Store**
-  - Integrazione acquisti in-app (Sblocco Pro Lifetime).
-  - Banner pubblicitari AdMob non invasivi.
-  - Generazione bundle `.aab` per la pubblicazione su Google Play.
+- [x] **Sprint 4: Monetizzazione & Google Play Store (Completato)**
+  - Modello Freemium con "ResellTracker Pro" a 3,49 € una tantum (No abbonamenti).
+  - Limite di 15 capi per il tier gratuito con sblocco automatico illimitato per utenti Pro.
+  - Banner Google AdMob per utenti Free (disattivato al 100% per utenti Pro).
+  - Configurazione ufficiale Android (`com.reselltracker.app`) in `app.json`.
+  - Configurazione EAS Build per la generazione del pacchetto `.apk` e del bundle finale `.aab`.
+  - Kit completo per la pubblicazione su Google Play Store (`STORE_LISTING.md` e `PRIVACY_POLICY.md`).
 
 ---
 

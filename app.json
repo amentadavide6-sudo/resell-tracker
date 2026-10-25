@@ -1,21 +1,35 @@
 {
   "expo": {
-    "name": "resell-tracker",
+    "name": "ResellTracker - Guadagni Vinted & eBay",
     "slug": "resell-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.reselltracker.app"
     },
     "android": {
+      "package": "com.reselltracker.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F172A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -23,7 +37,14 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'app accede alle foto per allegare le immagini ai capi nel tuo inventario.",
+          "cameraPermission": "L'app accede alla fotocamera per scattare foto agli articoli da vendere."
+        }
+      ]
     ]
   }
 }

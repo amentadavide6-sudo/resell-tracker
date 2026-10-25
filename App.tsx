@@ -7,6 +7,8 @@ import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { InventoryScreen } from './src/screens/InventoryScreen';
 import { StatsScreen } from './src/screens/StatsScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { ProModal } from './src/components/ProModal';
+import { AdBanner } from './src/components/AdBanner';
 import { insertInventoryItem } from './src/services/db';
 import { PlatformId } from './src/types';
 
@@ -16,6 +18,7 @@ function MainApp() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('calculator');
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState<number>(0);
+  const [proModalVisible, setProModalVisible] = useState<boolean>(false);
 
   const handleSaveFromCalculator = (itemData: {
     title: string;
@@ -61,7 +64,12 @@ function MainApp() {
         {activeTab === 'calculator' && (
           <CalculatorScreen onSaveItemSuccess={handleSaveFromCalculator} />
         )}
-        {activeTab === 'inventory' && <InventoryScreen key={inventoryRefreshKey} />}
+        {activeTab === 'inventory' && (
+          <InventoryScreen
+            key={inventoryRefreshKey}
+            onOpenProModal={() => setProModalVisible(true)}
+          />
+        )}
         {activeTab === 'stats' && (
           <StatsScreen
             key={`stats-${inventoryRefreshKey}`}
@@ -69,9 +77,15 @@ function MainApp() {
           />
         )}
         {activeTab === 'settings' && (
-          <SettingsScreen onDataRestored={() => setInventoryRefreshKey((prev) => prev + 1)} />
+          <SettingsScreen
+            onDataRestored={() => setInventoryRefreshKey((prev) => prev + 1)}
+            onOpenProModal={() => setProModalVisible(true)}
+          />
         )}
       </View>
+
+      {/* AdMob Banner for Free Users (Hidden when Pro) */}
+      <AdBanner onUpgradePress={() => setProModalVisible(true)} />
 
       {/* Bottom Tab Bar */}
       <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
@@ -155,6 +169,15 @@ function MainApp() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Pro Modal */}
+      <ProModal
+        visible={proModalVisible}
+        onClose={() => setProModalVisible(false)}
+        onProUnlocked={() => {
+          setInventoryRefreshKey((prev) => prev + 1);
+        }}
+      />
     </View>
   );
 }
