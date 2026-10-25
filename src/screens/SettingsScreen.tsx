@@ -312,6 +312,9 @@ export const SettingsScreen: React.FC<{
           <Text style={[styles.infoSub, { color: colors.textMuted }]}>
             Progettata per venditori indipendenti su Vinted, eBay, Wallapop e Subito.
           </Text>
+          <Text style={[styles.disclaimerText, { color: colors.textMuted }]}>
+            Disclaimer: ResellTracker è uno strumento indipendente. Vinted, eBay, Wallapop, Subito e Depop sono marchi registrati dei rispettivi proprietari e non sono affiliati a questa applicazione.
+          </Text>
           <View style={[styles.privacyBadge, isDark && { backgroundColor: '#064E3B', borderColor: '#047857' }]}>
             <Ionicons name="shield-checkmark" size={16} color={isDark ? '#34D399' : '#059669'} />
             <Text style={[styles.privacyBadgeText, isDark && { color: '#D1FAE5' }]}>
@@ -577,6 +580,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: 'center',
     marginTop: 2,
+  },
+  disclaimerText: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 14,
+    opacity: 0.8,
   },
   privacyBadge: {
     flexDirection: 'row',

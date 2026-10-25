@@ -62,6 +62,11 @@ Calcola istantaneamente il tuo profitto netto al centesimo, tieni traccia del tu
 • Funzione di Backup e Ripristino su file per salvare il tuo archivio su Google Drive o inviartelo via email.
 
 ══════════════════════════════════════
+⚖️ DISCLAIMER LEGALE / NOTE
+══════════════════════════════════════
+ResellTracker è un'applicazione indipendente sviluppata a scopo informativo e di calcolo. Vinted, eBay, Wallapop, Subito e Depop sono marchi registrati di proprietà delle rispettive società. ResellTracker non è in alcun modo affiliata, autorizzata, sponsorizzata o associata a tali piattaforme.
+
+══════════════════════════════════════
 💎 VERSIONE PRO
 ══════════════════════════════════════
 Sblocca il pieno potenziale con un unico acquisto a vita (nessun abbonamento mensile ricorrente!):
