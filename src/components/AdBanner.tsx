@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isProUser } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
+import { ADMOB_CONFIG } from '../constants/admob';
 
 interface AdBannerProps {
   onUpgradePress: () => void;

@@ -31,6 +31,9 @@
         "android.permission.INTERNET",
         "android.permission.RECORD_AUDIO"
       ],
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-6365276695518927~5868521227"
+      },
       "predictiveBackGestureEnabled": false
     },
     "web": {

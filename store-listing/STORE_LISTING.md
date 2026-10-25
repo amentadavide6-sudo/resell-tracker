@@ -11,6 +11,10 @@ Questo documento contiene tutti i testi ufficiali e le parole chiave ottimizzate
 * **Descrizione Breve (max 80 caratteri)**:
   `Calcola il guadagno netto reale, le commissioni e gestisci il tuo inventario.`
 
+* **Credenziali Google AdMob Collegate**:
+  * **App ID**: `ca-app-pub-6365276695518927~5868521227`
+  * **Banner Unit ID**: `ca-app-pub-6365276695518927/5013896713`
+
 * **Categoria consigliata**:
   * Principale: *Strumenti (Tools)* oppure *Finanza (Business/Finance)*
   * Tag: *Shopping, Produttività, Finanza Personale, Vendite*
