@@ -25,10 +25,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "INTERNET"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.RECORD_AUDIO"
       ],
       "predictiveBackGestureEnabled": false
     },
@@ -45,6 +46,11 @@
           "cameraPermission": "L'app accede alla fotocamera per scattare foto agli articoli da vendere."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a2a960ad-01b2-49ef-a161-482a99e6b977"
+      }
+    }
   }
 }
