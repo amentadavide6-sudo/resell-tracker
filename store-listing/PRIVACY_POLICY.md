@@ -43,4 +43,4 @@ Poiché tutti i dati risiedono localmente sul telefono, la cancellazione dei dat
 
 ### 6. Contatti
 Per qualsiasi domanda o chiarimento in merito alla presente Informativa sulla Privacy, è possibile contattare l'assistenza all'indirizzo email:
-✉️ **assistenza.reselltracker@gmail.com**
+✉️ **reselltrackersupport@gmail.com**

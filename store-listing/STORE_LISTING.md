@@ -75,5 +75,5 @@ Inizia oggi a vendere in modo smart e a massimizzare i tuoi margini con ResellTr
 1. Accedi a [Google Play Console](https://play.google.com/console).
 2. Crea una nuova applicazione inserendo il nome `ResellTracker: Vinted & eBay`.
 3. Incolla i testi sopra riportati nella sezione **"Presenza nello Store" -> "Scheda dello Store principale"**.
-4. Inserisci l'email di supporto: `assistenza.reselltracker@gmail.com`.
+4. Inserisci l'email di supporto: `reselltrackersupport@gmail.com`.
 5. Allega il link della Privacy Policy (vedi file `PRIVACY_POLICY.md`).

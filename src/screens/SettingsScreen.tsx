@@ -61,7 +61,7 @@ export const SettingsScreen: React.FC<{
   };
 
   const handleContactSupport = async () => {
-    const supportEmail = 'assistenza.reselltracker@gmail.com';
+    const supportEmail = 'reselltrackersupport@gmail.com';
     const subject = encodeURIComponent('Supporto ResellTracker v1.0');
     const body = encodeURIComponent(
       'Ciao Team di Assistenza,\n\nTi contatto in merito all\'app ResellTracker per richiedere:\n\n'
@@ -222,7 +222,7 @@ export const SettingsScreen: React.FC<{
           </TouchableOpacity>
 
           <Text style={[styles.supportEmailText, isDark && { color: '#A5B4FC' }]}>
-            Email: <Text style={styles.supportEmailBold}>assistenza.reselltracker@gmail.com</Text>
+            Email: <Text style={styles.supportEmailBold}>reselltrackersupport@gmail.com</Text>
           </Text>
         </View>
 
