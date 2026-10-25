@@ -29,10 +29,13 @@ Non serve installare Android Studio o emulatori pesanti:
   - Grafico a barre proporzionale della distribuzione (Costo d'acquisto, Fee, Spedizione, Guadagno).
   - Scheletro di navigazione a 4 tab (Calcolatore, Inventario, Statistiche, Impostazioni).
   
-- [ ] **Sprint 2: Gestione Inventario & Database Locale (SQLite)**
-  - Salvataggio offline con `expo-sqlite`.
-  - Scatto/selezione foto compresse (`expo-image-picker`).
-  - Gestione stato articoli: *Bozza ➔ In Vendita ➔ Spedito ➔ Venduto*.
+- [x] **Sprint 2: Gestione Inventario & Database Locale (SQLite) (Completato)**
+  - Database locale 100% offline con `expo-sqlite`.
+  - Scatto foto o selezione dalla galleria con `expo-image-picker`.
+  - Ricerca istantanea e filtri: *Tutti*, *In Vendita*, *Venduti*, *Bozze*.
+  - KPI in tempo reale: Numero capi attivi, Capitale fermo in giacenza e Profitto potenziale.
+  - Funzione "Segna come Venduto" con aggiornamento automatico dello storico.
+  - Connessione diretta: dal Calcolatore puoi salvare l'articolo calcolato con 1 tap nell'inventario.
 
 - [ ] **Sprint 3: Statistiche & Esportazione Dati**
   - Grafici di profitto mensile.
