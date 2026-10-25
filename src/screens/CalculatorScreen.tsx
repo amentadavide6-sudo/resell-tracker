@@ -9,7 +9,8 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { PlatformSelector } from '../components/PlatformSelector';
 import { CustomInput } from '../components/CustomInput';
 import { FeeBreakdownCard } from '../components/FeeBreakdownCard';
@@ -17,7 +18,17 @@ import { PLATFORMS } from '../constants/platforms';
 import { calculateResellProfit } from '../services/feeCalculator';
 import { CalculationInput, PlatformId } from '../types';
 
-export const CalculatorScreen: React.FC = () => {
+interface CalculatorScreenProps {
+  onSaveItemSuccess?: (itemData: {
+    title: string;
+    sellingPrice: number;
+    purchaseCost: number;
+    platformId: PlatformId;
+  }) => void;
+}
+
+export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSuccess }) => {
+  const insets = useSafeAreaInsets();
   const [platformId, setPlatformId] = useState<PlatformId>('vinted');
   const [sellingPrice, setSellingPrice] = useState<string>('25');
   const [purchaseCost, setPurchaseCost] = useState<string>('5');
@@ -69,41 +80,51 @@ export const CalculatorScreen: React.FC = () => {
     setPackagingCost('0');
   };
 
-  const handleSaveToInventoryPlaceholder = () => {
-    Alert.alert(
-      'Salvataggio Articolo',
-      `Articolo calcolato con profitto di ${result.netProfit.toFixed(2)}€ pronto per essere memorizzato nell'Inventario (disponibile con lo Sprint 2)!`,
-      [{ text: 'Ottimo!' }]
-    );
+  const handleSaveToInventory = () => {
+    if (onSaveItemSuccess) {
+      onSaveItemSuccess({
+        title: `Articolo ${selectedPlatform.name}`,
+        sellingPrice: result.sellingPrice,
+        purchaseCost: result.purchaseCost,
+        platformId,
+      });
+    } else {
+      Alert.alert(
+        'Salvataggio Articolo',
+        `Articolo (${result.sellingPrice} € su ${selectedPlatform.name}) con profitto netto di ${result.netProfit.toFixed(2)} € pronto per l'Inventario!`,
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.root, { paddingTop: Math.max(insets.top, 16) }]}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        {/* Top Header with safe margins to avoid any Expo / device overlay overlap */}
+        <View style={styles.header}>
+          <View style={styles.headerTitles}>
+            <Text style={styles.headerSubtitle}>CALCOLATORE MARGINI</Text>
+            <Text style={styles.headerTitle}>ResellTracker</Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleReset}
+            style={styles.resetBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh" size={14} color="#475569" style={{ marginRight: 4 }} />
+            <Text style={styles.resetBtnText}>Azzera</Text>
+          </TouchableOpacity>
+        </View>
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Top Title Bar */}
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.headerSubtitle}>CALCOLATORE MARGINI</Text>
-              <Text style={styles.headerTitle}>ResellTracker</Text>
-            </View>
-            <TouchableOpacity
-              onPress={handleReset}
-              style={styles.resetBtn}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.resetBtnText}>Azzera</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Platform Selector */}
           <PlatformSelector
             selectedId={platformId}
@@ -115,7 +136,7 @@ export const CalculatorScreen: React.FC = () => {
             <View style={styles.customCard}>
               <Text style={styles.customTitle}>PARAMETRI COMMISSIONE PERSONALIZZATA</Text>
               <View style={styles.row}>
-                <View style={styles.flex1}>
+                <View style={styles.col}>
                   <CustomInput
                     label="Commissione %"
                     value={customPercent}
@@ -123,7 +144,7 @@ export const CalculatorScreen: React.FC = () => {
                     placeholder="5.0"
                   />
                 </View>
-                <View style={styles.flex1}>
+                <View style={styles.col}>
                   <CustomInput
                     label="Costo Fisso €"
                     value={customFixed}
@@ -146,7 +167,7 @@ export const CalculatorScreen: React.FC = () => {
 
             <CustomInput
               label="Prezzo di Vendita Previsto"
-              subtitle="Quanto pagherà l'acquirente per l'oggetto"
+              subtitle="Quanto pagherà chi compra l'oggetto"
               value={sellingPrice}
               onChangeValue={setSellingPrice}
               quickAddAmounts={[5, 10, 20]}
@@ -154,25 +175,26 @@ export const CalculatorScreen: React.FC = () => {
 
             <CustomInput
               label="Costo di Acquisto (Spesa iniziale)"
-              subtitle="Quanto hai pagato per acquistarlo (0€ se trovato/regalo)"
+              subtitle="Quanto hai pagato (0€ se trovato o regalo)"
               value={purchaseCost}
               onChangeValue={setPurchaseCost}
               quickAddAmounts={[1, 5, 10]}
             />
 
+            {/* Two-column layout with isolated columns */}
             <View style={styles.row}>
-              <View style={styles.flex1}>
+              <View style={styles.col}>
                 <CustomInput
-                  label="Spedizione a tuo carico"
-                  subtitle="Se inclusa nel prezzo"
+                  label="Spedizione tua"
+                  subtitle="Se a tuo carico"
                   value={sellerShippingCost}
                   onChangeValue={setSellerShippingCost}
                 />
               </View>
-              <View style={styles.flex1}>
+              <View style={styles.col}>
                 <CustomInput
-                  label="Imballo / Scatola"
-                  subtitle="Busta, etichetta..."
+                  label="Imballo / Box"
+                  subtitle="Busta, etichetta"
                   value={packagingCost}
                   onChangeValue={setPackagingCost}
                 />
@@ -183,19 +205,20 @@ export const CalculatorScreen: React.FC = () => {
           {/* Action Button: Save to Inventory */}
           <TouchableOpacity
             style={styles.saveBtn}
-            onPress={handleSaveToInventoryPlaceholder}
+            onPress={handleSaveToInventory}
             activeOpacity={0.8}
           >
-            <Text style={styles.saveBtnText}>+ Salva in Inventario</Text>
+            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={styles.saveBtnText}>Salva in Inventario</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
@@ -206,15 +229,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 110, // Generous padding so contents are never behind bottom tab bar
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  headerTitles: {
+    flex: 1,
   },
   headerSubtitle: {
     fontSize: 11,
@@ -223,16 +250,19 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '900',
     color: '#0F172A',
     letterSpacing: -0.5,
   },
   resetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     backgroundColor: '#E2E8F0',
-    borderRadius: 8,
+    borderRadius: 10,
+    marginLeft: 8,
   },
   resetBtnText: {
     fontSize: 12,
@@ -244,14 +274,14 @@ const styles = StyleSheet.create({
   },
   inputsSection: {
     paddingHorizontal: 16,
-    marginTop: 8,
+    marginTop: 6,
   },
   sectionHeading: {
     fontSize: 12,
     fontWeight: '800',
     color: '#64748B',
     letterSpacing: 0.8,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   customCard: {
     marginHorizontal: 16,
@@ -272,19 +302,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  flex1: {
+  col: {
     flex: 1,
   },
   saveBtn: {
     marginHorizontal: 16,
-    marginTop: 20,
+    marginTop: 18,
     backgroundColor: '#0F172A',
     borderRadius: 14,
-    paddingVertical: 15,
+    paddingVertical: 14,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.18,
     shadowRadius: 8,
     elevation: 3,
   },

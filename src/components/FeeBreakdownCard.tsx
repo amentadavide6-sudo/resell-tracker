@@ -41,9 +41,13 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
         ]}
       >
         <View style={styles.profitHeader}>
-          <View>
+          <View style={styles.profitLeft}>
             <Text style={styles.profitLabel}>PROFITTO NETTO</Text>
-            <Text style={[styles.profitAmount, { color: profitColor }]}>
+            <Text
+              style={[styles.profitAmount, { color: profitColor }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {formatEuro(result.netProfit)}
             </Text>
           </View>
@@ -208,7 +212,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 12,
+    marginVertical: 8,
   },
   mainCard: {
     borderWidth: 1.5,
@@ -223,22 +227,27 @@ const styles = StyleSheet.create({
   profitHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+  },
+  profitLeft: {
+    flex: 1,
+    marginRight: 10,
   },
   profitLabel: {
     fontSize: 11,
     fontWeight: '800',
     color: '#64748B',
     letterSpacing: 1,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   profitAmount: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
     letterSpacing: -0.5,
   },
   metricsGroup: {
     alignItems: 'flex-end',
+    flexShrink: 0,
   },
   metricPill: {
     paddingHorizontal: 10,
@@ -250,7 +259,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   barSection: {
-    marginTop: 16,
+    marginTop: 14,
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.06)',
@@ -267,6 +276,7 @@ const styles = StyleSheet.create({
   },
   legendRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
     marginTop: 8,
   },

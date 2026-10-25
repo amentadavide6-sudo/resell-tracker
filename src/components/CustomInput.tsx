@@ -27,9 +27,16 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.labelRow}>
-        <Text style={styles.label}>{label}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      {/* Label and subtitle stacked vertically to avoid horizontal column collisions */}
+      <View style={styles.labelContainer}>
+        <Text style={styles.label} numberOfLines={1} ellipsizeMode="tail">
+          {label}
+        </Text>
+        {subtitle ? (
+          <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
 
       <View style={styles.inputWrapper}>
@@ -38,7 +45,6 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           style={styles.input}
           value={value}
           onChangeText={(txt) => {
-            // Replace comma with dot for standard decimal handling
             const sanitized = txt.replace(/[^0-9.,]/g, '');
             onChangeValue(sanitized);
           }}
@@ -50,7 +56,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
         {value !== '' && (
           <TouchableOpacity
             onPress={() => onChangeValue('')}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={styles.clearBtn}
           >
             <Text style={styles.clearBtnText}>✕</Text>
@@ -78,13 +84,12 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 6,
+    marginVertical: 4,
   },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginBottom: 6,
+  labelContainer: {
+    marginBottom: 4,
+    minHeight: 32, // Consistent height for label + subtitle alignment across adjacent columns
+    justifyContent: 'center',
   },
   label: {
     fontSize: 13,
@@ -94,6 +99,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 11,
     color: '#64748B',
+    marginTop: 1,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -102,18 +108,18 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     borderRadius: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     height: 48,
   },
   currencySymbol: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: '#64748B',
-    marginRight: 8,
+    marginRight: 6,
   },
   input: {
     flex: 1,
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
     paddingVertical: 0,
