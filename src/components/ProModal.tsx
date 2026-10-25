@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { setProUser } from '../services/proManager';
+import { purchaseProProduct, restoreProPurchases } from '../services/purchaseService';
 import { useTheme } from '../context/ThemeContext';
 
 interface ProModalProps {
@@ -24,30 +25,46 @@ export const ProModal: React.FC<ProModalProps> = ({
   onProUnlocked,
 }) => {
   const { colors, isDark } = useTheme();
-  const handlePurchase = () => {
-    // In production, this invokes Google Play Billing / In-App Purchase API.
-    // For local testing and development, it unlocks Pro immediately.
-    setProUser(true);
-    Alert.alert(
-      '🎉 Benvenuto in ResellTracker Pro!',
-      'Hai sbloccato con successo tutte le funzionalità avanzate senza limiti.',
-      [
-        {
-          text: 'Inizia subito',
-          onPress: () => {
-            onProUnlocked();
-            onClose();
-          },
-        },
-      ]
-    );
+  const [loading, setLoading] = React.useState(false);
+
+  const handlePurchase = async () => {
+    try {
+      setLoading(true);
+      const success = await purchaseProProduct();
+      if (success) {
+        Alert.alert(
+          '🎉 Benvenuto in ResellTracker Pro!',
+          'Hai sbloccato con successo tutte le funzionalità avanzate senza limiti.',
+          [
+            {
+              text: 'Inizia subito',
+              onPress: () => {
+                onProUnlocked();
+                onClose();
+              },
+            },
+          ]
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRestore = () => {
-    setProUser(true);
-    Alert.alert('Acquisto Ripristinato', 'Il tuo acquisto Pro è stato verificato e ripristinato con successo.');
-    onProUnlocked();
-    onClose();
+  const handleRestore = async () => {
+    try {
+      setLoading(true);
+      const restored = await restoreProPurchases();
+      if (restored) {
+        Alert.alert('Acquisto Ripristinato', 'Il tuo acquisto Pro è stato verificato e ripristinato con successo.');
+        onProUnlocked();
+        onClose();
+      } else {
+        Alert.alert('Nessun Acquisto Trovato', 'Non sono stati trovati acquisti precedenti associati a questo account Google.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
