@@ -37,10 +37,12 @@ Non serve installare Android Studio o emulatori pesanti:
   - Funzione "Segna come Venduto" con aggiornamento automatico dello storico.
   - Connessione diretta: dal Calcolatore puoi salvare l'articolo calcolato con 1 tap nell'inventario.
 
-- [ ] **Sprint 3: Statistiche & Esportazione Dati**
-  - Grafici di profitto mensile.
-  - Calcolo capitale fermo in merce invenduta.
-  - Esportazione report in formato CSV / Excel.
+- [x] **Sprint 3: Statistiche & Esportazione Dati (Completato)**
+  - Dashboard finanziaria avanzata: Profitto Netto Incassato, Ricavi lordi, Margine Medio % e ROI.
+  - Monitoraggio capitale: Valore della merce ferma in giacenza e profitto potenziale stimato.
+  - Analisi comparativa per piattaforma con barre grafiche e indicazione della piattaforma n° 1.
+  - Cronologia mensile automatica delle vendite.
+  - Esportatore del Registro Vendite in formato CSV/Excel (con formattazione europea e supporto UTF-8).
 
 - [ ] **Sprint 4: Monetizzazione & Google Play Store**
   - Integrazione acquisti in-app (Sblocco Pro Lifetime).

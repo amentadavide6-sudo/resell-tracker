@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { InventoryScreen } from './src/screens/InventoryScreen';
+import { StatsScreen } from './src/screens/StatsScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { insertInventoryItem } from './src/services/db';
 import { PlatformId } from './src/types';
@@ -62,13 +63,10 @@ function MainApp() {
         )}
         {activeTab === 'inventory' && <InventoryScreen key={inventoryRefreshKey} />}
         {activeTab === 'stats' && (
-          <SafeAreaView style={styles.placeholderContainer}>
-            <Ionicons name="bar-chart-outline" size={54} color="#10B981" />
-            <Text style={styles.placeholderTitle}>Dashboard & Statistiche</Text>
-            <Text style={styles.placeholderSubtitle}>
-              In arrivo nello Sprint 3: grafici di profitto mensile, ROI aggregato ed esportazione del registro in CSV/Excel.
-            </Text>
-          </SafeAreaView>
+          <StatsScreen
+            key={`stats-${inventoryRefreshKey}`}
+            onNavigateToInventory={() => setActiveTab('inventory')}
+          />
         )}
         {activeTab === 'settings' && (
           <SettingsScreen onDataRestored={() => setInventoryRefreshKey((prev) => prev + 1)} />
@@ -176,26 +174,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  placeholderContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    backgroundColor: '#F8FAFC',
-  },
-  placeholderTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  placeholderSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 22,
   },
   tabBar: {
     flexDirection: 'row',
