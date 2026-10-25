@@ -1,15 +1,54 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
+import { InventoryScreen } from './src/screens/InventoryScreen';
+import { insertInventoryItem } from './src/services/db';
+import { PlatformId } from './src/types';
 
 type Tab = 'calculator' | 'inventory' | 'stats' | 'settings';
 
 function MainApp() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<Tab>('calculator');
+  const [inventoryRefreshKey, setInventoryRefreshKey] = useState<number>(0);
+
+  const handleSaveFromCalculator = (itemData: {
+    title: string;
+    sellingPrice: number;
+    purchaseCost: number;
+    platformId: PlatformId;
+  }) => {
+    try {
+      insertInventoryItem({
+        title: itemData.title,
+        platformId: itemData.platformId,
+        purchaseCost: itemData.purchaseCost,
+        targetSellingPrice: itemData.sellingPrice,
+        sellerShippingCost: 0,
+        packagingCost: 0.5,
+        status: 'listed',
+        createdAt: new Date().toISOString(),
+      });
+      setInventoryRefreshKey((prev) => prev + 1);
+      Alert.alert(
+        'Articolo Salvato!',
+        `"${itemData.title}" è stato aggiunto al tuo inventario locale.`,
+        [
+          {
+            text: 'Vai all\'Inventario',
+            onPress: () => setActiveTab('inventory'),
+          },
+          { text: 'Rimani qui', style: 'cancel' },
+        ]
+      );
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Errore', 'Impossibile salvare l\'articolo nell\'inventario.');
+    }
+  };
 
   return (
     <View style={styles.root}>
@@ -17,22 +56,16 @@ function MainApp() {
 
       {/* Main Content Area */}
       <View style={styles.content}>
-        {activeTab === 'calculator' && <CalculatorScreen />}
-        {activeTab === 'inventory' && (
-          <SafeAreaView style={styles.placeholderContainer}>
-            <Ionicons name="pricetags-outline" size={54} color="#6366F1" />
-            <Text style={styles.placeholderTitle}>Modulo Inventario</Text>
-            <Text style={styles.placeholderSubtitle}>
-              In arrivo nello Sprint 2: salvataggio locale SQLite, foto compresse degli articoli, tracciamento stato (In Vendita, Venduto, Spedito).
-            </Text>
-          </SafeAreaView>
+        {activeTab === 'calculator' && (
+          <CalculatorScreen onSaveItemSuccess={handleSaveFromCalculator} />
         )}
+        {activeTab === 'inventory' && <InventoryScreen key={inventoryRefreshKey} />}
         {activeTab === 'stats' && (
           <SafeAreaView style={styles.placeholderContainer}>
             <Ionicons name="bar-chart-outline" size={54} color="#10B981" />
             <Text style={styles.placeholderTitle}>Dashboard & Statistiche</Text>
             <Text style={styles.placeholderSubtitle}>
-              In arrivo nello Sprint 3: grafici di profitto mensile, capitale bloccato in merce invenduta ed esportazione CSV/Excel.
+              In arrivo nello Sprint 3: grafici di profitto mensile, ROI aggregato ed esportazione del registro in CSV/Excel.
             </Text>
           </SafeAreaView>
         )}
@@ -41,13 +74,13 @@ function MainApp() {
             <Ionicons name="sparkles-outline" size={54} color="#F59E0B" />
             <Text style={styles.placeholderTitle}>Versione Pro & Impostazioni</Text>
             <Text style={styles.placeholderSubtitle}>
-              In arrivo nello Sprint 4: Google Play Billing (sblocco Pro a vita), impostazioni valute e backup su Google Drive.
+              In arrivo nello Sprint 4: Google Play Billing (sblocco Pro a vita), gestione valute e backup dei dati su file.
             </Text>
           </SafeAreaView>
         )}
       </View>
 
-      {/* Bottom Tab Bar with exact bottom safe area inset */}
+      {/* Bottom Tab Bar */}
       <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <TouchableOpacity
           style={styles.tabItem}
