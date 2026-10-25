@@ -6,7 +6,7 @@ Questo documento contiene tutti i testi ufficiali e le parole chiave ottimizzate
 
 ### 1. Dati Principali
 * **Titolo dell'App (max 30 caratteri)**:
-  `ResellTracker: Vinted & eBay`
+  `ResellTracker`
   
 * **Descrizione Breve (max 80 caratteri)**:
   `Calcola il guadagno netto reale, le commissioni e gestisci il tuo inventario.`
@@ -82,7 +82,7 @@ Inizia oggi a vendere in modo smart e a massimizzare i tuoi margini con ResellTr
 
 ### 3. Istruzioni per la Pubblicazione su Google Play Console
 1. Accedi a [Google Play Console](https://play.google.com/console).
-2. Crea una nuova applicazione inserendo il nome `ResellTracker: Vinted & eBay`.
+2. Crea una nuova applicazione inserendo il nome `ResellTracker`.
 3. Incolla i testi sopra riportati nella sezione **"Presenza nello Store" -> "Scheda dello Store principale"**.
 4. Inserisci l'email di supporto: `reselltrackersupport@gmail.com`.
 5. Inserisci il link ufficiale della Privacy Policy: `https://amentadavide6-sudo.github.io/resell-tracker/`
