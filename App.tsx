@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import mobileAds from 'react-native-google-mobile-ads';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { InventoryScreen } from './src/screens/InventoryScreen';
@@ -25,18 +24,6 @@ function MainApp() {
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState<number>(0);
   const [proModalVisible, setProModalVisible] = useState<boolean>(false);
   const [onboardingVisible, setOnboardingVisible] = useState<boolean>(() => !hasSeenOnboarding());
-
-  useEffect(() => {
-    try {
-      if (typeof mobileAds === 'function') {
-        mobileAds()
-          .initialize()
-          .catch((err: any) => console.log('AdMob init handled:', err?.message));
-      }
-    } catch (e) {
-      console.log('AdMob init catch:', e);
-    }
-  }, []);
 
   const handleSaveFromCalculator = (itemData: {
     title: string;

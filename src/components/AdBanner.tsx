@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isProUser } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
-import { ADMOB_CONFIG } from '../constants/admob';
 
 interface AdBannerProps {
   onUpgradePress: () => void;
 }
 
-const AD_UNIT_ID = __DEV__ ? TestIds.BANNER : ADMOB_CONFIG.bannerAdUnitId;
-
 export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
   const { colors, isDark } = useTheme();
   const [isPro, setIsPro] = useState(false);
-  const [adError, setAdError] = useState(false);
 
   useEffect(() => {
-    setIsPro(isProUser());
+    try {
+      setIsPro(isProUser());
+    } catch {
+      setIsPro(false);
+    }
   }, []);
 
   // Pro users never see ads
@@ -38,7 +37,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
     >
       <View style={styles.topBar}>
         <View style={[styles.adBadge, isDark && { backgroundColor: '#374151' }]}>
-          <Text style={[styles.adBadgeText, isDark && { color: '#9CA3AF' }]}>ANNUNCIO</Text>
+          <Text style={[styles.adBadgeText, isDark && { color: '#9CA3AF' }]}>SPONSOR</Text>
         </View>
 
         <TouchableOpacity
@@ -57,25 +56,18 @@ export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.adWrapper}>
-        {!adError ? (
-          <BannerAd
-            unitId={AD_UNIT_ID}
-            size={BannerAdSize.BANNER}
-            requestOptions={{
-              requestNonPersonalizedAdsOnly: true,
-            }}
-            onAdFailedToLoad={(err) => {
-              console.log('AdMob banner failed to load:', err?.message);
-              setAdError(true);
-            }}
-          />
-        ) : (
-          <Text style={[styles.adText, { color: colors.textMuted }]} numberOfLines={1}>
-            ResellTracker · Calcola guadagni reali su Vinted ed eBay
-          </Text>
-        )}
-      </View>
+      <TouchableOpacity
+        style={styles.adWrapper}
+        onPress={onUpgradePress}
+        activeOpacity={0.85}
+      >
+        <Text style={[styles.adTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+          ⭐ ResellTracker PRO · Sblocca Stock Illimitato a 3,49 €
+        </Text>
+        <Text style={[styles.adSub, { color: colors.textMuted }]} numberOfLines={1}>
+          Zero pubblicità, 2x XP Booster nel Reseller Club ed export Excel
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -84,7 +76,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderTopWidth: 1,
     alignItems: 'center',
   },
@@ -123,11 +115,17 @@ const styles = StyleSheet.create({
   adWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 50,
+    paddingVertical: 4,
     width: '100%',
   },
-  adText: {
+  adTitle: {
     fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  adSub: {
+    fontSize: 10,
+    marginTop: 2,
     textAlign: 'center',
   },
 });
