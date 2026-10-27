@@ -30,11 +30,13 @@ import { canAddMoreItems, isProUser, getProPassInfo, FREE_TIER_ITEM_LIMIT } from
 import { getUserXP, getLevelInfo, deductXP, XP_REWARDS } from '../services/gamification';
 import { shareSoldProfit } from '../services/socialProof';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
 export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onOpenProModal }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalDbCount, setTotalDbCount] = useState<number>(0);
   const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('listed');
@@ -399,7 +401,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                 activeOpacity={0.7}
               >
                 <Ionicons name="share-social-outline" size={14} color="#6366F1" />
-                <Text style={styles.shareActionBtnText}>Condividi</Text>
+                <Text style={styles.shareActionBtnText}>{strings.inventory.share}</Text>
               </TouchableOpacity>
             )}
 
@@ -415,7 +417,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                   color={isFrozen ? '#D97706' : '#059669'}
                 />
                 <Text style={[styles.soldActionBtnText, isFrozen && { color: '#D97706' }]}>
-                  {isFrozen ? 'Sblocca' : 'Venduto'}
+                  {isFrozen ? strings.inventory.unlockPro : strings.inventory.markSold}
                 </Text>
               </TouchableOpacity>
             )}
@@ -440,8 +442,8 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>INVENTARIO ARTICOLI</Text>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>I Miei Capi</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{strings.inventory.headerSubtitle}</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{strings.inventory.headerTitle}</Text>
         </View>
 
         <TouchableOpacity
@@ -450,7 +452,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
           activeOpacity={0.8}
         >
           <Ionicons name="add" size={20} color="#FFFFFF" />
-          <Text style={styles.addBtnText}>Aggiungi</Text>
+          <Text style={styles.addBtnText}>{strings.inventory.addItem}</Text>
         </TouchableOpacity>
       </View>
 
@@ -669,7 +671,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         <Ionicons name="search" size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
-          placeholder="Cerca per titolo o piattaforma..."
+          placeholder={strings.inventory.searchPlaceholder}
           placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -701,12 +703,12 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               ]}
             >
               {tab === 'all'
-                ? 'Tutti'
+                ? strings.inventory.filterAll
                 : tab === 'listed'
-                ? 'In Vendita'
+                ? strings.inventory.filterListed
                 : tab === 'sold'
-                ? 'Venduti'
-                : 'Bozze'}
+                ? strings.inventory.filterSold
+                : strings.inventory.filterDraft}
             </Text>
           </TouchableOpacity>
         ))}
@@ -735,7 +737,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                 platformFilter === 'all' && { color: '#6366F1', fontWeight: '800' },
               ]}
             >
-              Tutte le Piattaforme
+              {strings.inventory.allPlatforms}
             </Text>
           </TouchableOpacity>
 

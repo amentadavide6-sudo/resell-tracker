@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { InventoryItem } from '../types';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
@@ -26,6 +27,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
   onClose,
 }) => {
   const { colors, isDark } = useTheme();
+  const { strings, t } = useTranslation();
 
   if (!item) return null;
 
@@ -52,10 +54,11 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
 
   const handleShareStory = async () => {
     try {
-      const message = `🔥 VENDITA CONCLUSA SU ${platform.name.toUpperCase()}! 📈\n\n👕 ${item.title}\n🛒 Costo acquisto: ${formatEuro(item.purchaseCost)}${qty > 1 ? ` (${qty} pz)` : ''}\n💰 Prezzo vendita: ${formatEuro(salePrice)}\n🚀 Guadagno Netto: ${profitSign}${formatEuro(totalProfit)} (ROI +${Math.round(calc.roiPercent)}% • Margine ${calc.marginPercent}%)\n\n⚡ Tracciato con ResellTracker • Il gestionale dei reseller 📱`;
+      const header = t('socialProof.shareMessageHeader', { platform: platform.name.toUpperCase() });
+      const message = `${header}\n\n👕 ${item.title}\n🛒 ${strings.socialProof.purchase}: ${formatEuro(item.purchaseCost)}${qty > 1 ? ` (${qty} ${strings.common.pieces})` : ''}\n💰 ${strings.socialProof.sale}: ${formatEuro(salePrice)}\n🚀 ${strings.socialProof.netProfitEarned}: ${profitSign}${formatEuro(totalProfit)} (ROI +${Math.round(calc.roiPercent)}% • Margine ${calc.marginPercent}%)\n\n⚡ ${strings.socialProof.brandTagline}`;
 
       await Share.share({
-        title: `Affare Resell: ${profitSign}${formatEuro(totalProfit)}`,
+        title: t('socialProof.shareTitle', { profit: `${profitSign}${formatEuro(totalProfit)}` }),
         message,
       });
     } catch (err) {
@@ -99,7 +102,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
             <View style={styles.cardHeaderBadgeRow}>
               <View style={[styles.clubBadge, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7' }]}>
                 <Ionicons name="sparkles" size={13} color="#D97706" />
-                <Text style={styles.clubBadgeText}>AFFARE CONCLUSO</Text>
+                <Text style={styles.clubBadgeText}>{strings.socialProof.dealClosed}</Text>
               </View>
 
               <View style={[styles.platformPill, { backgroundColor: isDark ? '#1E293B' : platform.badgeBg }]}>
@@ -127,7 +130,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
 
               {qty > 1 && (
                 <View style={[styles.stockPillFloat, { backgroundColor: isDark ? 'rgba(11, 15, 25, 0.85)' : 'rgba(255, 255, 255, 0.9)' }]}>
-                  <Text style={[styles.stockPillText, { color: colors.primary }]}>Stock: {qty} pz</Text>
+                  <Text style={[styles.stockPillText, { color: colors.primary }]}>Stock: {qty} {strings.common.pieces}</Text>
                 </View>
               )}
             </View>
@@ -160,7 +163,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
                   { color: totalProfit >= 0 ? '#10B981' : '#EF4444' },
                 ]}
               >
-                PROFITTO NETTO EFFETTIVO
+                {strings.socialProof.netProfitEarned}
               </Text>
               <Text
                 style={[
@@ -200,7 +203,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
                       { color: totalProfit >= 0 ? '#10B981' : '#EF4444' },
                     ]}
                   >
-                    Margine {calc.marginPercent}%
+                    {strings.calculator.margin} {calc.marginPercent}%
                   </Text>
                 </View>
               </View>
@@ -223,7 +226,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
               <View style={styles.barLegendRow}>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-                  <Text style={[styles.legendText, { color: colors.textMuted }]}>Acquisto {costPct}%</Text>
+                  <Text style={[styles.legendText, { color: colors.textMuted }]}>{strings.socialProof.purchase} {costPct}%</Text>
                 </View>
                 {feePct > 0 && (
                   <View style={styles.legendItem}>
@@ -233,7 +236,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
                 )}
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-                  <Text style={[styles.legendText, { color: colors.textMuted }]}>Netto {profitPct}%</Text>
+                  <Text style={[styles.legendText, { color: colors.textMuted }]}>Net {profitPct}%</Text>
                 </View>
               </View>
             </View>
@@ -249,19 +252,19 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
               ]}
             >
               <View style={styles.journeyCol}>
-                <Text style={[styles.journeyLabel, { color: colors.textMuted }]}>ACQUISTO</Text>
+                <Text style={[styles.journeyLabel, { color: colors.textMuted }]}>{strings.socialProof.purchase}</Text>
                 <Text style={[styles.journeyValue, { color: colors.textPrimary }]}>{formatEuro(item.purchaseCost)}</Text>
               </View>
               <View style={styles.journeyArrow}>
                 <Ionicons name="arrow-forward" size={15} color={colors.textMuted} />
               </View>
               <View style={styles.journeyCol}>
-                <Text style={[styles.journeyLabel, { color: colors.textMuted }]}>VENDITA</Text>
+                <Text style={[styles.journeyLabel, { color: colors.textMuted }]}>{strings.socialProof.sale}</Text>
                 <Text style={[styles.journeyValue, { color: colors.textPrimary }]}>{formatEuro(salePrice)}</Text>
               </View>
               <View style={[styles.journeyDivider, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]} />
               <View style={styles.journeyCol}>
-                <Text style={[styles.journeyLabel, { color: colors.textMuted }]}>FEE & SPESE</Text>
+                <Text style={[styles.journeyLabel, { color: colors.textMuted }]}>{strings.socialProof.feesAndCosts}</Text>
                 <Text style={[styles.journeyValue, { color: '#F59E0B' }]}>
                   {formatEuro(calc.totalSellerFees + (item.sellerShippingCost || 0) + (item.packagingCost || 0))}
                 </Text>
@@ -276,7 +279,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
                 </View>
                 <Text style={[styles.brandName, { color: colors.textPrimary }]}>ResellTracker</Text>
               </View>
-              <Text style={[styles.brandTagline, { color: colors.textMuted }]}>Il gestionale dei reseller 📱</Text>
+              <Text style={[styles.brandTagline, { color: colors.textMuted }]}>{strings.socialProof.brandTagline}</Text>
             </View>
           </View>
 
@@ -287,7 +290,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
             activeOpacity={0.85}
           >
             <Ionicons name="share-social" size={18} color="#FFFFFF" />
-            <Text style={styles.shareBtnText}>Condividi sui Social / Chat</Text>
+            <Text style={styles.shareBtnText}>{strings.socialProof.shareButton}</Text>
           </TouchableOpacity>
         </View>
       </View>

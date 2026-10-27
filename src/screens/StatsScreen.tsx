@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { computeAnalytics, AnalyticsSummary } from '../services/analytics';
 import { exportInventoryToCSV } from '../services/csvExport';
 import { formatEuro } from '../services/feeCalculator';
@@ -25,6 +26,7 @@ export const StatsScreen: React.FC<{
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -89,8 +91,8 @@ export const StatsScreen: React.FC<{
       {/* Top Header */}
       <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
         <View>
-          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>ANALISI & PERFORMANCE</Text>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Dashboard Guadagni</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{strings.stats.headerSubtitle}</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{strings.stats.headerTitle}</Text>
         </View>
 
         <TouchableOpacity
@@ -99,7 +101,7 @@ export const StatsScreen: React.FC<{
           activeOpacity={0.7}
         >
           <Ionicons name="refresh" size={14} color={colors.primary} style={{ marginRight: 4 }} />
-          <Text style={[styles.refreshBtnText, { color: colors.primary }]}>Aggiorna</Text>
+          <Text style={[styles.refreshBtnText, { color: colors.primary }]}>↻</Text>
         </TouchableOpacity>
       </View>
 
@@ -110,23 +112,23 @@ export const StatsScreen: React.FC<{
       >
         {/* Main Hero Profit Card */}
         <View style={[styles.heroCard, isDark && { backgroundColor: '#161F30' }]}>
-          <Text style={styles.heroSubtitle}>PROFITTO NETTO INCASSATO</Text>
+          <Text style={styles.heroSubtitle}>{strings.stats.totalProfit.toUpperCase()}</Text>
           <Text style={styles.heroAmount}>{formatEuro(stats.totalNetProfit)}</Text>
 
           <View style={styles.heroMetricsGrid}>
             <View style={styles.heroMetricBox}>
               <Text style={styles.heroMetricVal}>{stats.totalSoldItems}</Text>
-              <Text style={styles.heroMetricLab}>Capi Venduti</Text>
+              <Text style={styles.heroMetricLab}>{strings.stats.itemsSold}</Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroMetricBox}>
               <Text style={styles.heroMetricVal}>{stats.averageMarginPercent}%</Text>
-              <Text style={styles.heroMetricLab}>Margine Medio</Text>
+              <Text style={styles.heroMetricLab}>{strings.stats.avgMargin}</Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroMetricBox}>
-              <Text style={styles.heroMetricVal}>{stats.averageRoiPercent}%</Text>
-              <Text style={styles.heroMetricLab}>ROI Medio</Text>
+              <Text style={styles.heroMetricVal}>{formatEuro(stats.totalGrossRevenue)}</Text>
+              <Text style={styles.heroMetricLab}>{strings.stats.totalRevenue}</Text>
             </View>
           </View>
         </View>
@@ -232,7 +234,7 @@ export const StatsScreen: React.FC<{
                   },
                 ]}
               >
-                {stats.dac7.status === 'safe' ? 'SICURO' : stats.dac7.status === 'warning' ? 'ATTENZIONE' : 'REPORT FISCALE'}
+                {stats.dac7.status === 'safe' ? strings.stats.dac7Safe : stats.dac7.status === 'warning' ? strings.stats.dac7Warning : strings.stats.dac7Report}
               </Text>
             </View>
           </View>
@@ -337,7 +339,7 @@ export const StatsScreen: React.FC<{
               )}
             </View>
             <Text style={styles.exportSub}>
-              Scarica il foglio di calcolo completo con date, commissioni e guadagni netti, pronto per la contabilità o per Google Fogli.
+              {strings.stats.exportCsvDesc}
             </Text>
           </View>
 
@@ -349,7 +351,7 @@ export const StatsScreen: React.FC<{
           >
             <Ionicons name="download-outline" size={18} color="#FFFFFF" />
             <Text style={styles.exportBtnText}>
-              {isExporting ? 'Generazione...' : 'Esporta Registro Excel'}
+              {isExporting ? '...' : strings.stats.exportCsv}
             </Text>
           </TouchableOpacity>
         </View>

@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { PlatformSelector } from '../components/PlatformSelector';
 import { CustomInput } from '../components/CustomInput';
 import { FeeBreakdownCard } from '../components/FeeBreakdownCard';
@@ -36,6 +37,7 @@ interface CalculatorScreenProps {
 export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSuccess }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
   const [platformId, setPlatformId] = useState<PlatformId>('vinted');
   const [sellingPrice, setSellingPrice] = useState<string>('25');
   const [purchaseCost, setPurchaseCost] = useState<string>('5');
@@ -128,8 +130,8 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
         {/* Top Header: Left-aligned only, top-right completely empty to avoid Expo Go / camera overlaps */}
         <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
           <View style={styles.headerTitles}>
-            <Text style={[styles.headerSubtitle, { color: colors.primary }]}>CALCOLATORE MARGINI</Text>
-            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>ResellTracker</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{strings.calculator.headerSubtitle}</Text>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{strings.calculator.headerTitle}</Text>
           </View>
         </View>
 
@@ -298,7 +300,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
             activeOpacity={0.8}
           >
             <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <Text style={styles.saveBtnText}>Salva in Inventario</Text>
+            <Text style={styles.saveBtnText}>{strings.calculator.saveToInventory}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

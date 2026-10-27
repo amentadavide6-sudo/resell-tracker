@@ -4,6 +4,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { LanguageProvider, useTranslation } from './src/i18n';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { InventoryScreen } from './src/screens/InventoryScreen';
 import { StatsScreen } from './src/screens/StatsScreen';
@@ -22,6 +23,7 @@ type Tab = 'calculator' | 'inventory' | 'stats' | 'settings';
 function MainApp() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('calculator');
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState<number>(0);
   const [proModalVisible, setProModalVisible] = useState<boolean>(false);
@@ -40,12 +42,12 @@ function MainApp() {
     try {
       if (!canAddMoreItems()) {
         Alert.alert(
-          'Limite Versione Free Raggiunto',
-          'Hai raggiunto il limite di 15 articoli della versione gratuita. Passa a ResellTracker Pro per salvare capi illimitati!',
+          strings.calculator.freeLimitTitle,
+          strings.calculator.freeLimitDesc,
           [
-            { text: 'Più tardi', style: 'cancel' },
+            { text: strings.calculator.later, style: 'cancel' },
             {
-              text: 'Passa a Pro',
+              text: strings.calculator.upgradePro,
               onPress: () => setProModalVisible(true),
             },
           ]
@@ -65,19 +67,19 @@ function MainApp() {
       });
       setInventoryRefreshKey((prev) => prev + 1);
       Alert.alert(
-        'Articolo Salvato!',
-        `"${itemData.title}" è stato aggiunto al tuo inventario locale.`,
+        strings.calculator.saveSuccess,
+        `"${itemData.title}" ${strings.calculator.saveSuccessDesc}`,
         [
           {
-            text: 'Vai all\'Inventario',
+            text: strings.calculator.goToInventory,
             onPress: () => setActiveTab('inventory'),
           },
-          { text: 'Rimani qui', style: 'cancel' },
+          { text: strings.calculator.stayHere, style: 'cancel' },
         ]
       );
     } catch (e) {
       console.error(e);
-      Alert.alert('Errore', 'Impossibile salvare l\'articolo nell\'inventario.');
+      Alert.alert(strings.common.error, 'Impossibile salvare l\'articolo nell\'inventario.');
     }
   };
 
@@ -145,7 +147,7 @@ function MainApp() {
               activeTab === 'calculator' && styles.tabLabelActive,
             ]}
           >
-            Calcola
+            {strings.tabs.calculator}
           </Text>
         </TouchableOpacity>
 
@@ -166,7 +168,7 @@ function MainApp() {
               activeTab === 'inventory' && styles.tabLabelActive,
             ]}
           >
-            Inventario
+            {strings.tabs.inventory}
           </Text>
         </TouchableOpacity>
 
@@ -187,7 +189,7 @@ function MainApp() {
               activeTab === 'stats' && styles.tabLabelActive,
             ]}
           >
-            Statistiche
+            {strings.tabs.stats}
           </Text>
         </TouchableOpacity>
 
@@ -208,7 +210,7 @@ function MainApp() {
               activeTab === 'settings' && styles.tabLabelActive,
             ]}
           >
-            Aiuto & Info
+            {strings.tabs.settings}
           </Text>
         </TouchableOpacity>
       </View>
@@ -235,7 +237,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <MainApp />
+        <LanguageProvider>
+          <MainApp />
+        </LanguageProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

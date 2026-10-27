@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
+import { useTranslation, LanguageMode } from '../i18n';
 import { exportBackup, importBackup } from '../services/backup';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import {
@@ -61,6 +62,7 @@ export const SettingsScreen: React.FC<{
 }> = ({ onDataRestored, onOpenProModal, onOpenTutorial }) => {
   const insets = useSafeAreaInsets();
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
+  const { strings, languageMode, setLanguageMode } = useTranslation();
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -153,8 +155,8 @@ export const SettingsScreen: React.FC<{
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
         <View>
-          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>IMPOSTAZIONI & ASSISTENZA</Text>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Centro Aiuto</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{strings.settings.headerSubtitle}</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{strings.settings.headerTitle}</Text>
         </View>
       </View>
 
@@ -173,32 +175,88 @@ export const SettingsScreen: React.FC<{
             <View style={styles.proHeaderRow}>
               <View style={styles.proTitleGroup}>
                 <Ionicons name="sparkles" size={18} color="#F59E0B" />
-                <Text style={styles.proTitle}>Passa a ResellTracker Pro</Text>
+                <Text style={styles.proTitle}>{strings.settings.proCardTitle}</Text>
               </View>
               <View style={styles.proPriceTag}>
                 <Text style={styles.proPriceText}>3,49 €</Text>
               </View>
             </View>
             <Text style={styles.proDesc}>
-              Sblocca inventario illimitato, rimuovi la pubblicità e accedi al supporto prioritario con un unico acquisto a vita.
+              {strings.settings.proCardDesc}
             </Text>
           </TouchableOpacity>
         )}
+
+        {/* Language Selector Card */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={styles.cardHeaderRow}>
+            <Ionicons name="globe-outline" size={20} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.settings.languageTitle}</Text>
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            {strings.settings.languageDesc}
+          </Text>
+
+          <View style={styles.langGrid}>
+            {[
+              { id: 'system', label: strings.settings.langSystem, flag: '🌐' },
+              { id: 'it', label: strings.settings.langIt, flag: '🇮🇹' },
+              { id: 'en', label: strings.settings.langEn, flag: '🇬🇧' },
+              { id: 'fr', label: strings.settings.langFr, flag: '🇫🇷' },
+              { id: 'es', label: strings.settings.langEs, flag: '🇪🇸' },
+              { id: 'de', label: strings.settings.langDe, flag: '🇩🇪' },
+            ].map((item) => {
+              const isSelected = languageMode === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.langChip,
+                    {
+                      backgroundColor: isDark ? '#111827' : '#F1F5F9',
+                      borderColor: isSelected ? colors.primary : (isDark ? '#1F2937' : '#E2E8F0'),
+                    },
+                    isSelected && {
+                      backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF',
+                      borderWidth: 1.5,
+                    },
+                  ]}
+                  onPress={() => setLanguageMode(item.id as LanguageMode)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.langFlag}>{item.flag}</Text>
+                  <Text
+                    style={[
+                      styles.langText,
+                      { color: isSelected ? colors.primary : colors.textPrimary },
+                      isSelected && { fontWeight: '800' },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                  {isSelected && (
+                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} style={{ marginLeft: 'auto' }} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
 
         {/* Theme Selector Card */}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.cardHeaderRow}>
             <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Tema & Aspetto</Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.settings.themeTitle}</Text>
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Scegli il tema dell'interfaccia o sincronizzalo con le impostazioni del tuo telefono.
+            {strings.settings.themeDesc}
           </Text>
 
           <View style={[styles.themePillsRow, { backgroundColor: isDark ? '#111827' : '#F1F5F9' }]}>
             {(['light', 'dark', 'system'] as const).map((mode) => {
               const isSelected = themeMode === mode;
-              const label = mode === 'light' ? 'Chiaro' : mode === 'dark' ? 'Scuro' : 'Sistema';
+              const label = mode === 'light' ? strings.settings.themeLight : mode === 'dark' ? strings.settings.themeDark : strings.settings.themeSystem;
               const iconName = mode === 'light' ? 'sunny' : mode === 'dark' ? 'moon' : 'phone-portrait';
               return (
                 <TouchableOpacity
@@ -236,7 +294,7 @@ export const SettingsScreen: React.FC<{
           <View style={styles.cardHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
               <Ionicons name="notifications-outline" size={20} color="#6366F1" />
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Notifiche Intelligenti</Text>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.settings.notificationsTitle}</Text>
             </View>
             <Switch
               value={notificationsActive}
@@ -246,7 +304,7 @@ export const SettingsScreen: React.FC<{
             />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Ricevi il riepilogo vendite la domenica sera e avvisi strategici quando un capo è fermo in armadio da oltre 30 giorni (100% offline, zero costi server).
+            {strings.settings.notificationsDesc}
           </Text>
 
           {notificationsActive && (
@@ -256,7 +314,7 @@ export const SettingsScreen: React.FC<{
               activeOpacity={0.7}
             >
               <Ionicons name="paper-plane-outline" size={15} color="#6366F1" />
-              <Text style={styles.testNotificationBtnText}>Invia Notifica di Prova</Text>
+              <Text style={styles.testNotificationBtnText}>{strings.settings.sendTestNotif}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -317,10 +375,10 @@ export const SettingsScreen: React.FC<{
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.cardHeaderRow}>
             <Ionicons name="cloud-done-outline" size={22} color="#059669" />
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Salvataggio & Backup Dati</Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.settings.backupTitle}</Text>
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            I tuoi dati sono conservati sul telefono. Esporta regolarmente una copia di sicurezza per salvarla su Google Drive, WhatsApp o inviartela via email.
+            {strings.settings.backupDesc}
           </Text>
 
           <View style={styles.backupButtonsRow}>
@@ -332,7 +390,7 @@ export const SettingsScreen: React.FC<{
             >
               <Ionicons name="share-outline" size={18} color={isDark ? '#34D399' : '#059669'} />
               <Text style={[styles.exportBtnText, isDark && { color: '#34D399' }]}>
-                {isExporting ? 'Esportazione...' : 'Esporta Backup'}
+                {isExporting ? '...' : strings.settings.exportBackup}
               </Text>
             </TouchableOpacity>
 
@@ -344,7 +402,7 @@ export const SettingsScreen: React.FC<{
             >
               <Ionicons name="download-outline" size={18} color={isDark ? '#9CA3AF' : '#475569'} />
               <Text style={[styles.importBtnText, isDark && { color: '#E5E7EB' }]}>
-                {isImporting ? 'Ripristino...' : 'Ripristina'}
+                {isImporting ? '...' : strings.settings.importBackup}
               </Text>
             </TouchableOpacity>
           </View>
@@ -759,5 +817,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#6366F1',
+  },
+  langGrid: {
+    gap: 8,
+    marginTop: 6,
+  },
+  langChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 10,
+  },
+  langFlag: {
+    fontSize: 18,
+  },
+  langText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

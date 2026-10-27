@@ -2,7 +2,7 @@
   "expo": {
     "name": "ResellTracker - Guadagni Vinted & eBay",
     "slug": "resell-tracker",
-    "version": "1.0.7",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.reselltracker.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "backgroundColor": "#0F172A",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -46,7 +46,8 @@
           "photosPermission": "L'app accede alle foto per allegare le immagini ai capi nel tuo inventario.",
           "cameraPermission": "L'app accede alla fotocamera per scattare foto agli articoli da vendere."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "extra": {
       "eas": {
