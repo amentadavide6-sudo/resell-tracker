@@ -17,8 +17,9 @@ import { PlatformSelector } from './PlatformSelector';
 import { CustomInput } from './CustomInput';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { SHIPPING_PRESETS } from '../constants/shipping';
-import { insertInventoryItem } from '../services/db';
+import { insertInventoryItem, getTotalInventoryCount } from '../services/db';
 import { addXP, XP_REWARDS } from '../services/gamification';
+import { getProPassInfo, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
 import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
@@ -56,6 +57,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const [packagingCost, setPackagingCost] = useState('0.50');
   const [status, setStatus] = useState<ItemStatus>('listed');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+
+  const proPassInfo = useMemo(() => getProPassInfo(), [visible]);
+  const currentTotalItems = useMemo(() => (visible ? getTotalInventoryCount() : 0), [visible]);
+  const isAddingBeyondFreeLimitDuringPass =
+    proPassInfo.isActive && !proPassInfo.isPermanentPro && currentTotalItems >= FREE_TIER_ITEM_LIMIT;
 
   const primaryPlatform = selectedPlatforms[0] || 'vinted';
 
@@ -156,8 +162,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       const xpRes = addXP(XP_REWARDS.ITEM_ADDED, `Aggiunto: ${newItem.title}`);
       if (xpRes.leveledUp) {
         Alert.alert(
-          '🎉 LIVELLO SUPERATO!',
-          `Congratulazioni! Sei salito al livello ${xpRes.newLevel.levelNumber}: ${xpRes.newLevel.badge} ${xpRes.newLevel.title}!`
+          '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
+          `Congratulazioni! Sei salito al livello ${xpRes.newLevel.levelNumber}: ${xpRes.newLevel.badge} ${xpRes.newLevel.title}!\n\n🎁 Hai sbloccato ${xpRes.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!`
         );
       }
       onItemAdded();
@@ -473,6 +479,21 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             </Text>
           </View>
 
+          {/* Pro Pass Warning Notice if adding beyond free limit */}
+          {isAddingBeyondFreeLimitDuringPass && (
+            <View style={[styles.proPassNoticeBox, { backgroundColor: isDark ? '#451A03' : '#FFFBEB', borderColor: '#F59E0B' }]}>
+              <View style={styles.proPassNoticeRow}>
+                <Ionicons name="flash" size={16} color="#D97706" />
+                <Text style={[styles.proPassNoticeTitle, { color: isDark ? '#FDE68A' : '#92400E' }]}>
+                  Stai usando il tuo Pro Pass ({proPassInfo.remainingFormatted} rimasti)
+                </Text>
+              </View>
+              <Text style={[styles.proPassNoticeText, { color: isDark ? '#FEF3C7' : '#B45309' }]}>
+                Questo articolo (il tuo {currentTotalItems + 1}° capo) rimarrà al sicuro nel telefono, ma verrà congelato se il pass scadrà prima di attivare il piano Pro.
+              </Text>
+            </View>
+          )}
+
           {/* Bottom Save Action */}
           <TouchableOpacity style={styles.bottomSaveBtn} onPress={handleSave} activeOpacity={0.8}>
             <Text style={styles.bottomSaveBtnText}>
@@ -751,5 +772,26 @@ const styles = StyleSheet.create({
   shippingPresetChipText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  proPassNoticeBox: {
+    marginHorizontal: 16,
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  proPassNoticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  proPassNoticeTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  proPassNoticeText: {
+    fontSize: 11,
+    lineHeight: 15,
   },
 });

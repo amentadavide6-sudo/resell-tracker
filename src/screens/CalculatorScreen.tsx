@@ -18,6 +18,10 @@ import { FeeBreakdownCard } from '../components/FeeBreakdownCard';
 import { PLATFORMS } from '../constants/platforms';
 import { SHIPPING_PRESETS } from '../constants/shipping';
 import { calculateResellProfit } from '../services/feeCalculator';
+import {
+  getCustomPlatformSettings,
+  saveCustomPlatformSettings,
+} from '../services/customPlatformManager';
 import { CalculationInput, PlatformId } from '../types';
 
 interface CalculatorScreenProps {
@@ -38,9 +42,23 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
   const [sellerShippingCost, setSellerShippingCost] = useState<string>('0');
   const [packagingCost, setPackagingCost] = useState<string>('0.50');
 
-  // Custom platform fields
-  const [customPercent, setCustomPercent] = useState<string>('5');
-  const [customFixed, setCustomFixed] = useState<string>('0.50');
+  // Custom platform saved settings
+  const savedCustom = useMemo(() => getCustomPlatformSettings(), []);
+  const [customName, setCustomName] = useState<string>(savedCustom.name);
+  const [customPercent, setCustomPercent] = useState<string>(savedCustom.sellerFeePercent.toString());
+  const [customFixed, setCustomFixed] = useState<string>(savedCustom.sellerFixedFee.toString());
+
+  const handleSaveCustomSettings = () => {
+    saveCustomPlatformSettings({
+      name: customName.trim() || 'Personalizzato',
+      sellerFeePercent: parseFloat(customPercent.replace(',', '.')) || 0,
+      sellerFixedFee: parseFloat(customFixed.replace(',', '.')) || 0,
+    });
+    Alert.alert(
+      'Piattaforma Salvata! 💾',
+      `I parametri di "${customName.trim() || 'Personalizzato'}" (${customPercent}% + ${customFixed}€) sono stati memorizzati per tutti i tuoi calcoli futuri.`
+    );
+  };
 
   const selectedPlatform = useMemo(() => {
     return PLATFORMS.find((p) => p.id === platformId) || PLATFORMS[0];
@@ -127,10 +145,23 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
             onSelect={(id) => setPlatformId(id)}
           />
 
-          {/* Custom Platform Extra Inputs */}
+          {/* Custom Platform Extra Inputs & Saved Manager */}
           {platformId === 'custom' && (
             <View style={[styles.customCard, isDark && { backgroundColor: '#1E1B4B', borderColor: '#312E81' }]}>
-              <Text style={[styles.customTitle, isDark && { color: '#C7D2FE' }]}>PARAMETRI COMMISSIONE PERSONALIZZATA</Text>
+              <View style={styles.customCardHeader}>
+                <Ionicons name="options-outline" size={18} color="#6366F1" />
+                <Text style={[styles.customTitle, isDark && { color: '#C7D2FE' }]}>PARAMETRI PIATTAFORMA PERSONALIZZATA</Text>
+              </View>
+
+              <CustomInput
+                label="Nome Piattaforma / Canale"
+                subtitle="Es. Vestiaire Collective, Mercatino Locale, Etsy"
+                value={customName}
+                onChangeValue={setCustomName}
+                placeholder="Nome piattaforma..."
+                isCurrency={false}
+              />
+
               <View style={styles.row}>
                 <View style={styles.col}>
                   <CustomInput
@@ -150,6 +181,15 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                   />
                 </View>
               </View>
+
+              <TouchableOpacity
+                style={styles.saveCustomBtn}
+                onPress={handleSaveCustomSettings}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="save-outline" size={15} color="#FFFFFF" />
+                <Text style={styles.saveCustomBtnText}>Salva Parametri Predefiniti</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -345,11 +385,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C7D2FE',
   },
+  customCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
   customTitle: {
     fontSize: 11,
     fontWeight: '800',
     color: '#4338CA',
-    marginBottom: 6,
+  },
+  saveCustomBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#6366F1',
+    paddingVertical: 9,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  saveCustomBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   row: {
     flexDirection: 'row',

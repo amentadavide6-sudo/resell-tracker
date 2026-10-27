@@ -20,6 +20,7 @@ import { PLATFORMS } from '../constants/platforms';
 import { markItemAsSold, recordPartialSale } from '../services/db';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import { isProUser } from '../services/proManager';
+import { shareSoldProfit } from '../services/socialProof';
 
 interface MarkSoldModalProps {
   visible: boolean;
@@ -89,21 +90,44 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
       // 2. Award XP
       const xpResult = addXP(XP_REWARDS.ITEM_SOLD, `Vendita (${soldQuantity}x): ${item.title}`);
 
-      // 3. Delist Assistant Alert if multi-platform
+      // 3. Delist Assistant Alert or Level Up with Pro Pass
       const otherPlatforms = activePlatforms.filter((p) => p !== soldPlatform);
-      if (otherPlatforms.length > 0) {
-        const otherNames = otherPlatforms
-          .map((id) => PLATFORMS.find((p) => p.id === id)?.name || id)
-          .join(', ');
+      const isMulti = otherPlatforms.length > 0;
+      const otherNames = otherPlatforms
+        .map((id) => PLATFORMS.find((p) => p.id === id)?.name || id)
+        .join(', ');
 
+      if (xpResult.leveledUp) {
+        Alert.alert(
+          '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
+          `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n🎁 Hai sbloccato ${xpResult.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!${
+            isMulti
+              ? `\n\n⚠️ Promemoria Delist: Ricordati di rimuovere l'annuncio da: ${otherNames}`
+              : ''
+          }`,
+          [
+            {
+              text: 'Condividi Affare 🚀',
+              onPress: () => {
+                shareSoldProfit(item, totalNetProfit, unitBreakdown.roiPercent);
+              },
+            },
+            { text: 'Continua', style: 'cancel' },
+          ]
+        );
+      } else if (isMulti) {
         Alert.alert(
           '🎉 Vendita Registrata con Successo!',
-          `Hai guadagnato +${xpResult.earnedXP} XP nel Reseller Club!\n\n⚠️ Promemoria Delist Assistant:\nRicordati di eliminare o disattivare subito l'annuncio da:\n👉 ${otherNames}\nper evitare doppie vendite accidentali e reclami.`
-        );
-      } else if (xpResult.leveledUp) {
-        Alert.alert(
-          '🎉 LIVELLO SUPERATO!',
-          `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n+${xpResult.earnedXP} XP guadagnati!`
+          `Hai guadagnato +${xpResult.earnedXP} XP nel Reseller Club!\n\n⚠️ Promemoria Delist Assistant:\nRicordati di eliminare o disattivare subito l'annuncio da:\n👉 ${otherNames}\nper evitare doppie vendite accidentali e reclami.`,
+          [
+            {
+              text: 'Condividi Affare 🚀',
+              onPress: () => {
+                shareSoldProfit(item, totalNetProfit, unitBreakdown.roiPercent);
+              },
+            },
+            { text: 'Ho Capito', style: 'cancel' },
+          ]
         );
       }
 

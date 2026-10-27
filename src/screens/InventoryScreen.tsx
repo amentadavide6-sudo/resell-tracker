@@ -25,8 +25,9 @@ import {
 } from '../services/db';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
-import { canAddMoreItems, isProUser, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
+import { canAddMoreItems, isProUser, getProPassInfo, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
 import { getUserXP, getLevelInfo, deductXP, XP_REWARDS } from '../services/gamification';
+import { shareSoldProfit } from '../services/socialProof';
 import { useTheme } from '../context/ThemeContext';
 import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
@@ -48,19 +49,35 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     message: '',
   });
 
+  const [proPassInfo, setProPassInfo] = useState(() => getProPassInfo());
+  const [allItemsList, setAllItemsList] = useState<InventoryItem[]>([]);
+
   const isPro = isProUser();
   const levelInfo = useMemo(() => getLevelInfo(userXP), [userXP]);
 
   const loadData = useCallback(() => {
     try {
       const data = getAllInventoryItems(activeFilter);
+      const allData = getAllInventoryItems('all');
       setItems(data);
+      setAllItemsList(allData);
       setTotalDbCount(getTotalInventoryCount());
       setUserXP(getUserXP());
+      setProPassInfo(getProPassInfo());
     } catch (e) {
       console.error(e);
     }
   }, [activeFilter]);
+
+  // Chronological index mapping: items sorted by id ASC (oldest first)
+  const itemChronologicalMap = useMemo(() => {
+    const map = new Map<number, number>();
+    const sorted = [...allItemsList].sort((a, b) => (a.id || 0) - (b.id || 0));
+    sorted.forEach((item, index) => {
+      if (item.id) map.set(item.id, index);
+    });
+    return map;
+  }, [allItemsList]);
 
   useEffect(() => {
     loadData();
@@ -213,6 +230,30 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   };
 
   const handleMarkAsSold = (item: InventoryItem) => {
+    const itemIndex = itemChronologicalMap.get(item.id || 0) ?? 0;
+    const isFrozen = !isPro && itemIndex >= FREE_TIER_ITEM_LIMIT;
+
+    if (isFrozen) {
+      setAlertConfig({
+        visible: true,
+        title: '🔒 Articolo Congelato',
+        message: `Questo capo fa parte del tuo stock oltre la soglia gratuita di ${FREE_TIER_ITEM_LIMIT} articoli.\n\nI tuoi dati sono al sicuro sul telefono! Sbloccalo subito passando a ResellTracker Pro per registrare la vendita e aggiornare i tuoi guadagni.`,
+        icon: 'lock-closed',
+        iconColor: '#F59E0B',
+        iconBgColor: isDark ? '#451A03' : '#FEF3C7',
+        buttons: [
+          {
+            text: 'Sblocca con Pro ⚡',
+            style: 'primary',
+            onPress: () => {
+              if (onOpenProModal) onOpenProModal();
+            },
+          },
+          { text: 'Più tardi', style: 'cancel' },
+        ],
+      });
+      return;
+    }
     setItemToSell(item);
   };
 
@@ -220,6 +261,9 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     const itemPlatforms = item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId];
     const primaryPlatform = PLATFORMS.find((p) => p.id === item.platformId) || PLATFORMS[0];
     const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
+
+    const itemIndex = itemChronologicalMap.get(item.id || 0) ?? 0;
+    const isFrozen = !isPro && itemIndex >= FREE_TIER_ITEM_LIMIT;
 
     const unitCalc = calculateResellProfit({
       sellingPrice: item.status === 'sold' && item.actualSellingPrice ? item.actualSellingPrice : item.targetSellingPrice,
@@ -233,7 +277,14 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     const totalProfit = unitCalc.netProfit * qty;
 
     return (
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }, isSold && (isDark ? { backgroundColor: '#111827' } : styles.cardSold)]}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          isSold && (isDark ? { backgroundColor: '#111827' } : styles.cardSold),
+          isFrozen && { borderColor: '#F59E0B', opacity: 0.9 },
+        ]}
+      >
         <View style={styles.cardHeader}>
           {item.photoUri ? (
             <Image source={{ uri: item.photoUri }} style={styles.cardThumb} />
@@ -269,6 +320,14 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                   <Text style={[styles.qtyBadgeText, { color: '#6366F1' }]}>
                     Qtà: {qty}
                   </Text>
+                </View>
+              )}
+
+              {/* Frozen Stock Badge (Proposta B) */}
+              {isFrozen && (
+                <View style={[styles.frozenBadge, { backgroundColor: isDark ? '#451A03' : '#FEF3C7' }]}>
+                  <Ionicons name="lock-closed" size={10} color="#D97706" />
+                  <Text style={styles.frozenBadgeText}>Congelato (Pro)</Text>
                 </View>
               )}
 
@@ -330,14 +389,32 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
           </View>
 
           <View style={styles.cardActions}>
+            {/* Social Proof Share Button on Sold Item */}
+            {isSold && item.id && (
+              <TouchableOpacity
+                style={styles.shareActionBtn}
+                onPress={() => shareSoldProfit(item, totalProfit, unitCalc.roiPercent)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="share-social-outline" size={14} color="#6366F1" />
+                <Text style={styles.shareActionBtnText}>Condividi</Text>
+              </TouchableOpacity>
+            )}
+
             {!isSold && item.id && (
               <TouchableOpacity
-                style={styles.soldActionBtn}
+                style={[styles.soldActionBtn, isFrozen && { backgroundColor: isDark ? '#1F2937' : '#F1F5F9' }]}
                 onPress={() => handleMarkAsSold(item)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="checkmark-circle-outline" size={16} color="#059669" />
-                <Text style={styles.soldActionBtnText}>Venduto</Text>
+                <Ionicons
+                  name={isFrozen ? 'lock-closed' : 'checkmark-circle-outline'}
+                  size={15}
+                  color={isFrozen ? '#D97706' : '#059669'}
+                />
+                <Text style={[styles.soldActionBtnText, isFrozen && { color: '#D97706' }]}>
+                  {isFrozen ? 'Sblocca' : 'Venduto'}
+                </Text>
               </TouchableOpacity>
             )}
 
@@ -458,6 +535,43 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                 },
               ]}
             />
+          </View>
+        </TouchableOpacity>
+      ) : proPassInfo.isActive && !proPassInfo.isPermanentPro ? (
+        <TouchableOpacity
+          style={[styles.slotCardProPass, { backgroundColor: isDark ? '#1E1B4B' : '#FEF3C7', borderColor: '#F59E0B' }]}
+          onPress={() => {
+            setAlertConfig({
+              visible: true,
+              title: '⚡ Pro Pass Attivo!',
+              message: `Hai sbloccato ${proPassInfo.remainingFormatted} di accesso Pro completo per essere salito di livello!\n\nGoditi stock illimitato, export CSV senza limiti e tutte le funzioni esclusive.`,
+              icon: 'flash',
+              iconColor: '#F59E0B',
+              iconBgColor: isDark ? '#451A03' : '#FEF3C7',
+              buttons: [
+                {
+                  text: 'Passa a Pro per Sempre (5,99€)',
+                  style: 'primary',
+                  onPress: () => {
+                    if (onOpenProModal) onOpenProModal();
+                  },
+                },
+                { text: 'Continua a usare il Pass', style: 'cancel' },
+              ],
+            });
+          }}
+          activeOpacity={0.8}
+        >
+          <View style={styles.slotRow}>
+            <View style={styles.slotLeft}>
+              <Ionicons name="flash" size={16} color="#D97706" />
+              <Text style={styles.slotProPassText}>
+                Pro Pass Attivo • <Text style={{ fontWeight: '800' }}>{proPassInfo.remainingFormatted} rimasti</Text>
+              </Text>
+            </View>
+            <View style={styles.slotProPassBadge}>
+              <Text style={styles.slotProPassBadgeText}>VIP ⚡</Text>
+            </View>
           </View>
         </TouchableOpacity>
       ) : (
@@ -1130,5 +1244,57 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  frozenBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  frozenBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#D97706',
+  },
+  shareActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  shareActionBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6366F1',
+  },
+  slotCardProPass: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  slotProPassText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#B45309',
+  },
+  slotProPassBadge: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  slotProPassBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 });

@@ -1,5 +1,5 @@
 import { getDatabase } from './db';
-import { isProUser } from './proManager';
+import { isProUser, activateProPass } from './proManager';
 
 export interface LevelDefinition {
   levelNumber: number;
@@ -167,7 +167,13 @@ export function getLevelInfo(xp: number): LevelInfo {
 export function addXP(
   baseAmount: number,
   reason?: string
-): { newXP: number; earnedXP: number; leveledUp: boolean; newLevel: LevelInfo } {
+): {
+  newXP: number;
+  earnedXP: number;
+  leveledUp: boolean;
+  newLevel: LevelInfo;
+  proPassAwardedHours: number;
+} {
   try {
     const isPro = isProUser();
     // Pro members get 2x XP Booster perenne!
@@ -186,12 +192,20 @@ export function addXP(
 
     const newLevel = getLevelInfo(newXP);
     const leveledUp = newLevel.levelNumber > oldLevel.levelNumber;
+    let proPassAwardedHours = 0;
+
+    if (leveledUp) {
+      // Award Taste of Pro temporary pass
+      proPassAwardedHours = newLevel.levelNumber <= 3 ? 24 : 48;
+      activateProPass(proPassAwardedHours);
+    }
 
     return {
       newXP,
       earnedXP,
       leveledUp,
       newLevel,
+      proPassAwardedHours,
     };
   } catch (err) {
     console.error('Error adding XP:', err);
@@ -200,6 +214,7 @@ export function addXP(
       earnedXP: baseAmount,
       leveledUp: false,
       newLevel: getLevelInfo(0),
+      proPassAwardedHours: 0,
     };
   }
 }
