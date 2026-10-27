@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -13,11 +13,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-import { InventoryItem } from '../types';
+import { InventoryItem, PlatformId } from '../types';
 import { CustomInput } from './CustomInput';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
-import { markItemAsSold } from '../services/db';
+import { markItemAsSold, recordPartialSale } from '../services/db';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import { isProUser } from '../services/proManager';
 
@@ -36,52 +36,83 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const [actualPrice, setActualPrice] = useState<string>('');
+  const [soldPlatform, setSoldPlatform] = useState<PlatformId>('vinted');
+  const [soldQuantity, setSoldQuantity] = useState<number>(1);
   const isPro = isProUser();
+
+  const totalAvailableQty = item?.quantity && item.quantity > 0 ? item.quantity : 1;
+  const activePlatforms = useMemo(() => {
+    if (!item) return [];
+    if (item.platforms && item.platforms.length > 0) return item.platforms;
+    return [item.platformId];
+  }, [item]);
 
   useEffect(() => {
     if (item) {
       setActualPrice(item.targetSellingPrice > 0 ? item.targetSellingPrice.toString() : '');
+      setSoldPlatform(item.platformId || 'vinted');
+      setSoldQuantity(1);
     }
   }, [item]);
 
   if (!item) return null;
 
-  const platform = PLATFORMS.find((p) => p.id === item.platformId) || PLATFORMS[0];
-  const numericPrice = parseFloat(actualPrice.replace(',', '.')) || 0;
+  const currentPlatformConfig = PLATFORMS.find((p) => p.id === soldPlatform) || PLATFORMS[0];
+  const numericUnitPrice = parseFloat(actualPrice.replace(',', '.')) || 0;
 
-  // Real-time calculated fees and net profit
-  const breakdown = calculateResellProfit({
-    sellingPrice: numericPrice,
+  // Real-time calculated fees and net profit per single unit
+  const unitBreakdown = calculateResellProfit({
+    sellingPrice: numericUnitPrice,
     purchaseCost: item.purchaseCost,
     sellerShippingCost: item.sellerShippingCost,
     packagingCost: item.packagingCost,
-    platformId: item.platformId,
+    platformId: soldPlatform,
   });
+
+  const totalNetProfit = unitBreakdown.netProfit * soldQuantity;
+  const totalRevenue = numericUnitPrice * soldQuantity;
 
   const handleConfirm = () => {
     if (!item.id) return;
-    const finalPrice = numericPrice > 0 ? numericPrice : item.targetSellingPrice;
+    const finalUnitPrice = numericUnitPrice > 0 ? numericUnitPrice : item.targetSellingPrice;
+    const isPartialSale = totalAvailableQty > 1 && soldQuantity < totalAvailableQty;
 
     try {
-      // 1. Update SQLite
-      markItemAsSold(item.id, finalPrice);
+      if (isPartialSale) {
+        // Split logic: update remaining on listed item and insert new sold item
+        recordPartialSale(item, soldQuantity, finalUnitPrice, soldPlatform);
+      } else {
+        // Full sale
+        markItemAsSold(item.id, finalUnitPrice, soldPlatform);
+      }
 
       // 2. Award XP
-      const xpResult = addXP(XP_REWARDS.ITEM_SOLD, `Vendita: ${item.title}`);
+      const xpResult = addXP(XP_REWARDS.ITEM_SOLD, `Vendita (${soldQuantity}x): ${item.title}`);
 
-      // 3. Inform user
-      const xpText = `+${xpResult.earnedXP} XP guadagnati! ${isPro ? '(Boost 2x Pro attivo ⚡)' : ''}`;
-      if (xpResult.leveledUp) {
+      // 3. Delist Assistant Alert if multi-platform
+      const otherPlatforms = activePlatforms.filter((p) => p !== soldPlatform);
+      if (otherPlatforms.length > 0) {
+        const otherNames = otherPlatforms
+          .map((id) => PLATFORMS.find((p) => p.id === id)?.name || id)
+          .join(', ');
+
+        Alert.alert(
+          '🎉 Vendita Registrata con Successo!',
+          `Hai guadagnato +${xpResult.earnedXP} XP nel Reseller Club!\n\n⚠️ Promemoria Delist Assistant:\nRicordati di eliminare o disattivare subito l'annuncio da:\n👉 ${otherNames}\nper evitare doppie vendite accidentali e reclami.`
+        );
+      } else if (xpResult.leveledUp) {
         Alert.alert(
           '🎉 LIVELLO SUPERATO!',
-          `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n${xpText}`
+          `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n+${xpResult.earnedXP} XP guadagnati!`
         );
       }
 
       onSuccess({
         ...item,
-        status: 'sold',
-        actualSellingPrice: finalPrice,
+        status: isPartialSale ? 'listed' : 'sold',
+        quantity: isPartialSale ? totalAvailableQty - soldQuantity : soldQuantity,
+        actualSellingPrice: finalUnitPrice,
+        platformId: soldPlatform,
         soldAt: new Date().toISOString(),
       });
       onClose();
@@ -135,30 +166,130 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
               {item.photoUri ? (
                 <Image source={{ uri: item.photoUri }} style={styles.thumbImage} />
               ) : (
-                <View style={[styles.thumbPlaceholder, { backgroundColor: platform.color + '20' }]}>
-                  <Ionicons name="shirt-outline" size={24} color={platform.color} />
+                <View style={[styles.thumbPlaceholder, { backgroundColor: currentPlatformConfig.color + '20' }]}>
+                  <Ionicons name="shirt-outline" size={24} color={currentPlatformConfig.color} />
                 </View>
               )}
 
               <View style={styles.itemMeta}>
-                <View style={styles.platformBadge}>
-                  <Text style={[styles.platformName, { color: platform.color }]}>
-                    {platform.name}
-                  </Text>
+                <View style={styles.badgeRow}>
+                  <View style={[styles.platformBadge, { backgroundColor: isDark ? '#0F172A' : currentPlatformConfig.badgeBg }]}>
+                    <Text style={[styles.platformName, { color: currentPlatformConfig.color }]}>
+                      {currentPlatformConfig.name}
+                    </Text>
+                  </View>
+                  {totalAvailableQty > 1 && (
+                    <View style={[styles.qtyBadge, { backgroundColor: isDark ? '#312E81' : '#EEF2FF' }]}>
+                      <Text style={[styles.qtyBadgeText, { color: '#6366F1' }]}>
+                        Stock: {totalAvailableQty} pz
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={[styles.priceTag, { color: colors.textSecondary }]}>
-                  Prezzo listino originario: <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{formatEuro(item.targetSellingPrice)}</Text>
+                  Prezzo listino unitario: <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{formatEuro(item.targetSellingPrice)}</Text>
                 </Text>
                 <Text style={[styles.priceTag, { color: colors.textMuted }]}>
-                  Costo acquisto: {formatEuro(item.purchaseCost)}
+                  Costo acquisto unitario: {formatEuro(item.purchaseCost)}
                 </Text>
               </View>
             </View>
 
+            {/* Platform Selection if cross-listed on multiple platforms */}
+            {activePlatforms.length > 1 && (
+              <View style={styles.sectionBox}>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>DOVE HAI VENDUTO L'ARTICOLO?</Text>
+                <View style={styles.platformOptionsRow}>
+                  {activePlatforms.map((pid) => {
+                    const pConfig = PLATFORMS.find((p) => p.id === pid) || PLATFORMS[0];
+                    const isSelected = soldPlatform === pid;
+                    return (
+                      <TouchableOpacity
+                        key={pid}
+                        style={[
+                          styles.platformOptionChip,
+                          { backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor: colors.cardBorder },
+                          isSelected && { borderColor: pConfig.color, backgroundColor: isDark ? '#1E293B' : '#FFFFFF' },
+                        ]}
+                        onPress={() => setSoldPlatform(pid)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.dot, { backgroundColor: pConfig.color }]} />
+                        <Text style={[styles.platformOptionText, { color: isSelected ? pConfig.color : colors.textPrimary, fontWeight: isSelected ? '700' : '500' }]}>
+                          {pConfig.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Quantity Selector if item has multiple pieces */}
+            {totalAvailableQty > 1 && (
+              <View style={styles.sectionBox}>
+                <View style={styles.qtyHeaderRow}>
+                  <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>QUANTE UNITÀ HAI VENDUTO?</Text>
+                  <Text style={[styles.qtySubText, { color: colors.textMuted }]}>
+                    Disponibili: {totalAvailableQty} pz
+                  </Text>
+                </View>
+
+                <View style={[styles.stepperContainer, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: colors.cardBorder }]}>
+                  <TouchableOpacity
+                    style={[styles.stepperBtn, soldQuantity <= 1 && styles.stepperBtnDisabled]}
+                    onPress={() => setSoldQuantity((q) => Math.max(1, q - 1))}
+                    disabled={soldQuantity <= 1}
+                  >
+                    <Ionicons name="remove" size={18} color={soldQuantity <= 1 ? colors.textMuted : colors.textPrimary} />
+                  </TouchableOpacity>
+
+                  <View style={styles.stepperCenter}>
+                    <Text style={[styles.stepperNumber, { color: colors.textPrimary }]}>{soldQuantity}</Text>
+                    <Text style={[styles.stepperUnit, { color: colors.textMuted }]}>su {totalAvailableQty} pezzi</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.stepperBtn, soldQuantity >= totalAvailableQty && styles.stepperBtnDisabled]}
+                    onPress={() => setSoldQuantity((q) => Math.min(totalAvailableQty, q + 1))}
+                    disabled={soldQuantity >= totalAvailableQty}
+                  >
+                    <Ionicons name="add" size={18} color={soldQuantity >= totalAvailableQty ? colors.textMuted : colors.textPrimary} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Quick actions for quantity */}
+                <View style={styles.quickQtyRow}>
+                  <TouchableOpacity
+                    style={[styles.quickQtyBtn, soldQuantity === 1 && { backgroundColor: '#6366F1' }]}
+                    onPress={() => setSoldQuantity(1)}
+                  >
+                    <Text style={[styles.quickQtyBtnText, soldQuantity === 1 && { color: '#FFFFFF', fontWeight: '700' }]}>1x</Text>
+                  </TouchableOpacity>
+                  {totalAvailableQty > 2 && (
+                    <TouchableOpacity
+                      style={[styles.quickQtyBtn, soldQuantity === 2 && { backgroundColor: '#6366F1' }]}
+                      onPress={() => setSoldQuantity(2)}
+                    >
+                      <Text style={[styles.quickQtyBtnText, soldQuantity === 2 && { color: '#FFFFFF', fontWeight: '700' }]}>2x</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={[styles.quickQtyBtn, soldQuantity === totalAvailableQty && { backgroundColor: '#6366F1' }]}
+                    onPress={() => setSoldQuantity(totalAvailableQty)}
+                  >
+                    <Text style={[styles.quickQtyBtnText, soldQuantity === totalAvailableQty && { color: '#FFFFFF', fontWeight: '700' }]}>
+                      Tutti ({totalAvailableQty}x)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
             {/* Input final price */}
             <View style={styles.inputSection}>
               <CustomInput
-                label="Prezzo di Vendita Finale Effettivo"
+                label={totalAvailableQty > 1 ? "Prezzo Finale di Vendita Unitario (€)" : "Prezzo di Vendita Finale Effettivo (€)"}
                 subtitle="Se hai fatto uno sconto o accettato un'offerta, modificalo qui"
                 value={actualPrice}
                 onChangeValue={setActualPrice}
@@ -168,16 +299,18 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             </View>
 
             {/* Live Profit Preview Box */}
-            <View style={[styles.profitBox, isDark ? { backgroundColor: '#064E3B', borderColor: '#059669' } : { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
+            <View style={[styles.profitBox, isDark ? { backgroundColor: '#064E3B22', borderColor: '#059669' } : { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
               <View style={styles.profitRow}>
                 <View>
-                  <Text style={[styles.profitLabel, { color: isDark ? '#A7F3D0' : '#047857' }]}>GUADAGNO NETTO REALE</Text>
+                  <Text style={[styles.profitLabel, { color: isDark ? '#A7F3D0' : '#047857' }]}>
+                    {soldQuantity > 1 ? `GUADAGNO TOTALE (${soldQuantity} PEZZI)` : 'GUADAGNO NETTO REALE'}
+                  </Text>
                   <Text style={[styles.profitSub, { color: isDark ? '#6EE7B7' : '#065F46' }]}>
-                    Trattenute fee: -{formatEuro(breakdown.totalSellerFees)}
+                    Incasso lordo: {formatEuro(totalRevenue)} | Fee: -{formatEuro(unitBreakdown.totalSellerFees * soldQuantity)}
                   </Text>
                 </View>
-                <Text style={[styles.profitValue, { color: breakdown.netProfit >= 0 ? (isDark ? '#34D399' : '#059669') : '#EF4444' }]}>
-                  {formatEuro(breakdown.netProfit)}
+                <Text style={[styles.profitValue, { color: totalNetProfit >= 0 ? (isDark ? '#34D399' : '#059669') : '#EF4444' }]}>
+                  {formatEuro(totalNetProfit)}
                 </Text>
               </View>
 
@@ -205,7 +338,9 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
               activeOpacity={0.8}
             >
               <Ionicons name="checkmark-done" size={18} color="#FFFFFF" />
-              <Text style={styles.confirmBtnText}>Conferma Vendita</Text>
+              <Text style={styles.confirmBtnText}>
+                {soldQuantity < totalAvailableQty ? `Vendi ${soldQuantity} pz (Split)` : 'Conferma Vendita'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -231,7 +366,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     padding: 20,
-    maxHeight: '85%',
+    maxHeight: '90%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.35,
@@ -299,16 +434,120 @@ const styles = StyleSheet.create({
   itemMeta: {
     flex: 1,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
   platformBadge: {
-    marginBottom: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   platformName: {
     fontSize: 12,
     fontWeight: '700',
   },
+  qtyBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  qtyBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   priceTag: {
     fontSize: 12,
     marginTop: 1,
+  },
+  sectionBox: {
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    marginBottom: 8,
+  },
+  platformOptionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  platformOptionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 6,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  platformOptionText: {
+    fontSize: 13,
+  },
+  qtyHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  qtySubText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 6,
+  },
+  stepperBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  stepperBtnDisabled: {
+    opacity: 0.3,
+  },
+  stepperCenter: {
+    alignItems: 'center',
+  },
+  stepperNumber: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  stepperUnit: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  quickQtyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  quickQtyBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  quickQtyBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6366F1',
   },
   inputSection: {
     marginBottom: 14,

@@ -58,7 +58,11 @@ export function computeAnalytics(): AnalyticsSummary {
   // Monthly grouping
   const monthlyMap: Record<string, { count: number; profit: number; revenue: number }> = {};
 
+  let totalSoldPieces = 0;
   soldItems.forEach((item) => {
+    const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
+    totalSoldPieces += qty;
+
     const salePrice = item.actualSellingPrice ?? item.targetSellingPrice;
     const calc = calculateResellProfit({
       sellingPrice: salePrice,
@@ -68,15 +72,15 @@ export function computeAnalytics(): AnalyticsSummary {
       platformId: item.platformId,
     });
 
-    totalGrossRevenue += salePrice;
-    totalNetProfit += calc.netProfit;
-    totalCostOfGoodsSold += item.purchaseCost;
+    totalGrossRevenue += salePrice * qty;
+    totalNetProfit += calc.netProfit * qty;
+    totalCostOfGoodsSold += item.purchaseCost * qty;
 
     // Aggregate by platform
     if (platformProfitMap[item.platformId]) {
-      platformProfitMap[item.platformId].count += 1;
-      platformProfitMap[item.platformId].profit += calc.netProfit;
-      platformProfitMap[item.platformId].revenue += salePrice;
+      platformProfitMap[item.platformId].count += qty;
+      platformProfitMap[item.platformId].profit += calc.netProfit * qty;
+      platformProfitMap[item.platformId].revenue += salePrice * qty;
     }
 
     // Aggregate by month (using soldAt or createdAt)
@@ -87,9 +91,9 @@ export function computeAnalytics(): AnalyticsSummary {
     if (!monthlyMap[monthKey]) {
       monthlyMap[monthKey] = { count: 0, profit: 0, revenue: 0 };
     }
-    monthlyMap[monthKey].count += 1;
-    monthlyMap[monthKey].profit += calc.netProfit;
-    monthlyMap[monthKey].revenue += salePrice;
+    monthlyMap[monthKey].count += qty;
+    monthlyMap[monthKey].profit += calc.netProfit * qty;
+    monthlyMap[monthKey].revenue += salePrice * qty;
   });
 
   // Calculate platform statistics
@@ -103,15 +107,19 @@ export function computeAnalytics(): AnalyticsSummary {
       soldCount: stat.count,
       totalProfit: Math.round(stat.profit * 100) / 100,
       totalRevenue: Math.round(stat.revenue * 100) / 100,
-      percentageOfProfit: Math.max(0, Math.round(pct * 10) / 10),
+      percentageOfProfit: Math.round(pct * 10) / 10,
     };
-  }).filter((p) => p.soldCount > 0 || p.totalProfit > 0);
+  });
 
-  // Sort platforms by profit descending
-  platformStats.sort((a, b) => b.totalProfit - a.totalProfit);
-  const bestPlatform = platformStats.length > 0 ? platformStats[0] : null;
+  // Best platform (by net profit)
+  const bestPlatform = platformStats.reduce<PlatformStat | null>((best, curr) => {
+    if (!best || curr.totalProfit > best.totalProfit) {
+      return curr.totalProfit > 0 ? curr : null;
+    }
+    return best;
+  }, null);
 
-  // Monthly stats formatted
+  // Month labels
   const monthNames = [
     'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
     'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
@@ -119,7 +127,6 @@ export function computeAnalytics(): AnalyticsSummary {
 
   const monthlyStats: MonthlyStat[] = Object.keys(monthlyMap)
     .sort()
-    .reverse()
     .map((key) => {
       const [year, month] = key.split('-');
       const monthIdx = parseInt(month, 10) - 1;
@@ -133,9 +140,18 @@ export function computeAnalytics(): AnalyticsSummary {
     });
 
   // Active / unsold stats
-  const unsoldCapital = activeItems.reduce((acc, i) => acc + i.purchaseCost, 0);
+  const totalActivePieces = activeItems.reduce(
+    (acc, i) => acc + (i.quantity && i.quantity > 0 ? i.quantity : 1),
+    0
+  );
+  const unsoldCapital = activeItems.reduce(
+    (acc, i) => acc + i.purchaseCost * (i.quantity && i.quantity > 0 ? i.quantity : 1),
+    0
+  );
+
   let potentialProfitUnsold = 0;
   activeItems.forEach((i) => {
+    const qty = i.quantity && i.quantity > 0 ? i.quantity : 1;
     const calc = calculateResellProfit({
       sellingPrice: i.targetSellingPrice,
       purchaseCost: i.purchaseCost,
@@ -143,7 +159,7 @@ export function computeAnalytics(): AnalyticsSummary {
       packagingCost: i.packagingCost,
       platformId: i.platformId,
     });
-    potentialProfitUnsold += calc.netProfit;
+    potentialProfitUnsold += calc.netProfit * qty;
   });
 
   const averageMarginPercent =
@@ -157,8 +173,8 @@ export function computeAnalytics(): AnalyticsSummary {
       : 0;
 
   return {
-    totalSoldItems: soldItems.length,
-    totalActiveItems: activeItems.length,
+    totalSoldItems: totalSoldPieces,
+    totalActiveItems: totalActivePieces,
     totalGrossRevenue: Math.round(totalGrossRevenue * 100) / 100,
     totalNetProfit: Math.round(totalNetProfit * 100) / 100,
     totalCostOfGoodsSold: Math.round(totalCostOfGoodsSold * 100) / 100,

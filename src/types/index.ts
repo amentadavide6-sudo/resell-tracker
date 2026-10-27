@@ -53,6 +53,8 @@ export interface InventoryItem {
   id?: number;
   title: string;
   platformId: PlatformId;
+  platforms?: PlatformId[];
+  quantity?: number;
   purchaseCost: number;
   targetSellingPrice: number;
   actualSellingPrice?: number | null;

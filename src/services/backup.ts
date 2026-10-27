@@ -79,6 +79,8 @@ export async function importBackup(): Promise<{ success: boolean; count: number;
         insertInventoryItem({
           title: item.title,
           platformId: item.platformId,
+          platforms: item.platforms,
+          quantity: item.quantity,
           purchaseCost: item.purchaseCost,
           targetSellingPrice: item.targetSellingPrice,
           actualSellingPrice: item.actualSellingPrice,

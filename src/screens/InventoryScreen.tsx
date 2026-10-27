@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,7 +28,7 @@ import { PLATFORMS } from '../constants/platforms';
 import { canAddMoreItems, isProUser, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
 import { getUserXP, getLevelInfo, deductXP, XP_REWARDS } from '../services/gamification';
 import { useTheme } from '../context/ThemeContext';
-import { InventoryItem, ItemStatus } from '../types';
+import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
 export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onOpenProModal }) => {
   const insets = useSafeAreaInsets();
@@ -35,6 +36,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalDbCount, setTotalDbCount] = useState<number>(0);
   const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('listed');
+  const [platformFilter, setPlatformFilter] = useState<PlatformId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [itemToSell, setItemToSell] = useState<InventoryItem | null>(null);
@@ -64,25 +66,44 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     loadData();
   }, [loadData]);
 
-  // Filtered by search
+  // Filtered by platform & search
   const displayedItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
+    let list = items;
+
+    if (platformFilter !== 'all') {
+      list = list.filter((item) => {
+        if (item.platforms && item.platforms.length > 0) {
+          return item.platforms.includes(platformFilter);
+        }
+        return item.platformId === platformFilter;
+      });
+    }
+
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
-    return items.filter(
+    return list.filter(
       (item) =>
         item.title.toLowerCase().includes(q) ||
-        item.platformId.toLowerCase().includes(q)
+        item.platformId.toLowerCase().includes(q) ||
+        (item.platforms && item.platforms.some((p) => p.toLowerCase().includes(q)))
     );
-  }, [items, searchQuery]);
+  }, [items, platformFilter, searchQuery]);
 
-  // Overall statistics for listed inventory
+  // Overall statistics for listed inventory (taking multi-quantity into account)
   const inventoryStats = useMemo(() => {
     const active = items.filter((i) => i.status === 'listed');
-    const totalInvested = active.reduce((sum, i) => sum + i.purchaseCost, 0);
-    const potentialRevenue = active.reduce((sum, i) => sum + i.targetSellingPrice, 0);
+    const totalInvested = active.reduce(
+      (sum, i) => sum + i.purchaseCost * (i.quantity && i.quantity > 0 ? i.quantity : 1),
+      0
+    );
+    const totalPieces = active.reduce(
+      (sum, i) => sum + (i.quantity && i.quantity > 0 ? i.quantity : 1),
+      0
+    );
 
     let potentialProfit = 0;
     active.forEach((i) => {
+      const qty = i.quantity && i.quantity > 0 ? i.quantity : 1;
       const calc = calculateResellProfit({
         sellingPrice: i.targetSellingPrice,
         purchaseCost: i.purchaseCost,
@@ -90,11 +111,12 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         packagingCost: i.packagingCost,
         platformId: i.platformId,
       });
-      potentialProfit += calc.netProfit;
+      potentialProfit += calc.netProfit * qty;
     });
 
     return {
       activeCount: active.length,
+      totalPieces,
       totalInvested,
       potentialProfit,
     };
@@ -104,6 +126,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     if (!item.id) return;
 
     if (item.status === 'sold') {
+      const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
       const calc = calculateResellProfit({
         sellingPrice: item.actualSellingPrice || item.targetSellingPrice,
         purchaseCost: item.purchaseCost,
@@ -116,7 +139,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       setAlertConfig({
         visible: true,
         title: 'Elimina Capo Venduto',
-        message: `Attenzione: eliminando questo capo venduto rimuoverai anche il relativo profitto (+${formatEuro(calc.netProfit)}) dalle statistiche, dal registro vendite e perderai ${xpDeduct} XP.\n\nPassa a Pro per archiviare capi illimitati senza perdere lo storico delle tue vendite!`,
+        message: `Attenzione: eliminando questo capo venduto rimuoverai anche il relativo profitto (+${formatEuro(calc.netProfit * qty)}) dalle statistiche, dal registro vendite e perderai ${xpDeduct} XP.\n\nPassa a Pro per archiviare capi illimitati senza perdere lo storico delle tue vendite!`,
         icon: 'warning',
         iconColor: '#F59E0B',
         iconBgColor: isDark ? '#451A03' : '#FEF3C7',
@@ -194,8 +217,11 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   };
 
   const renderItemCard = ({ item }: { item: InventoryItem }) => {
-    const platform = PLATFORMS.find((p) => p.id === item.platformId) || PLATFORMS[0];
-    const calc = calculateResellProfit({
+    const itemPlatforms = item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId];
+    const primaryPlatform = PLATFORMS.find((p) => p.id === item.platformId) || PLATFORMS[0];
+    const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
+
+    const unitCalc = calculateResellProfit({
       sellingPrice: item.status === 'sold' && item.actualSellingPrice ? item.actualSellingPrice : item.targetSellingPrice,
       purchaseCost: item.purchaseCost,
       sellerShippingCost: item.sellerShippingCost,
@@ -204,6 +230,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     });
 
     const isSold = item.status === 'sold';
+    const totalProfit = unitCalc.netProfit * qty;
 
     return (
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }, isSold && (isDark ? { backgroundColor: '#111827' } : styles.cardSold)]}>
@@ -211,8 +238,8 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
           {item.photoUri ? (
             <Image source={{ uri: item.photoUri }} style={styles.cardThumb} />
           ) : (
-            <View style={[styles.cardThumbPlaceholder, { backgroundColor: isDark ? '#1E293B' : platform.badgeBg }]}>
-              <Ionicons name="shirt-outline" size={26} color={platform.color} />
+            <View style={[styles.cardThumbPlaceholder, { backgroundColor: isDark ? '#1E293B' : primaryPlatform.badgeBg }]}>
+              <Ionicons name="shirt-outline" size={26} color={primaryPlatform.color} />
             </View>
           )}
 
@@ -224,12 +251,28 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             </View>
 
             <View style={styles.tagRow}>
-              <View style={[styles.platformBadge, { backgroundColor: isDark ? '#1E293B' : platform.badgeBg }]}>
-                <Text style={[styles.platformBadgeText, { color: platform.color }]}>
-                  {platform.name}
-                </Text>
-              </View>
+              {/* Multiple Platform Badges */}
+              {itemPlatforms.map((pId) => {
+                const pConfig = PLATFORMS.find((p) => p.id === pId) || PLATFORMS[0];
+                return (
+                  <View key={pId} style={[styles.platformBadge, { backgroundColor: isDark ? '#1E293B' : pConfig.badgeBg }]}>
+                    <Text style={[styles.platformBadgeText, { color: pConfig.color }]}>
+                      {pConfig.name}
+                    </Text>
+                  </View>
+                );
+              })}
 
+              {/* Quantity Stock Badge */}
+              {qty > 1 && (
+                <View style={[styles.qtyBadge, { backgroundColor: isDark ? '#312E81' : '#EEF2FF' }]}>
+                  <Text style={[styles.qtyBadgeText, { color: '#6366F1' }]}>
+                    Qtà: {qty}
+                  </Text>
+                </View>
+              )}
+
+              {/* Status Badge */}
               <View
                 style={[
                   styles.statusBadge,
@@ -251,10 +294,15 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 
             {/* Financial comparison */}
             <View style={styles.pricesRow}>
-              <Text style={[styles.priceAcquired, { color: colors.textSecondary }]}>Acquisto: {formatEuro(item.purchaseCost)}</Text>
+              <Text style={[styles.priceAcquired, { color: colors.textSecondary }]}>
+                Acquisto: {formatEuro(item.purchaseCost)} {qty > 1 ? '/pz' : ''}
+              </Text>
               <Text style={styles.priceArrow}>➔</Text>
               <Text style={[styles.priceTarget, { color: colors.textPrimary }]}>
-                {isSold ? `Venduto: ${formatEuro(item.actualSellingPrice || item.targetSellingPrice)}` : `Prezzo: ${formatEuro(item.targetSellingPrice)}`}
+                {isSold
+                  ? `Venduto: ${formatEuro(item.actualSellingPrice || item.targetSellingPrice)}`
+                  : `Prezzo: ${formatEuro(item.targetSellingPrice)}`}
+                {qty > 1 ? '/pz' : ''}
               </Text>
             </View>
           </View>
@@ -263,15 +311,22 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         {/* Card Footer: Net profit and quick actions */}
         <View style={[styles.cardFooter, { borderTopColor: colors.cardBorder }]}>
           <View style={styles.profitBadge}>
-            <Text style={[styles.profitBadgeLabel, { color: colors.textSecondary }]}>Guadagno Netto:</Text>
+            <Text style={[styles.profitBadgeLabel, { color: colors.textSecondary }]}>
+              {qty > 1 ? 'Guadagno Totale:' : 'Guadagno Netto:'}
+            </Text>
             <Text
               style={[
                 styles.profitBadgeValue,
-                { color: calc.netProfit > 0 ? '#10B981' : '#EF4444' },
+                { color: totalProfit > 0 ? '#10B981' : '#EF4444' },
               ]}
             >
-              {formatEuro(calc.netProfit)}
+              {formatEuro(totalProfit)}
             </Text>
+            {qty > 1 && (
+              <Text style={[styles.profitUnitText, { color: colors.textMuted }]}>
+                ({formatEuro(unitCalc.netProfit)}/pz)
+              </Text>
+            )}
           </View>
 
           <View style={styles.cardActions}>
@@ -320,7 +375,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         </TouchableOpacity>
       </View>
 
-      {/* Slot Counter & Pro Status Badge (Effetto Zeigarnik) */}
+      {/* Slot Counter & Pro Status Badge */}
       {!isPro ? (
         <TouchableOpacity
           style={[
@@ -448,6 +503,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               </Text>
             </View>
           </View>
+
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={[styles.levelXPBadge, { color: colors.primary }]}>
               {levelInfo.currentXP} XP
@@ -473,7 +529,9 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       {/* KPI Overview Card */}
       <View style={[styles.kpiContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
         <View style={styles.kpiBox}>
-          <Text style={[styles.kpiValue, { color: colors.textPrimary }]}>{inventoryStats.activeCount}</Text>
+          <Text style={[styles.kpiValue, { color: colors.textPrimary }]}>
+            {inventoryStats.activeCount} <Text style={{ fontSize: 11, fontWeight: '600' }}>({inventoryStats.totalPieces} pz)</Text>
+          </Text>
           <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Capi Attivi</Text>
         </View>
         <View style={[styles.kpiDivider, { backgroundColor: colors.cardBorder }]} />
@@ -507,7 +565,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         )}
       </View>
 
-      {/* Filter Tabs */}
+      {/* Status Filter Tabs */}
       <View style={styles.filtersRow}>
         {(['listed', 'sold', 'draft', 'all'] as const).map((tab) => (
           <TouchableOpacity
@@ -538,6 +596,65 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         ))}
       </View>
 
+      {/* Platform Quick Filter Scroll (Killer Feature J) */}
+      <View style={styles.platformFilterContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.platformFilterScroll}
+        >
+          <TouchableOpacity
+            style={[
+              styles.platformFilterChip,
+              { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
+              platformFilter === 'all' && { backgroundColor: isDark ? '#312E81' : '#EEF2FF', borderColor: '#6366F1' },
+            ]}
+            onPress={() => setPlatformFilter('all')}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.platformFilterChipText,
+                { color: isDark ? '#94A3B8' : '#64748B' },
+                platformFilter === 'all' && { color: '#6366F1', fontWeight: '800' },
+              ]}
+            >
+              Tutte le Piattaforme
+            </Text>
+          </TouchableOpacity>
+
+          {PLATFORMS.map((p) => {
+            const isSelected = platformFilter === p.id;
+            return (
+              <TouchableOpacity
+                key={p.id}
+                style={[
+                  styles.platformFilterChip,
+                  { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
+                  isSelected && {
+                    backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                    borderColor: p.color,
+                  },
+                ]}
+                onPress={() => setPlatformFilter(isSelected ? 'all' : p.id)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.dot, { backgroundColor: p.color }]} />
+                <Text
+                  style={[
+                    styles.platformFilterChipText,
+                    { color: isSelected ? p.color : colors.textSecondary },
+                    isSelected && { fontWeight: '800' },
+                  ]}
+                >
+                  {p.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
       {/* Items List */}
       <FlatList
         data={displayedItems}
@@ -550,11 +667,11 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             <Ionicons name="shirt-outline" size={60} color="#CBD5E1" />
             <Text style={styles.emptyTitle}>Nessun articolo trovato</Text>
             <Text style={styles.emptySubtitle}>
-              {searchQuery
-                ? 'Nessun risultato corrisponde alla ricerca.'
+              {searchQuery || platformFilter !== 'all'
+                ? 'Nessun risultato corrisponde ai filtri selezionati.'
                 : 'Inizia a catalogare i tuoi capi per tenere traccia delle tue vendite.'}
             </Text>
-            {!searchQuery && (
+            {!searchQuery && platformFilter === 'all' && (
               <TouchableOpacity
                 style={styles.emptyAddBtn}
                 onPress={handleOpenAddModal}
@@ -573,7 +690,6 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         onItemAdded={loadData}
       />
 
-      {/* Mark As Sold Custom Modal */}
       {/* Custom Modern Alert / Confirmation Modal */}
       <CustomAlertModal
         config={alertConfig}
@@ -588,6 +704,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         onOpenProModal={onOpenProModal}
       />
 
+      {/* Mark As Sold Custom Modal */}
       <MarkSoldModal
         visible={itemToSell !== null}
         item={itemToSell}
@@ -604,7 +721,6 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -616,13 +732,11 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#6366F1',
     letterSpacing: 1.2,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#0F172A',
     letterSpacing: -0.5,
   },
   addBtn: {
@@ -633,6 +747,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 10,
     gap: 4,
+  },
+  addBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   slotCard: {
     marginHorizontal: 16,
@@ -652,14 +771,13 @@ const styles = StyleSheet.create({
   },
   slotRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   slotLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    flex: 1,
   },
   slotText: {
     fontSize: 12,
@@ -668,16 +786,16 @@ const styles = StyleSheet.create({
   slotProText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#D97706',
+    color: '#B45309',
   },
   slotProBadge: {
     backgroundColor: '#F59E0B',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   slotProBadgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: 0.5,
@@ -686,20 +804,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
   },
   slotUpgradeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#6366F1',
   },
   slotProgressTrack: {
     height: 4,
     borderRadius: 2,
-    marginTop: 6,
+    marginTop: 8,
     overflow: 'hidden',
   },
   slotProgressFill: {
@@ -710,7 +824,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 10,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
   },
   levelRow: {
@@ -723,34 +837,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    flex: 1,
   },
   levelBadgeEmoji: {
-    fontSize: 22,
+    fontSize: 26,
   },
   levelTitleText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
   },
   levelSubText: {
-    fontSize: 10,
+    fontSize: 11,
     marginTop: 1,
-  },
-  levelXPBadge: {
-    fontSize: 13,
-    fontWeight: '900',
-    marginLeft: 6,
   },
   proBoostPill: {
     backgroundColor: '#FEF3C7',
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: '#F59E0B',
   },
   proBoostText: {
     fontSize: 9,
     fontWeight: '800',
     color: '#D97706',
+  },
+  levelXPBadge: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   levelTrack: {
     height: 5,
@@ -761,20 +875,13 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 3,
   },
-  addBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
   kpiContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginVertical: 10,
+    marginBottom: 10,
     borderRadius: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     alignItems: 'center',
   },
   kpiBox: {
@@ -784,35 +891,29 @@ const styles = StyleSheet.create({
   kpiDivider: {
     width: 1,
     height: 28,
-    backgroundColor: '#E2E8F0',
   },
   kpiValue: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
   },
   kpiLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748B',
     marginTop: 2,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginBottom: 8,
     paddingHorizontal: 12,
     height: 42,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   searchInput: {
     flex: 1,
     fontSize: 13,
-    color: '#0F172A',
     paddingVertical: 0,
   },
   filtersRow: {
@@ -825,18 +926,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
-  },
-  filterChipActive: {
-    backgroundColor: '#0F172A',
   },
   filterChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
   },
-  filterChipTextActive: {
-    color: '#FFFFFF',
+  platformFilterContainer: {
+    marginBottom: 10,
+  },
+  platformFilterScroll: {
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  platformFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    gap: 6,
+  },
+  platformFilterChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -844,11 +963,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOpacity: 0.03,
     shadowOffset: { width: 0, height: 2 },
@@ -857,7 +974,6 @@ const styles = StyleSheet.create({
   },
   cardSold: {
     opacity: 0.85,
-    backgroundColor: '#FAFCFF',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -886,15 +1002,15 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A',
   },
   tagRow: {
     flexDirection: 'row',
-    gap: 6,
+    flexWrap: 'wrap',
+    gap: 4,
     marginVertical: 4,
   },
   platformBadge: {
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 5,
   },
@@ -902,8 +1018,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  qtyBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  qtyBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
   statusBadge: {
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 5,
   },
@@ -918,7 +1043,6 @@ const styles = StyleSheet.create({
   },
   priceAcquired: {
     fontSize: 11,
-    color: '#64748B',
     fontWeight: '600',
   },
   priceArrow: {
@@ -927,14 +1051,12 @@ const styles = StyleSheet.create({
   },
   priceTarget: {
     fontSize: 12,
-    color: '#0F172A',
     fontWeight: '700',
   },
   cardFooter: {
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -946,12 +1068,15 @@ const styles = StyleSheet.create({
   },
   profitBadgeLabel: {
     fontSize: 11,
-    color: '#64748B',
     fontWeight: '600',
   },
   profitBadgeValue: {
     fontSize: 14,
     fontWeight: '800',
+  },
+  profitUnitText: {
+    fontSize: 10,
+    fontWeight: '500',
   },
   cardActions: {
     flexDirection: 'row',

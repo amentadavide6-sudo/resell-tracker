@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { InventoryItem, ItemStatus } from '../types';
+import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
 let dbInstance: SQLite.SQLiteDatabase | null = null;
 
@@ -17,6 +17,8 @@ function initDatabase(db: SQLite.SQLiteDatabase) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       platformId TEXT NOT NULL,
+      platforms TEXT,
+      quantity INTEGER NOT NULL DEFAULT 1,
       purchaseCost REAL NOT NULL DEFAULT 0,
       targetSellingPrice REAL NOT NULL DEFAULT 0,
       actualSellingPrice REAL,
@@ -29,6 +31,19 @@ function initDatabase(db: SQLite.SQLiteDatabase) {
       soldAt TEXT
     );
   `);
+
+  // Safe non-destructive column migrations for existing databases
+  try {
+    db.execSync('ALTER TABLE inventory ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1;');
+  } catch (_) {
+    // Column already exists
+  }
+
+  try {
+    db.execSync('ALTER TABLE inventory ADD COLUMN platforms TEXT;');
+  } catch (_) {
+    // Column already exists
+  }
 }
 
 export function getAllInventoryItems(statusFilter?: ItemStatus | 'all'): InventoryItem[] {
@@ -41,20 +56,43 @@ export function getAllInventoryItems(statusFilter?: ItemStatus | 'all'): Invento
     params = [statusFilter];
   }
 
-  const rows = db.getAllSync<InventoryItem>(query, params);
-  return rows || [];
+  const rows = db.getAllSync<any>(query, params);
+  if (!rows) return [];
+
+  return rows.map((row) => {
+    let parsedPlatforms: PlatformId[] = [row.platformId as PlatformId];
+    if (row.platforms) {
+      try {
+        parsedPlatforms = JSON.parse(row.platforms);
+      } catch {
+        parsedPlatforms = row.platforms.split(',').filter(Boolean) as PlatformId[];
+      }
+    }
+    return {
+      ...row,
+      quantity: typeof row.quantity === 'number' && row.quantity > 0 ? row.quantity : 1,
+      platforms: parsedPlatforms && parsedPlatforms.length > 0 ? parsedPlatforms : [row.platformId as PlatformId],
+    };
+  });
 }
 
 export function insertInventoryItem(item: Omit<InventoryItem, 'id'>): number {
   const db = getDatabase();
+  const platformsStr = JSON.stringify(
+    item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId]
+  );
+  const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
+
   const result = db.runSync(
     `INSERT INTO inventory (
-      title, platformId, purchaseCost, targetSellingPrice, actualSellingPrice,
+      title, platformId, platforms, quantity, purchaseCost, targetSellingPrice, actualSellingPrice,
       sellerShippingCost, packagingCost, status, photoUri, notes, createdAt, soldAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       item.title,
       item.platformId,
+      platformsStr,
+      quantity,
       item.purchaseCost,
       item.targetSellingPrice,
       item.actualSellingPrice ?? null,
@@ -73,10 +111,17 @@ export function insertInventoryItem(item: Omit<InventoryItem, 'id'>): number {
 export function updateInventoryItem(item: InventoryItem): void {
   if (!item.id) return;
   const db = getDatabase();
+  const platformsStr = JSON.stringify(
+    item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId]
+  );
+  const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
+
   db.runSync(
     `UPDATE inventory SET
       title = ?,
       platformId = ?,
+      platforms = ?,
+      quantity = ?,
       purchaseCost = ?,
       targetSellingPrice = ?,
       actualSellingPrice = ?,
@@ -90,6 +135,8 @@ export function updateInventoryItem(item: InventoryItem): void {
     [
       item.title,
       item.platformId,
+      platformsStr,
+      quantity,
       item.purchaseCost,
       item.targetSellingPrice,
       item.actualSellingPrice ?? null,
@@ -104,16 +151,74 @@ export function updateInventoryItem(item: InventoryItem): void {
   );
 }
 
-export function markItemAsSold(id: number, finalPrice: number): void {
+export function markItemAsSold(id: number, finalPrice: number, soldPlatformId?: PlatformId): void {
   const db = getDatabase();
+  if (soldPlatformId) {
+    db.runSync(
+      `UPDATE inventory SET
+        status = 'sold',
+        actualSellingPrice = ?,
+        platformId = ?,
+        soldAt = ?
+      WHERE id = ?`,
+      [finalPrice, soldPlatformId, new Date().toISOString(), id]
+    );
+  } else {
+    db.runSync(
+      `UPDATE inventory SET
+        status = 'sold',
+        actualSellingPrice = ?,
+        soldAt = ?
+      WHERE id = ?`,
+      [finalPrice, new Date().toISOString(), id]
+    );
+  }
+}
+
+export function recordPartialSale(
+  originalItem: InventoryItem,
+  soldQuantity: number,
+  unitSellingPrice: number,
+  soldPlatformId?: PlatformId
+): { remainingQuantity: number; soldItemId: number } {
+  if (!originalItem.id) throw new Error('Articolo non valido per la vendita parziale');
+  const db = getDatabase();
+  const currentQty = originalItem.quantity || 1;
+  const remainingQty = Math.max(0, currentQty - soldQuantity);
+
+  // 1. Decrement quantity on the original listed item
   db.runSync(
-    `UPDATE inventory SET
-      status = 'sold',
-      actualSellingPrice = ?,
-      soldAt = ?
-    WHERE id = ?`,
-    [finalPrice, new Date().toISOString(), id]
+    `UPDATE inventory SET quantity = ? WHERE id = ?`,
+    [remainingQty, originalItem.id]
   );
+
+  // 2. Insert new record for the sold units
+  const soldPlatform = soldPlatformId || originalItem.platformId;
+  const platformsStr = JSON.stringify([soldPlatform]);
+  const soldRow = db.runSync(
+    `INSERT INTO inventory (
+      title, platformId, platforms, quantity, purchaseCost, targetSellingPrice, actualSellingPrice,
+      sellerShippingCost, packagingCost, status, photoUri, notes, createdAt, soldAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      originalItem.title,
+      soldPlatform,
+      platformsStr,
+      soldQuantity,
+      originalItem.purchaseCost,
+      originalItem.targetSellingPrice,
+      unitSellingPrice,
+      originalItem.sellerShippingCost,
+      originalItem.packagingCost,
+      'sold',
+      originalItem.photoUri ?? null,
+      originalItem.notes ?? null,
+      originalItem.createdAt || new Date().toISOString(),
+      new Date().toISOString(),
+    ]
+  );
+
+  return { remainingQuantity: remainingQty, soldItemId: soldRow.lastInsertRowId };
 }
 
 export function updateItemStatus(id: number, newStatus: ItemStatus): void {

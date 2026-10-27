@@ -41,7 +41,10 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const [title, setTitle] = useState(initialValues?.title || '');
-  const [platformId, setPlatformId] = useState<PlatformId>(initialValues?.platformId || 'vinted');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<PlatformId[]>([
+    initialValues?.platformId || 'vinted',
+  ]);
+  const [quantity, setQuantity] = useState<number>(1);
   const [sellingPrice, setSellingPrice] = useState(
     initialValues?.sellingPrice ? initialValues.sellingPrice.toString() : '20'
   );
@@ -53,16 +56,38 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const [status, setStatus] = useState<ItemStatus>('listed');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
-  // Live calculation of profit before saving
+  const primaryPlatform = selectedPlatforms[0] || 'vinted';
+
+  const handleTogglePlatform = (id: PlatformId) => {
+    setSelectedPlatforms((prev) => {
+      if (prev.includes(id)) {
+        if (prev.length <= 1) return prev; // Keep at least one platform selected
+        return prev.filter((p) => p !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  // Live calculation of unit profit before saving
   const liveResult = useMemo(() => {
     return calculateResellProfit({
       sellingPrice: parseFloat(sellingPrice.replace(',', '.')) || 0,
       purchaseCost: parseFloat(purchaseCost.replace(',', '.')) || 0,
       sellerShippingCost: parseFloat(sellerShippingCost.replace(',', '.')) || 0,
       packagingCost: parseFloat(packagingCost.replace(',', '.')) || 0,
-      platformId,
+      platformId: primaryPlatform,
     });
-  }, [sellingPrice, purchaseCost, sellerShippingCost, packagingCost, platformId]);
+  }, [sellingPrice, purchaseCost, sellerShippingCost, packagingCost, primaryPlatform]);
+
+  const totalPurchaseInvested = useMemo(() => {
+    const cost = parseFloat(purchaseCost.replace(',', '.')) || 0;
+    return cost * quantity;
+  }, [purchaseCost, quantity]);
+
+  const totalPotentialProfit = useMemo(() => {
+    return liveResult.netProfit * quantity;
+  }, [liveResult.netProfit, quantity]);
 
   const handlePickImage = async (useCamera: boolean) => {
     try {
@@ -113,7 +138,9 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
     const newItem: Omit<InventoryItem, 'id'> = {
       title: title.trim(),
-      platformId,
+      platformId: primaryPlatform,
+      platforms: selectedPlatforms,
+      quantity: Math.max(1, quantity),
       purchaseCost: costNum,
       targetSellingPrice: priceNum,
       sellerShippingCost: shippingNum,
@@ -143,6 +170,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
   const handleResetForm = () => {
     setTitle('');
+    setSelectedPlatforms(['vinted']);
+    setQuantity(1);
     setSellingPrice('20');
     setPurchaseCost('5');
     setSellerShippingCost('0');
@@ -221,8 +250,77 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             />
           </View>
 
-          {/* Platform Selector */}
-          <PlatformSelector selectedId={platformId} onSelect={setPlatformId} />
+          {/* Multi-Platform Selector */}
+          <PlatformSelector
+            multiSelect
+            selectedIds={selectedPlatforms}
+            onToggle={handleTogglePlatform}
+            title="PIATTAFORME ATTIVE (MULTI-SELEZIONE)"
+          />
+
+          {/* Quantity & Stock Stepper */}
+          <View style={styles.quantitySection}>
+            <View style={styles.quantityHeaderRow}>
+              <View>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>QUANTITÀ / STOCK DISPONIBILE</Text>
+                <Text style={[styles.quantitySubtitle, { color: colors.textSecondary }]}>
+                  {quantity > 1 ? `Stock di ${quantity} copie identiche dello stesso capo` : 'Capo singolo (1 pezzo)'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.stepperContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <TouchableOpacity
+                style={[styles.stepperBtn, quantity <= 1 && styles.stepperBtnDisabled]}
+                onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="remove" size={20} color={quantity <= 1 ? colors.textSecondary : colors.textPrimary} />
+              </TouchableOpacity>
+
+              <View style={styles.stepperValueContainer}>
+                <Text style={[styles.stepperValueText, { color: colors.textPrimary }]}>{quantity}</Text>
+                <Text style={[styles.stepperUnitText, { color: colors.textSecondary }]}>
+                  {quantity === 1 ? 'pezzo' : 'pezzi'}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.stepperBtn}
+                onPress={() => setQuantity((q) => q + 1)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={20} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick preset chips for quantity */}
+            <View style={styles.quickQtyRow}>
+              {[1, 2, 5, 10, 20].map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  style={[
+                    styles.quickQtyChip,
+                    { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
+                    quantity === num && { backgroundColor: '#6366F1' },
+                  ]}
+                  onPress={() => setQuantity(num)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.quickQtyChipText,
+                      { color: isDark ? '#94A3B8' : '#475569' },
+                      quantity === num && { color: '#FFFFFF', fontWeight: '800' },
+                    ]}
+                  >
+                    {num}x
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           {/* Status Selector */}
           <View style={styles.statusSection}>
@@ -249,17 +347,19 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Financial Inputs */}
           <View style={styles.financialSection}>
-            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>COSTI & PREZZI</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>COSTI & PREZZI UNITARI</Text>
 
             <CustomInput
-              label="Prezzo di Vendita Listato (€)"
+              label="Prezzo di Vendita Unitario (€)"
+              subtitle={quantity > 1 ? `Prezzo al pezzo per ciascuno dei ${quantity} capi` : undefined}
               value={sellingPrice}
               onChangeValue={setSellingPrice}
               quickAddAmounts={[5, 10, 20]}
             />
 
             <CustomInput
-              label="Costo d'Acquisto Speso (€)"
+              label="Costo d'Acquisto Unitario (€)"
+              subtitle={quantity > 1 ? `Costo pagato per singolo pezzo (Totale stock: ${formatEuro(totalPurchaseInvested)})` : undefined}
               value={purchaseCost}
               onChangeValue={setPurchaseCost}
               quickAddAmounts={[1, 5, 10]}
@@ -290,13 +390,15 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             style={[
               styles.previewProfitCard,
               {
-                backgroundColor: liveResult.netProfit > 0 ? '#ECFDF5' : '#FEF2F2',
-                borderColor: liveResult.netProfit > 0 ? '#A7F3D0' : '#FECACA',
+                backgroundColor: liveResult.netProfit > 0 ? (isDark ? '#064E3B22' : '#ECFDF5') : (isDark ? '#7F1D1D22' : '#FEF2F2'),
+                borderColor: liveResult.netProfit > 0 ? '#10B981' : '#EF4444',
               },
             ]}
           >
             <View style={styles.previewProfitRow}>
-              <Text style={styles.previewProfitLabel}>Stima Guadagno Netto:</Text>
+              <Text style={[styles.previewProfitLabel, { color: colors.textPrimary }]}>
+                {quantity > 1 ? 'Guadagno al Pezzo:' : 'Stima Guadagno Netto:'}
+              </Text>
               <Text
                 style={[
                   styles.previewProfitAmount,
@@ -306,6 +408,23 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                 {formatEuro(liveResult.netProfit)}
               </Text>
             </View>
+
+            {quantity > 1 && (
+              <View style={[styles.totalStockProfitRow, { borderTopColor: isDark ? '#334155' : '#E2E8F0' }]}>
+                <Text style={[styles.totalStockProfitLabel, { color: colors.textSecondary }]}>
+                  Guadagno Totale Stock ({quantity} pz):
+                </Text>
+                <Text
+                  style={[
+                    styles.totalStockProfitAmount,
+                    { color: totalPotentialProfit > 0 ? '#10B981' : '#EF4444' },
+                  ]}
+                >
+                  {formatEuro(totalPotentialProfit)}
+                </Text>
+              </View>
+            )}
+
             <Text style={styles.previewProfitSub}>
               Margine: {liveResult.marginPercent}% | ROI: {liveResult.roiPercent}%
             </Text>
@@ -313,7 +432,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Bottom Save Action */}
           <TouchableOpacity style={styles.bottomSaveBtn} onPress={handleSave} activeOpacity={0.8}>
-            <Text style={styles.bottomSaveBtnText}>Conferma e Salva nell'Inventario</Text>
+            <Text style={styles.bottomSaveBtnText}>
+              {quantity > 1
+                ? `Conferma e Salva Stock (${quantity} pz)`
+                : "Conferma e Salva nell'Inventario"}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -324,7 +447,6 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -333,14 +455,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0F172A',
   },
   closeBtn: {
     padding: 6,
@@ -415,6 +534,64 @@ const styles = StyleSheet.create({
   inputCard: {
     paddingHorizontal: 16,
   },
+  quantitySection: {
+    paddingHorizontal: 16,
+    marginVertical: 8,
+  },
+  quantityHeaderRow: {
+    marginBottom: 8,
+  },
+  quantitySubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 6,
+  },
+  stepperBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  stepperBtnDisabled: {
+    opacity: 0.3,
+  },
+  stepperValueContainer: {
+    alignItems: 'center',
+  },
+  stepperValueText: {
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  stepperUnitText: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  quickQtyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  quickQtyChip: {
+    flex: 1,
+    paddingVertical: 7,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickQtyChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
   statusSection: {
     paddingHorizontal: 16,
     marginVertical: 6,
@@ -422,13 +599,11 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#64748B',
     letterSpacing: 0.8,
     marginBottom: 6,
   },
   statusTabs: {
     flexDirection: 'row',
-    backgroundColor: '#E2E8F0',
     borderRadius: 10,
     padding: 3,
     gap: 4,
@@ -439,21 +614,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 8,
   },
-  statusTabActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
   statusTabText: {
     fontSize: 13,
     fontWeight: '600',
     color: '#64748B',
-  },
-  statusTabTextActive: {
-    color: '#0F172A',
-    fontWeight: '700',
   },
   financialSection: {
     paddingHorizontal: 16,
@@ -481,11 +645,26 @@ const styles = StyleSheet.create({
   previewProfitLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#334155',
   },
   previewProfitAmount: {
     fontSize: 22,
     fontWeight: '900',
+  },
+  totalStockProfitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+  },
+  totalStockProfitLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  totalStockProfitAmount: {
+    fontSize: 16,
+    fontWeight: '800',
   },
   previewProfitSub: {
     fontSize: 12,

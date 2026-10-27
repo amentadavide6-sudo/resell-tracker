@@ -1,35 +1,71 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PLATFORMS } from '../constants/platforms';
 import { PlatformId } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
 interface PlatformSelectorProps {
-  selectedId: PlatformId;
-  onSelect: (id: PlatformId) => void;
+  selectedId?: PlatformId;
+  onSelect?: (id: PlatformId) => void;
+  multiSelect?: boolean;
+  selectedIds?: PlatformId[];
+  onToggle?: (id: PlatformId) => void;
+  title?: string;
 }
 
 export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
   selectedId,
   onSelect,
+  multiSelect = false,
+  selectedIds = [],
+  onToggle,
+  title,
 }) => {
   const { colors, isDark } = useTheme();
 
+  const handlePress = (id: PlatformId) => {
+    if (multiSelect && onToggle) {
+      onToggle(id);
+    } else if (onSelect) {
+      onSelect(id);
+    }
+  };
+
+  const defaultTitle = multiSelect
+    ? 'PIATTAFORME ATTIVE (MULTI-SELEZIONE)'
+    : 'SELEZIONA PIATTAFORMA';
+
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>SELEZIONA PIATTAFORMA</Text>
+      <View style={styles.headerTitleRow}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          {title || defaultTitle}
+        </Text>
+        {multiSelect && selectedIds.length > 1 && (
+          <View style={[styles.multiCountBadge, { backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF' }]}>
+            <Text style={[styles.multiCountText, { color: '#6366F1' }]}>
+              {selectedIds.length} selezionate
+            </Text>
+          </View>
+        )}
+      </View>
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {PLATFORMS.map((platform) => {
-          const isSelected = platform.id === selectedId;
+          const isSelected = multiSelect
+            ? selectedIds.includes(platform.id)
+            : platform.id === selectedId;
+
           return (
             <TouchableOpacity
               key={platform.id}
               activeOpacity={0.7}
-              onPress={() => onSelect(platform.id)}
+              onPress={() => handlePress(platform.id)}
               style={[
                 styles.card,
                 {
@@ -62,6 +98,14 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
                 >
                   {platform.name}
                 </Text>
+                {multiSelect && isSelected && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={16}
+                    color={platform.color}
+                    style={{ marginLeft: 'auto' }}
+                  />
+                )}
               </View>
 
               <View
@@ -86,12 +130,26 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 8,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
   label: {
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.8,
-    marginBottom: 8,
-    paddingHorizontal: 16,
+  },
+  multiCountBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  multiCountText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   scrollContent: {
     paddingHorizontal: 12,

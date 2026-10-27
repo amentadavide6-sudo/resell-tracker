@@ -8,7 +8,10 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
   try {
     const isAvailable = await Sharing.isAvailableAsync();
     if (!isAvailable) {
-      return { success: false, message: 'La condivisione file non è supportata su questo dispositivo.' };
+      return {
+        success: false,
+        message: 'La condivisione file non è supportata su questo dispositivo.',
+      };
     }
 
     const items = getAllInventoryItems('all');
@@ -16,7 +19,6 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
       return { success: false, message: 'Non ci sono articoli nell\'inventario da esportare.' };
     }
 
-    // CSV content initialization without BOM to prevent ï»¿ artifact
     let csvContent = '';
 
     // Headers with semicolon delimiter (European Excel standard)
@@ -25,13 +27,15 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
       'Data Inserimento',
       'Data Vendita',
       'Titolo Articolo',
-      'Piattaforma',
+      'Piattaforme',
+      'Quantità',
       'Stato',
-      'Prezzo Acquisto (€)',
-      'Prezzo Vendita (€)',
-      'Commissione Piattaforma (€)',
-      'Spedizione & Imballo (€)',
-      'Guadagno Netto (€)',
+      'Prezzo Acquisto Unitario (€)',
+      'Prezzo Vendita Unitario (€)',
+      'Totale Ricavo (€)',
+      'Commissioni Piattaforma Totali (€)',
+      'Spese Spedizione & Imballo (€)',
+      'Guadagno Netto Totale (€)',
       'Margine (%)',
       'ROI (%)',
       'Note',
@@ -41,7 +45,13 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
 
     // Rows
     items.forEach((item) => {
-      const platform = PLATFORMS.find((p) => p.id === item.platformId) || PLATFORMS[0];
+      const activePlatforms =
+        item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId];
+      const platformNames = activePlatforms
+        .map((pid) => PLATFORMS.find((p) => p.id === pid)?.name || pid)
+        .join(', ');
+
+      const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
       const sellingPrice =
         item.status === 'sold' && item.actualSellingPrice
           ? item.actualSellingPrice
@@ -63,12 +73,18 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
 
       const formatDecimal = (num: number) => num.toFixed(2).replace('.', ',');
 
+      const totalRevenue = sellingPrice * qty;
+      const totalFees = calc.totalSellerFees * qty;
+      const totalShippingPkg = (item.sellerShippingCost + item.packagingCost) * qty;
+      const totalNetProfit = calc.netProfit * qty;
+
       const row = [
         sanitize(item.id),
         sanitize(item.createdAt ? item.createdAt.slice(0, 10) : ''),
         sanitize(item.soldAt ? item.soldAt.slice(0, 10) : ''),
         sanitize(item.title),
-        sanitize(platform.name),
+        sanitize(platformNames),
+        sanitize(qty),
         sanitize(
           item.status === 'sold'
             ? 'Venduto'
@@ -78,9 +94,10 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
         ),
         sanitize(formatDecimal(item.purchaseCost)),
         sanitize(formatDecimal(sellingPrice)),
-        sanitize(formatDecimal(calc.totalSellerFees)),
-        sanitize(formatDecimal(item.sellerShippingCost + item.packagingCost)),
-        sanitize(formatDecimal(calc.netProfit)),
+        sanitize(formatDecimal(totalRevenue)),
+        sanitize(formatDecimal(totalFees)),
+        sanitize(formatDecimal(totalShippingPkg)),
+        sanitize(formatDecimal(totalNetProfit)),
         sanitize(formatDecimal(calc.marginPercent)),
         sanitize(formatDecimal(calc.roiPercent)),
         sanitize(item.notes || ''),
@@ -100,7 +117,7 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
 
     await Sharing.shareAsync(file.uri, {
       mimeType: 'text/csv',
-      dialogTitle: 'Apri o Condividi Registro Vendite (Excel / Fogli)',
+      dialogTitle: 'Esporta Registro Fiscale CSV',
       UTI: 'public.comma-separated-values-text',
     });
 
