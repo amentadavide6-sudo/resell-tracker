@@ -13,6 +13,7 @@ import { OnboardingModal } from './src/components/OnboardingModal';
 import { AdBanner } from './src/components/AdBanner';
 import { insertInventoryItem } from './src/services/db';
 import { hasSeenOnboarding } from './src/services/onboarding';
+import { canAddMoreItems } from './src/services/proManager';
 import { PlatformId } from './src/types';
 
 type Tab = 'calculator' | 'inventory' | 'stats' | 'settings';
@@ -32,6 +33,21 @@ function MainApp() {
     platformId: PlatformId;
   }) => {
     try {
+      if (!canAddMoreItems()) {
+        Alert.alert(
+          'Limite Versione Free Raggiunto',
+          'Hai raggiunto il limite di 15 articoli della versione gratuita. Passa a ResellTracker Pro per salvare capi illimitati!',
+          [
+            { text: 'Più tardi', style: 'cancel' },
+            {
+              text: 'Passa a Pro',
+              onPress: () => setProModalVisible(true),
+            },
+          ]
+        );
+        return;
+      }
+
       insertInventoryItem({
         title: itemData.title,
         platformId: itemData.platformId,
@@ -81,6 +97,7 @@ function MainApp() {
           <StatsScreen
             key={`stats-${inventoryRefreshKey}`}
             onNavigateToInventory={() => setActiveTab('inventory')}
+            onOpenProModal={() => setProModalVisible(true)}
           />
         )}
         {activeTab === 'settings' && (

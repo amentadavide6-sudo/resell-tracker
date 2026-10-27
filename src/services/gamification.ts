@@ -113,3 +113,20 @@ export function addXP(
     };
   }
 }
+
+export function deductXP(amount: number): number {
+  try {
+    const currentXP = getUserXP();
+    const newXP = Math.max(0, currentXP - amount);
+
+    const db = getDatabase();
+    db.runSync(
+      `INSERT OR REPLACE INTO user_settings (key, value) VALUES ('user_xp', ?)`,
+      [newXP.toString()]
+    );
+    return newXP;
+  } catch (err) {
+    console.error('Error deducting XP:', err);
+    return 0;
+  }
+}

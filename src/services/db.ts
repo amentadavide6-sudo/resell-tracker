@@ -128,3 +128,14 @@ export function deleteInventoryItem(id: number): void {
   const db = getDatabase();
   db.runSync(`DELETE FROM inventory WHERE id = ?`, [id]);
 }
+
+export function getTotalInventoryCount(): number {
+  try {
+    const db = getDatabase();
+    const row = db.getFirstSync<{ count: number }>('SELECT COUNT(*) as count FROM inventory');
+    return row ? row.count : 0;
+  } catch (err) {
+    console.error('Error getting total inventory count:', err);
+    return 0;
+  }
+}

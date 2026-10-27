@@ -18,11 +18,12 @@ import {
   deleteInventoryItem,
   markItemAsSold,
   updateItemStatus,
+  getTotalInventoryCount,
 } from '../services/db';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
 import { canAddMoreItems, isProUser, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
-import { getUserXP, getLevelInfo } from '../services/gamification';
+import { getUserXP, getLevelInfo, deductXP, XP_REWARDS } from '../services/gamification';
 import { useTheme } from '../context/ThemeContext';
 import { InventoryItem, ItemStatus } from '../types';
 
@@ -30,6 +31,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [totalDbCount, setTotalDbCount] = useState<number>(0);
   const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -43,6 +45,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     try {
       const data = getAllInventoryItems(activeFilter);
       setItems(data);
+      setTotalDbCount(getTotalInventoryCount());
       setUserXP(getUserXP());
     } catch (e) {
       console.error(e);
@@ -89,30 +92,66 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     };
   }, [items]);
 
-  const handleDelete = (id: number, title: string) => {
-    Alert.alert(
-      'Elimina Articolo',
-      `Vuoi davvero eliminare "${title}" dall'inventario?`,
-      [
-        { text: 'Annulla', style: 'cancel' },
-        {
-          text: 'Elimina',
-          style: 'destructive',
-          onPress: () => {
-            deleteInventoryItem(id);
-            loadData();
+  const handleDelete = (item: InventoryItem) => {
+    if (!item.id) return;
+
+    if (item.status === 'sold') {
+      const calc = calculateResellProfit({
+        sellingPrice: item.actualSellingPrice || item.targetSellingPrice,
+        purchaseCost: item.purchaseCost,
+        sellerShippingCost: item.sellerShippingCost,
+        packagingCost: item.packagingCost,
+        platformId: item.platformId,
+      });
+      const xpDeduct = isPro ? 200 : 100;
+
+      Alert.alert(
+        'Elimina Capo Venduto',
+        `Attenzione: eliminando questo capo venduto rimuoverai anche il relativo profitto (+${formatEuro(calc.netProfit)}) dalle statistiche, dal registro vendite e perderai ${xpDeduct} XP.\n\nPassa a ResellTracker Pro per avere slot illimitati senza dover eliminare lo storico delle tue vendite!`,
+        [
+          {
+            text: 'Passa a Pro',
+            onPress: () => {
+              if (onOpenProModal) onOpenProModal();
+            },
           },
-        },
-      ]
-    );
+          { text: 'Annulla', style: 'cancel' },
+          {
+            text: 'Elimina comunque',
+            style: 'destructive',
+            onPress: () => {
+              deleteInventoryItem(item.id!);
+              deductXP(xpDeduct);
+              loadData();
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Elimina Articolo',
+        `Vuoi davvero eliminare "${item.title}" dall'inventario? Perderai ${XP_REWARDS.ITEM_ADDED} XP.`,
+        [
+          { text: 'Annulla', style: 'cancel' },
+          {
+            text: 'Elimina',
+            style: 'destructive',
+            onPress: () => {
+              deleteInventoryItem(item.id!);
+              deductXP(XP_REWARDS.ITEM_ADDED);
+              loadData();
+            },
+          },
+        ]
+      );
+    }
   };
 
   const handleOpenAddModal = () => {
-    const totalCount = items.length;
-    if (!canAddMoreItems(totalCount)) {
+    if (!canAddMoreItems(totalDbCount)) {
       Alert.alert(
         'Limite Versione Free Raggiunto',
-        `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita. Passa a ResellTracker Pro a 3,49 € una tantum per sbloccare l'inventario illimitato!`,
+        `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita. Passa a ResellTracker Pro per sbloccare l'inventario illimitato!`,
         [
           { text: 'Più tardi', style: 'cancel' },
           {
@@ -228,7 +267,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             {item.id && (
               <TouchableOpacity
                 style={styles.deleteActionBtn}
-                onPress={() => handleDelete(item.id!, item.title)}
+                onPress={() => handleDelete(item)}
                 activeOpacity={0.7}
               >
                 <Ionicons name="trash-outline" size={16} color="#94A3B8" />
@@ -258,6 +297,107 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
           <Text style={styles.addBtnText}>Aggiungi</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Slot Counter & Pro Status Badge (Effetto Zeigarnik) */}
+      {!isPro ? (
+        <TouchableOpacity
+          style={[
+            styles.slotCard,
+            {
+              backgroundColor:
+                totalDbCount >= 15
+                  ? (isDark ? '#450A0A' : '#FEF2F2')
+                  : totalDbCount >= 13
+                  ? (isDark ? '#451A03' : '#FFFBEB')
+                  : (isDark ? '#06281E' : '#ECFDF5'),
+              borderColor:
+                totalDbCount >= 15
+                  ? (isDark ? '#DC2626' : '#FECACA')
+                  : totalDbCount >= 13
+                  ? (isDark ? '#D97706' : '#FDE68A')
+                  : (isDark ? '#059669' : '#A7F3D0'),
+            },
+          ]}
+          onPress={() => {
+            if (onOpenProModal) onOpenProModal();
+          }}
+          activeOpacity={0.8}
+        >
+          <View style={styles.slotRow}>
+            <View style={styles.slotLeft}>
+              <Ionicons
+                name={totalDbCount >= 15 ? 'lock-closed' : totalDbCount >= 13 ? 'alert-circle' : 'cube-outline'}
+                size={16}
+                color={
+                  totalDbCount >= 15
+                    ? '#EF4444'
+                    : totalDbCount >= 13
+                    ? '#F59E0B'
+                    : '#10B981'
+                }
+              />
+              <Text
+                style={[
+                  styles.slotText,
+                  {
+                    color:
+                      totalDbCount >= 15
+                        ? (isDark ? '#F87171' : '#DC2626')
+                        : totalDbCount >= 13
+                        ? (isDark ? '#FBBF24' : '#D97706')
+                        : (isDark ? '#34D399' : '#059669'),
+                  },
+                ]}
+              >
+                {totalDbCount >= 15
+                  ? `${totalDbCount} / ${FREE_TIER_ITEM_LIMIT} Capi • Limite Raggiunto!`
+                  : totalDbCount >= 13
+                  ? `${totalDbCount} / ${FREE_TIER_ITEM_LIMIT} Capi • Spazio quasi esaurito`
+                  : `${totalDbCount} / ${FREE_TIER_ITEM_LIMIT} Capi (Piano Free)`}
+              </Text>
+            </View>
+
+            <View style={styles.slotUpgradeBtn}>
+              <Text style={styles.slotUpgradeText}>
+                {totalDbCount >= 13 ? 'Passa a Pro ⚡' : 'Sblocca Pro'}
+              </Text>
+              <Ionicons name="chevron-forward" size={12} color="#6366F1" />
+            </View>
+          </View>
+
+          {/* Micro Progress Track */}
+          <View style={[styles.slotProgressTrack, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
+            <View
+              style={[
+                styles.slotProgressFill,
+                {
+                  width: `${Math.min(100, Math.round((totalDbCount / FREE_TIER_ITEM_LIMIT) * 100))}%`,
+                  backgroundColor:
+                    totalDbCount >= 15
+                      ? '#EF4444'
+                      : totalDbCount >= 13
+                      ? '#F59E0B'
+                      : '#10B981',
+                },
+              ]}
+            />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.slotCardPro, { backgroundColor: isDark ? '#1E1B4B' : '#FEF3C7', borderColor: '#F59E0B' }]}>
+          <View style={styles.slotRow}>
+            <View style={styles.slotLeft}>
+              <Ionicons name="sparkles" size={16} color="#F59E0B" />
+              <Text style={styles.slotProText}>
+                ResellTracker VIP Pro • Capi Illimitati ✨
+              </Text>
+            </View>
+            <View style={styles.slotProBadge}>
+              <Text style={styles.slotProBadgeText}>ILLIMITATO</Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Reseller XP & Level Pill */}
       <View style={[styles.levelCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
@@ -447,6 +587,78 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 10,
     gap: 4,
+  },
+  slotCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  slotCardPro: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  slotRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  slotLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  slotText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  slotProText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#D97706',
+  },
+  slotProBadge: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  slotProBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  slotUpgradeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  slotUpgradeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6366F1',
+  },
+  slotProgressTrack: {
+    height: 4,
+    borderRadius: 2,
+    marginTop: 6,
+    overflow: 'hidden',
+  },
+  slotProgressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   levelCard: {
     marginHorizontal: 16,

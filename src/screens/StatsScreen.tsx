@@ -14,14 +14,22 @@ import { computeAnalytics, AnalyticsSummary } from '../services/analytics';
 import { exportInventoryToCSV } from '../services/csvExport';
 import { formatEuro } from '../services/feeCalculator';
 import { addXP, XP_REWARDS } from '../services/gamification';
+import { isProUser, getCSVExportCount, incrementCSVExportCount } from '../services/proManager';
 
-export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
+export const StatsScreen: React.FC<{
+  onNavigateToInventory?: () => void;
+  onOpenProModal?: () => void;
+}> = ({
   onNavigateToInventory,
+  onOpenProModal,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  const isPro = isProUser();
+  const exportCount = getCSVExportCount();
 
   const loadStats = useCallback(() => {
     try {
@@ -37,11 +45,36 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
   }, [loadStats]);
 
   const handleExportCSV = async () => {
+    if (!isPro && exportCount >= 1) {
+      Alert.alert(
+        'Esportazione Fiscale Excel & CSV',
+        'Hai già usufruito del tuo 1° export dimostrativo gratuito.\n\nPassa a ResellTracker Pro per esportare registri contabili completi Excel e CSV illimitati in qualsiasi momento!',
+        [
+          { text: 'Annulla', style: 'cancel' },
+          {
+            text: 'Passa a Pro ⚡',
+            onPress: () => {
+              if (onOpenProModal) onOpenProModal();
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     setIsExporting(true);
     const result = await exportInventoryToCSV();
     setIsExporting(false);
+
     if (result.success) {
       addXP(XP_REWARDS.EXPORT_CSV, 'Esportazione CSV');
+      if (!isPro && exportCount === 0) {
+        incrementCSVExportCount();
+        Alert.alert(
+          '🎉 1° Export Gratuito Completato!',
+          'Il registro Excel/CSV è stato generato e condiviso con successo.\n\nQuesto primo export completo era in omaggio: i successivi export sono illimitati con il piano ResellTracker Pro.'
+        );
+      }
     } else if (result.message !== 'Nessun file selezionato.') {
       Alert.alert('Esportazione Registro', result.message);
     }
@@ -140,6 +173,17 @@ export const StatsScreen: React.FC<{ onNavigateToInventory?: () => void }> = ({
             <View style={styles.exportTitleRow}>
               <Ionicons name="document-text-outline" size={20} color="#059669" />
               <Text style={styles.exportTitle}>Registro Vendite (Excel / CSV)</Text>
+              {!isPro ? (
+                <View style={[styles.exportBadge, exportCount === 0 ? styles.exportBadgeFree : styles.exportBadgePro]}>
+                  <Text style={[styles.exportBadgeText, exportCount === 0 ? styles.exportBadgeTextFree : styles.exportBadgeTextPro]}>
+                    {exportCount === 0 ? '1 Free' : 'Pro ⚡'}
+                  </Text>
+                </View>
+              ) : (
+                <View style={[styles.exportBadge, styles.exportBadgeVip]}>
+                  <Text style={[styles.exportBadgeText, styles.exportBadgeTextVip]}>VIP ✨</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.exportSub}>
               Scarica il foglio di calcolo completo con date, commissioni e guadagni netti, pronto per la contabilità o per Google Fogli.
@@ -423,6 +467,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     color: '#166534',
+  },
+  exportBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+    marginLeft: 4,
+  },
+  exportBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  exportBadgeFree: {
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  exportBadgeTextFree: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#15803D',
+  },
+  exportBadgePro: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  exportBadgeTextPro: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#B45309',
+  },
+  exportBadgeVip: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  exportBadgeTextVip: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#92400E',
   },
   exportSub: {
     fontSize: 11,

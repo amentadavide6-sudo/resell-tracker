@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,12 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { setProUser } from '../services/proManager';
-import { purchaseProProduct, restoreProPurchases } from '../services/purchaseService';
+import {
+  purchaseProProduct,
+  restoreProPurchases,
+  PurchasePlanId,
+  PLAN_CONFIGS,
+} from '../services/purchaseService';
 import { useTheme } from '../context/ThemeContext';
 
 interface ProModalProps {
@@ -25,16 +29,19 @@ export const ProModal: React.FC<ProModalProps> = ({
   onProUnlocked,
 }) => {
   const { colors, isDark } = useTheme();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PurchasePlanId>('lifetime');
 
   const handlePurchase = async () => {
     try {
       setLoading(true);
-      const success = await purchaseProProduct();
+      const success = await purchaseProProduct(selectedPlan);
       if (success) {
         Alert.alert(
           '🎉 Benvenuto in ResellTracker Pro!',
-          'Hai sbloccato con successo tutte le funzionalità avanzate senza limiti.',
+          selectedPlan === 'lifetime'
+            ? 'Hai sbloccato con successo l\'accesso Pro a vita senza limiti né canoni!'
+            : 'Il tuo abbonamento mensile Pro è ora attivo.',
           [
             {
               text: 'Inizia subito',
@@ -56,20 +63,29 @@ export const ProModal: React.FC<ProModalProps> = ({
       setLoading(true);
       const restored = await restoreProPurchases();
       if (restored) {
-        Alert.alert('Acquisto Ripristinato', 'Il tuo acquisto Pro è stato verificato e ripristinato con successo.');
+        Alert.alert(
+          'Acquisto Ripristinato',
+          'Il tuo acquisto Pro è stato verificato e ripristinato con successo.'
+        );
         onProUnlocked();
         onClose();
       } else {
-        Alert.alert('Nessun Acquisto Trovato', 'Non sono stati trovati acquisti precedenti associati a questo account Google.');
+        Alert.alert(
+          'Nessun Acquisto Trovato',
+          'Non sono stati trovati acquisti precedenti associati a questo account Google.'
+        );
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const lifetimeConfig = PLAN_CONFIGS.lifetime;
+  const monthlyConfig = PLAN_CONFIGS.monthly;
+
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <View style={[styles.root, { backgroundColor: colors.card }]}>
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
         {/* Top Close button */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -85,102 +101,193 @@ export const ProModal: React.FC<ProModalProps> = ({
           {/* Header Hero */}
           <View style={styles.heroSection}>
             <View style={styles.proBadge}>
-              <Ionicons name="sparkles" size={16} color="#F59E0B" />
-              <Text style={styles.proBadgeText}>ACCESSO A VITA</Text>
+              <Ionicons name="sparkles" size={15} color="#D97706" />
+              <Text style={styles.proBadgeText}>OFFERTA LANCIO FONDATORI</Text>
             </View>
             <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>ResellTracker Pro</Text>
             <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
-              Porta il tuo business dell'usato a un livello professionale, senza canoni mensili.
+              Il toolkit completo per vendere con profitto su Vinted, eBay, Wallapop e Subito.
             </Text>
           </View>
 
-          {/* Pricing Card */}
-          <View style={styles.priceCard}>
-            <View style={styles.priceTagRow}>
-              <Text style={styles.priceAmount}>3,49 €</Text>
-              <View style={styles.oneTimeTag}>
-                <Text style={styles.oneTimeTagText}>UNA TANTUM</Text>
+          {/* Plan Selection Cards */}
+          <View style={styles.plansContainer}>
+            {/* 1. Lifetime Card (Recommended) */}
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                selectedPlan === 'lifetime' && styles.planCardSelected,
+                selectedPlan === 'lifetime' && (isDark ? { backgroundColor: '#1E1B4B' } : { backgroundColor: '#EEF2FF' }),
+              ]}
+              onPress={() => setSelectedPlan('lifetime')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.planBadgeRow}>
+                <View style={styles.highlightBadge}>
+                  <Text style={styles.highlightBadgeText}>{lifetimeConfig.badge}</Text>
+                </View>
+                <Ionicons
+                  name={selectedPlan === 'lifetime' ? 'radio-button-on' : 'radio-button-off'}
+                  size={20}
+                  color={selectedPlan === 'lifetime' ? '#6366F1' : colors.textMuted}
+                />
               </View>
-            </View>
-            <Text style={styles.priceNote}>Paghi una sola volta, tuo per sempre. Nessun abbonamento ricorrente.</Text>
+
+              <View style={styles.planMainRow}>
+                <View>
+                  <Text style={[styles.planTitle, { color: colors.textPrimary }]}>
+                    {lifetimeConfig.title}
+                  </Text>
+                  <Text style={[styles.planSubtitle, { color: colors.textSecondary }]}>
+                    {lifetimeConfig.description}
+                  </Text>
+                </View>
+
+                <View style={styles.planPriceCol}>
+                  <View style={styles.strikethroughRow}>
+                    <Text style={styles.strikethroughPrice}>{lifetimeConfig.originalPrice}</Text>
+                    <View style={styles.discountTag}>
+                      <Text style={styles.discountTagText}>{lifetimeConfig.savingsPercent}</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.planPriceAmount, { color: colors.textPrimary }]}>
+                    {lifetimeConfig.price}
+                  </Text>
+                  <Text style={styles.planPeriodText}>{lifetimeConfig.billingPeriod}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {/* 2. Monthly Card */}
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                selectedPlan === 'monthly' && styles.planCardSelected,
+                selectedPlan === 'monthly' && (isDark ? { backgroundColor: '#1E1B4B' } : { backgroundColor: '#EEF2FF' }),
+              ]}
+              onPress={() => setSelectedPlan('monthly')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.planBadgeRow}>
+                <View style={[styles.highlightBadge, { backgroundColor: isDark ? '#374151' : '#F1F5F9' }]}>
+                  <Text style={[styles.highlightBadgeText, { color: colors.textSecondary }]}>
+                    {monthlyConfig.badge}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={selectedPlan === 'monthly' ? 'radio-button-on' : 'radio-button-off'}
+                  size={20}
+                  color={selectedPlan === 'monthly' ? '#6366F1' : colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.planMainRow}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={[styles.planTitle, { color: colors.textPrimary }]}>
+                    {monthlyConfig.title}
+                  </Text>
+                  <Text style={[styles.planSubtitle, { color: colors.textSecondary }]}>
+                    {monthlyConfig.description}
+                  </Text>
+                </View>
+
+                <View style={styles.planPriceCol}>
+                  <Text style={[styles.planPriceAmount, { color: colors.textPrimary }]}>
+                    {monthlyConfig.price}
+                  </Text>
+                  <Text style={styles.planPeriodText}>{monthlyConfig.billingPeriod}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           </View>
 
-          {/* Features List */}
-          <View style={styles.featuresList}>
+          {/* Features Comparison Checklist */}
+          <View style={[styles.featuresCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <Text style={[styles.featuresHeader, { color: colors.textPrimary }]}>
+              Cosa include ResellTracker Pro:
+            </Text>
+
             <View style={styles.featureItem}>
               <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF' }]}>
-                <Ionicons name="infinite" size={20} color="#6366F1" />
+                <Ionicons name="infinite" size={18} color="#6366F1" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Inventario Capi Illimitato</Text>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
+                  Inventario Capi Illimitato
+                </Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  La versione Free è limitata a 15 capi contemporanei. Con Pro carichi tutti i capi che vuoi.
+                  Sblocca gli slot infiniti. La versione Free è limitata a 15 capi massimi salvati.
                 </Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
               <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#064E3B' : '#ECFDF5' }]}>
-                <Ionicons name="document-text" size={20} color="#10B981" />
+                <Ionicons name="document-text" size={18} color="#10B981" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Esportazione Fiscale Excel & CSV</Text>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
+                  Esportazione Registro Excel & CSV Illimitata
+                </Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Scarica in qualsiasi momento il registro contabile completo delle tue vendite apribile su Excel.
+                  Genera con 1 tap il foglio di calcolo completo con tutti i profitti, tasse e margini per Excel e Fogli Google.
                 </Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
               <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#451A03' : '#FEF3C7' }]}>
-                <Ionicons name="shield-checkmark" size={20} color="#F59E0B" />
+                <Ionicons name="shield-checkmark" size={18} color="#F59E0B" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Zero Pubblicità (Ad-Free)</Text>
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
+                  Zero Pubblicità (100% Ad-Free)
+                </Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Rimozione istantanea e definitiva di qualsiasi banner o interruzione pubblicitaria.
+                  Rimozione immediata di qualsiasi banner promozionale e interfaccia ultra rapida.
                 </Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
               <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#78350F' : '#FEF3C7' }]}>
-                <Ionicons name="trophy" size={20} color="#F59E0B" />
+                <Ionicons name="trophy" size={18} color="#F59E0B" />
               </View>
               <View style={styles.featureTextWrap}>
-                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>2x XP Booster & Livello Rapido ⚡</Text>
-                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Guadagni doppi punti XP per ogni vendita o articolo per scalare rapidamente fino al titolo di Top Seller!
+                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
+                  2x XP Booster Permanente ⚡
                 </Text>
-              </View>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={[styles.featureIconWrap, { backgroundColor: isDark ? '#3B0764' : '#F3E8FF' }]}>
-                <Ionicons name="flash" size={20} color="#A855F7" />
-              </View>
-              <View style={styles.featureTextWrap}>
-                <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Supporto Prioritario & Nuovi Mercatini</Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Accesso prioritario per richiedere l'integrazione di nuove piattaforme e assistenza rapida.
+                  Punti doppi per ogni articolo registrato o venduto, per raggiungere il badge Top Seller in metà tempo!
                 </Text>
               </View>
             </View>
           </View>
 
           {/* Action CTA */}
-          <TouchableOpacity style={styles.buyBtn} onPress={handlePurchase} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.buyBtn}
+            onPress={handlePurchase}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
             <Ionicons name="sparkles" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.buyBtnText}>Sblocca ResellTracker Pro a 3,49 €</Text>
+            <Text style={styles.buyBtnText}>
+              {selectedPlan === 'lifetime'
+                ? `Sblocca Accesso a Vita a ${lifetimeConfig.price}`
+                : `Attiva Abbonamento a ${monthlyConfig.price} / mese`}
+            </Text>
           </TouchableOpacity>
 
           {/* Restore link */}
-          <TouchableOpacity style={styles.restoreBtn} onPress={handleRestore}>
-            <Text style={styles.restoreBtnText}>Hai già acquistato Pro? Ripristina acquisto</Text>
+          <TouchableOpacity style={styles.restoreBtn} onPress={handleRestore} disabled={loading}>
+            <Text style={styles.restoreBtnText}>Hai già acquistato Pro? Ripristina acquisti</Text>
           </TouchableOpacity>
 
           <Text style={styles.legalNotice}>
-            Transazione protetta e gestita direttamente da Google Play Billing.
+            Transazione protetta e gestita direttamente da Google Play.
           </Text>
         </ScrollView>
       </View>
@@ -191,12 +298,11 @@ export const ProModal: React.FC<ProModalProps> = ({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   topBar: {
     paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 10,
+    paddingTop: 45,
+    paddingBottom: 8,
     alignItems: 'flex-start',
   },
   closeBtn: {
@@ -211,7 +317,7 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    marginVertical: 12,
+    marginVertical: 10,
   },
   proBadge: {
     flexDirection: 'row',
@@ -220,7 +326,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
-    gap: 4,
+    gap: 5,
     borderWidth: 1,
     borderColor: '#FDE68A',
     marginBottom: 8,
@@ -232,56 +338,114 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
-    color: '#0F172A',
     letterSpacing: -0.5,
   },
   heroSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: 13,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
     marginTop: 6,
     paddingHorizontal: 10,
   },
-  priceCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
+  plansContainer: {
+    gap: 12,
     marginVertical: 14,
   },
-  priceTagRow: {
+  planCard: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+  },
+  planCardSelected: {
+    borderColor: '#6366F1',
+    borderWidth: 2,
+    shadowColor: '#6366F1',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  planBadgeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  highlightBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  highlightBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#B45309',
+    letterSpacing: 0.5,
+  },
+  planMainRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  planTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  planSubtitle: {
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 2,
+    maxWidth: 200,
+  },
+  planPriceCol: {
+    alignItems: 'flex-end',
+  },
+  strikethroughRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
+    marginBottom: 1,
   },
-  priceAmount: {
-    fontSize: 32,
+  strikethroughPrice: {
+    fontSize: 11,
+    color: '#94A3B8',
+    textDecorationLine: 'line-through',
+    fontWeight: '600',
+  },
+  discountTag: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  discountTagText: {
+    fontSize: 8,
     fontWeight: '900',
     color: '#FFFFFF',
   },
-  oneTimeTag: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  planPriceAmount: {
+    fontSize: 22,
+    fontWeight: '900',
   },
-  oneTimeTagText: {
+  planPeriodText: {
     fontSize: 10,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  priceNote: {
-    fontSize: 11,
     color: '#94A3B8',
-    textAlign: 'center',
-    marginTop: 4,
+    fontWeight: '600',
   },
-  featuresList: {
-    gap: 14,
+  featuresCard: {
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    gap: 12,
     marginVertical: 10,
+  },
+  featuresHeader: {
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 2,
   },
   featureItem: {
     flexDirection: 'row',
@@ -289,9 +453,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   featureIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -299,14 +463,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#0F172A',
   },
   featureDesc: {
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 15,
     marginTop: 2,
   },
   buyBtn: {
@@ -316,7 +478,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 18,
     shadowColor: '#6366F1',
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
@@ -341,6 +503,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#94A3B8',
     textAlign: 'center',
-    marginTop: 6,
+    marginTop: 4,
   },
 });
