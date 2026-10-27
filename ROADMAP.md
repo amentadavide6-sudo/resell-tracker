@@ -40,19 +40,44 @@ Documento operativo delle nuove funzionalità e ottimizzazioni UX pianificate du
 
 ## 💡 2. Nuove Idee a Valore Aggiunto (Crescita & Virilità)
 
-### D. "Social Proof Card" (Condividi il Guadagno con 1 Tap) 🚀
+### D. Internazionalizzazione Completa i18n (Inglese, Francese, Tedesco, Spagnolo) 🌍
+* **Perché è una miniera d'oro:**
+  - **Francia:** È il mercato #1 al mondo per Vinted (oltre 23 milioni di utenti francesi registrati!).
+  - **Germania:** Mercato immenso per Vinted.de ed eBay Kleinanzeigen con potere d'acquisto elevatissimo.
+  - **Regno Unito / USA:** Mercato anglofono globale per eBay e Depop.
+  - **Spagna:** Patria di Wallapop.
+* **Soluzione tecnica:**
+  - Architettura `src/i18n/` con dizionari tipizzati in TypeScript (`it.ts`, `en.ts`, `fr.ts`, `de.ts`, `es.ts`).
+  - Rilevamento automatico della lingua dello smartphone tramite `expo-localization`. Se il telefono è impostato in francese, l'app si apre magicamente in francese; se in tedesco, in tedesco; fallback in inglese per il resto del mondo.
+  - Traduzione delle schede di Google Play Store (titoli e descrizioni localizzate per moltiplicare i download organici europei).
+
+### E. "Social Proof Card" (Condividi il Guadagno con 1 Tap) 🚀
 * **Idea:** Quando un venditore segna un capo come "Venduto" con un buon margine (es. profitto +30 € o ROI +150%), un pulsante permette di generare una grafica attraente formato storia Instagram / TikTok / Reddit:
   > *"Acquistato a 10 € ➔ Venduto a 45 € | Guadagno Netto: +31,50 € (ROI +315%) 📈 Calcolato con ResellTracker"*
 * **Perché è micidiale:** I reseller adorano mostrare i propri affari sui social. Ogni storia condivisa porta **download organici gratuiti** di altri venditori senza spendere un centesimo in pubblicità!
 
 ---
 
-### E. Filtro Rapido per Piattaforma nell'Inventario
+### F. Gamification "Taste of Pro" (Pro Pass Temporaneo a ogni Level Up) ⚡🎁
+* **Idea:** Quando un utente Free sale di livello nel *Reseller Club* (es. da Legno a Bronzo, da Bronzo ad Argento), riceve un **Pro Pass Temporaneo** (24-48 ore di accesso Pro completo).
+* **Perché è una mossa da manuale (Product-Led Growth):**
+  - **Dopamina e Gratificazione:** Il cambio di livello non è solo un numeretto estetico, ma un premio tangibile e immediato.
+  - **Educazione alla funzione Pro:** Molti utenti non comprano il Pro perché non ne comprendono il valore reale finché non lo provano. Durante il pass possono esportare CSV illimitati, gestire capi oltre la soglia free e provare tutte le comodità avanzate.
+  - **Psicologia della "Loss Aversion" (Paura di perdere il beneficio):** Duolingo e Spotify usano esattamente questo trucco. Una volta che l'utente si è abituato al comfort del Pro, allo scadere del timer (con countdown visibile: *"⚡ Pro Pass attivo: 18h rimaste"*), la notifica di scadenza converte ad altissimo tasso verso l'abbonamento o il lifetime a 5,99 €.
+* **Taratura delle durate:**
+  - *Livello 2 (Bronzo):* **24 ore** di Pro Pass (raggiungibile nei primi 2 giorni, crea il primo shock positivo).
+  - *Livello 3 (Argento):* **24 ore** di Pro Pass.
+  - *Livello 4 (Oro I):* **48 ore** di Pro Pass.
+  - *Livello 5+ (Oro II, Platino...):* **48-72 ore** di Pro Pass.
+
+---
+
+### G. Filtro Rapido per Piattaforma nell'Inventario
 * Nella schermata *I Miei Capi*, aggiungere oltre ai filtri di stato (*In Vendita / Venduti / Bozze*) anche un filtro per piattaforma (es. *"Mostrami solo cosa ho attivo su Vinted"* o *"Cosa ho venduto su eBay"*).
 * Permette di fare l'inventario fisico dell'armadio in 2 minuti.
 
 ---
 
-### F. Preset Rapidi Spedizioni Nazionali
+### H. Preset Rapidi Spedizioni Nazionali
 * Molti venditori alle prime armi non sanno quanto costa una spedizione con Poste/InPost/BRT.
 * Inserire dei preset rapidi con 1 tap (es. *"InPost Punto Ritiro: 3,50 €"*, *"Pacco Piccolo Poste: 5,90 €"*).
