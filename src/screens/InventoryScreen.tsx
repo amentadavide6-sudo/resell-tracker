@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AddItemModal } from '../components/AddItemModal';
 import { MarkSoldModal } from '../components/MarkSoldModal';
+import { CustomAlertModal, CustomAlertConfig } from '../components/CustomAlertModal';
 import {
   getAllInventoryItems,
   deleteInventoryItem,
@@ -32,11 +33,16 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const { colors, isDark } = useTheme();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalDbCount, setTotalDbCount] = useState<number>(0);
-  const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('all');
+  const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('listed');
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [itemToSell, setItemToSell] = useState<InventoryItem | null>(null);
   const [userXP, setUserXP] = useState(0);
+  const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
   const isPro = isProUser();
   const levelInfo = useMemo(() => getLevelInfo(userXP), [userXP]);
@@ -105,19 +111,23 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       });
       const xpDeduct = isPro ? 200 : 100;
 
-      Alert.alert(
-        'Elimina Capo Venduto',
-        `Attenzione: eliminando questo capo venduto rimuoverai anche il relativo profitto (+${formatEuro(calc.netProfit)}) dalle statistiche, dal registro vendite e perderai ${xpDeduct} XP.\n\nPassa a ResellTracker Pro per avere slot illimitati senza dover eliminare lo storico delle tue vendite!`,
-        [
+      setAlertConfig({
+        visible: true,
+        title: 'Elimina Capo Venduto',
+        message: `Attenzione: eliminando questo capo venduto rimuoverai anche il relativo profitto (+${formatEuro(calc.netProfit)}) dalle statistiche, dal registro vendite e perderai ${xpDeduct} XP.\n\nPassa a Pro per archiviare capi illimitati senza perdere lo storico delle tue vendite!`,
+        icon: 'warning',
+        iconColor: '#F59E0B',
+        iconBgColor: isDark ? '#451A03' : '#FEF3C7',
+        buttons: [
           {
-            text: 'Passa a Pro',
+            text: 'Passa a Pro ⚡',
+            style: 'primary',
             onPress: () => {
               if (onOpenProModal) onOpenProModal();
             },
           },
-          { text: 'Annulla', style: 'cancel' },
           {
-            text: 'Elimina comunque',
+            text: 'Elimina comunque (perdi dati)',
             style: 'destructive',
             onPress: () => {
               deleteInventoryItem(item.id!);
@@ -125,16 +135,20 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               loadData();
             },
           },
-        ]
-      );
-    } else {
-      Alert.alert(
-        'Elimina Articolo',
-        `Vuoi davvero eliminare "${item.title}" dall'inventario? Perderai ${XP_REWARDS.ITEM_ADDED} XP.`,
-        [
           { text: 'Annulla', style: 'cancel' },
+        ],
+      });
+    } else {
+      setAlertConfig({
+        visible: true,
+        title: 'Elimina Articolo',
+        message: `Vuoi davvero eliminare "${item.title}" dall'inventario?\nPerderai ${XP_REWARDS.ITEM_ADDED} XP guadagnati per l'inserimento.`,
+        icon: 'trash',
+        iconColor: '#EF4444',
+        iconBgColor: isDark ? '#450A0A' : '#FEE2E2',
+        buttons: [
           {
-            text: 'Elimina',
+            text: 'Elimina Articolo',
             style: 'destructive',
             onPress: () => {
               deleteInventoryItem(item.id!);
@@ -142,26 +156,32 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               loadData();
             },
           },
-        ]
-      );
+          { text: 'Annulla', style: 'cancel' },
+        ],
+      });
     }
   };
 
   const handleOpenAddModal = () => {
     if (!canAddMoreItems(totalDbCount)) {
-      Alert.alert(
-        'Limite Versione Free Raggiunto',
-        `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita. Passa a ResellTracker Pro per sbloccare l'inventario illimitato!`,
-        [
-          { text: 'Più tardi', style: 'cancel' },
+      setAlertConfig({
+        visible: true,
+        title: 'Limite Piano Free Raggiunto',
+        message: `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita.\n\nPassa a ResellTracker Pro per sbloccare l'inventario capi illimitato!`,
+        icon: 'lock-closed',
+        iconColor: '#6366F1',
+        iconBgColor: isDark ? '#1E1B4B' : '#EEF2FF',
+        buttons: [
           {
-            text: 'Passa a Pro',
+            text: 'Passa a Pro ⚡',
+            style: 'primary',
             onPress: () => {
               if (onOpenProModal) onOpenProModal();
             },
           },
-        ]
-      );
+          { text: 'Più tardi', style: 'cancel' },
+        ],
+      });
       return;
     }
     setModalVisible(true);
@@ -477,7 +497,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 
       {/* Filter Tabs */}
       <View style={styles.filtersRow}>
-        {(['all', 'listed', 'sold', 'draft'] as const).map((tab) => (
+        {(['listed', 'sold', 'draft', 'all'] as const).map((tab) => (
           <TouchableOpacity
             key={tab}
             onPress={() => setActiveFilter(tab)}
@@ -542,6 +562,12 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       />
 
       {/* Mark As Sold Custom Modal */}
+      {/* Custom Modern Alert / Confirmation Modal */}
+      <CustomAlertModal
+        config={alertConfig}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
+
       <MarkSoldModal
         visible={itemToSell !== null}
         item={itemToSell}
