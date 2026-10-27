@@ -16,6 +16,7 @@ import { AddItemModal } from '../components/AddItemModal';
 import { MarkSoldModal } from '../components/MarkSoldModal';
 import { CustomAlertModal, CustomAlertConfig } from '../components/CustomAlertModal';
 import { CareerRoadmapModal } from '../components/CareerRoadmapModal';
+import { SocialProofModal } from '../components/SocialProofModal';
 import {
   getAllInventoryItems,
   deleteInventoryItem,
@@ -43,6 +44,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const [itemToSell, setItemToSell] = useState<InventoryItem | null>(null);
   const [userXP, setUserXP] = useState(0);
   const [roadmapVisible, setRoadmapVisible] = useState(false);
+  const [socialProofItem, setSocialProofItem] = useState<InventoryItem | null>(null);
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
     visible: false,
     title: '',
@@ -393,7 +395,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             {isSold && item.id && (
               <TouchableOpacity
                 style={styles.shareActionBtn}
-                onPress={() => shareSoldProfit(item, totalProfit, unitCalc.roiPercent)}
+                onPress={() => setSocialProofItem(item)}
                 activeOpacity={0.7}
               >
                 <Ionicons name="share-social-outline" size={14} color="#6366F1" />
@@ -827,6 +829,13 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
           setItemToSell(null);
           loadData();
         }}
+      />
+
+      {/* Social Proof Story Card Modal */}
+      <SocialProofModal
+        visible={socialProofItem !== null}
+        item={socialProofItem}
+        onClose={() => setSocialProofItem(null)}
       />
     </View>
   );
