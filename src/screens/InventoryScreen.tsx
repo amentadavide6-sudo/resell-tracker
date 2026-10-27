@@ -421,8 +421,12 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         </View>
       )}
 
-      {/* Reseller XP & Level Pill */}
-      <View style={[styles.levelCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+      {/* Reseller XP & Level Pill - Tap to view 10 Career Levels */}
+      <TouchableOpacity
+        style={[styles.levelCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
+        onPress={() => setRoadmapVisible(true)}
+        activeOpacity={0.7}
+      >
         <View style={styles.levelRow}>
           <View style={styles.levelInfoGroup}>
             <Text style={styles.levelBadgeEmoji}>{levelInfo.badge}</Text>
@@ -444,9 +448,15 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               </Text>
             </View>
           </View>
-          <Text style={[styles.levelXPBadge, { color: colors.primary }]}>
-            {levelInfo.currentXP} XP
-          </Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.levelXPBadge, { color: colors.primary }]}>
+              {levelInfo.currentXP} XP
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 }}>
+              <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '800' }}>Roadmap</Text>
+              <Ionicons name="chevron-forward" size={12} color={colors.primary} />
+            </View>
+          </View>
         </View>
 
         {/* Progress Bar */}
@@ -458,7 +468,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             ]}
           />
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* KPI Overview Card */}
       <View style={[styles.kpiContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>

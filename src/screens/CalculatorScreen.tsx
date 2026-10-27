@@ -103,7 +103,8 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
     <View style={[styles.root, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 16) }]}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         {/* Top Header: Left-aligned only, top-right completely empty to avoid Expo Go / camera overlaps */}
         <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 110,
+    paddingBottom: 220,
   },
   header: {
     flexDirection: 'row',

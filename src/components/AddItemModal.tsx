@@ -155,7 +155,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={[styles.keyboardContainer, { backgroundColor: colors.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.cardBorder }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 220,
   },
   photoSection: {
     padding: 16,
