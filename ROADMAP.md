@@ -72,12 +72,45 @@ Documento operativo delle nuove funzionalità e ottimizzazioni UX pianificate du
 
 ---
 
-### G. Filtro Rapido per Piattaforma nell'Inventario
+### G. Monitoraggio Fiscale Direttiva Europea DAC7 (Zero Ansia Fiscale) 🛡️
+* **Problema reale:** Dal 2024, la direttiva UE **DAC7** obbliga Vinted, eBay e Wallapop a inviare i dati all'Agenzia delle Entrate per chi supera **30 vendite** o **2.000 € di incasso lordo** in un anno. I reseller vivono nel terrore di superare inavvertitamente questo limite.
+* **Soluzione UX:**
+  - Nella schermata *Statistiche*, un box dinamico aggiornato in tempo reale:
+    > *🛡️ **Stato Segnalazione DAC7 (Anno Corrente):**  
+    > • Capi venduti: **18 / 30** (Mancano 12 vendite)  
+    > • Incasso lordo totale: **1.150 € / 2.000 €**  
+    > 🟢 **Sei sotto la soglia di segnalazione fiscale. Nessun dato inviato al fisco.***
+  - Alert visivo quando ci si avvicina (es. 25 vendite o 1.700 €).
+* **Valore commerciale:** Questa singola feature è percepita come una consulenza commercialistica gratuita e da sola giustifica l'acquisto del Pro.
+
+---
+
+### H. Gestione Multi-Quantità & Vendite Parziali (Stock Reale) 📦
+* **Problema reale:** Chi compra stock o lotti (es. 10 magliette identiche a 3 € l'una) non vuole riempire l'inventario con 10 schede uguali.
+* **Soluzione UX (Idea Utente):**
+  - Nel modale di inserimento si imposta la **Quantità** (es. `10`). Sulla scheda appare il badge `Qtà: 10`.
+  - Quando si tocca "Segna come Venduto", l'app chiede: *"Quante unità hai venduto? [1 - 10]"*.
+  - **Split intelligente:** Se vendi 4 pezzi su 10:
+    - La scheda originale in *In Vendita* scala automaticamente a `Qtà: 6`.
+    - Viene generata una voce distinta nello storico *Venduti* per le 4 unità vendute, con il calcolo perfetto del ricavo, del costo sostenuto (4 x costo unitario) e del profitto netto.
+    - Se vendi tutte le unità rimanenti, la scheda passa per intero nei *Venduti*.
+
+---
+
+### I. Notifiche Locali Intelligenti (Zero Costi Server, +40% Retention) 🔔
+* **Tecnologia:** `expo-notifications` 100% offline gestite dallo smartphone (zero server Firebase/AWS da pagare).
+* **Trigger intelligenti:**
+  - **Allarme Giacenza (Capo Fermo > 30 giorni):** *"📦 Hai 3 capi in vendita da oltre un mese. Un ribasso del 10% riattiva l'algoritmo di visibilità di Vinted!"*
+  - **Promemoria Weekend (Domenica sera):** *"📈 È terminato il weekend di vendite! Registra i tuoi profitti su ResellTracker per aggiornare le statistiche e salire di livello nel Club."*
+
+---
+
+### J. Filtro Rapido per Piattaforma nell'Inventario
 * Nella schermata *I Miei Capi*, aggiungere oltre ai filtri di stato (*In Vendita / Venduti / Bozze*) anche un filtro per piattaforma (es. *"Mostrami solo cosa ho attivo su Vinted"* o *"Cosa ho venduto su eBay"*).
 * Permette di fare l'inventario fisico dell'armadio in 2 minuti.
 
 ---
 
-### H. Preset Rapidi Spedizioni Nazionali
+### K. Preset Rapidi Spedizioni Nazionali
 * Molti venditori alle prime armi non sanno quanto costa una spedizione con Poste/InPost/BRT.
 * Inserire dei preset rapidi con 1 tap (es. *"InPost Punto Ritiro: 3,50 €"*, *"Pacco Piccolo Poste: 5,90 €"*).
