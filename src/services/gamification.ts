@@ -1,25 +1,114 @@
 import { getDatabase } from './db';
 import { isProUser } from './proManager';
 
-export interface LevelInfo {
+export interface LevelDefinition {
   levelNumber: number;
   title: string;
   badge: string;
   badgeColor: string;
   minXP: number;
   maxXP: number;
+  description: string;
+}
+
+export interface LevelInfo extends LevelDefinition {
   currentXP: number;
   progress: number; // 0.0 - 1.0
   nextLevelTitle: string | null;
   xpToNextLevel: number;
 }
 
-const LEVELS = [
-  { levelNumber: 1, title: 'Reseller Principiante', badge: '🥉', badgeColor: '#94A3B8', minXP: 0, maxXP: 100 },
-  { levelNumber: 2, title: 'Venditore Attivo', badge: '🥈', badgeColor: '#38BDF8', minXP: 100, maxXP: 300 },
-  { levelNumber: 3, title: 'Reseller Esperto', badge: '🥇', badgeColor: '#F59E0B', minXP: 300, maxXP: 800 },
-  { levelNumber: 4, title: 'Top Seller', badge: '💎', badgeColor: '#10B981', minXP: 800, maxXP: 2000 },
-  { levelNumber: 5, title: 'Mogul del Reselling', badge: '👑', badgeColor: '#8B5CF6', minXP: 2000, maxXP: 999999 },
+export const LEVELS: LevelDefinition[] = [
+  {
+    levelNumber: 1,
+    title: 'Principiante (Legno)',
+    badge: '🪵',
+    badgeColor: '#A16207',
+    minXP: 0,
+    maxXP: 75,
+    description: 'Primi passi per fare ordine nell\'armadio e catalogare i primi capi.',
+  },
+  {
+    levelNumber: 2,
+    title: 'Venditore Novizio (Bronzo)',
+    badge: '🥉',
+    badgeColor: '#CD7F32',
+    minXP: 75,
+    maxXP: 200,
+    description: 'Prime vendite concluse con successo e prime spedizioni andate a buon fine.',
+  },
+  {
+    levelNumber: 3,
+    title: 'Cacciatore d\'Affari (Argento)',
+    badge: '🥈',
+    badgeColor: '#94A3B8',
+    minXP: 200,
+    maxXP: 450,
+    description: 'Inizi a dominare le negoziazioni e a riconoscere al volo i veri margini.',
+  },
+  {
+    levelNumber: 4,
+    title: 'Reseller Attivo (Oro I)',
+    badge: '🥇',
+    badgeColor: '#F59E0B',
+    minXP: 450,
+    maxXP: 800,
+    description: 'Inventario costante e vendite settimanali regolari su Vinted ed eBay.',
+  },
+  {
+    levelNumber: 5,
+    title: 'Commerciante Esperto (Oro II)',
+    badge: '🏆',
+    badgeColor: '#D97706',
+    minXP: 800,
+    maxXP: 1300,
+    description: 'Rotazione rapida dei capi e profitti netti costantemente in crescita.',
+  },
+  {
+    levelNumber: 6,
+    title: 'Top Seller (Platino)',
+    badge: '⚔️',
+    badgeColor: '#38BDF8',
+    minXP: 1300,
+    maxXP: 2000,
+    description: 'Punto di riferimento per gli acquirenti, con feedback eccellenti.',
+  },
+  {
+    levelNumber: 7,
+    title: 'Maestro del Vintage (Cristallo I)',
+    badge: '💎',
+    badgeColor: '#06B6D4',
+    minXP: 2000,
+    maxXP: 3200,
+    description: 'Fiuto infallibile per i pezzi rari, streetwear introvabile e brand ricercati.',
+  },
+  {
+    levelNumber: 8,
+    title: 'Elite Reseller (Cristallo II)',
+    badge: '🔮',
+    badgeColor: '#8B5CF6',
+    minXP: 3200,
+    maxXP: 5000,
+    description: 'Volumi da vero professionista dell\'usato, con vendite quotidiane.',
+  },
+  {
+    levelNumber: 9,
+    title: 'Mogul del Mercato (Diamante)',
+    badge: '💠',
+    badgeColor: '#EC4899',
+    minXP: 5000,
+    maxXP: 8000,
+    description: 'Gestione impeccabile di inventory massicci con ROI medio straordinario.',
+  },
+  {
+    levelNumber: 10,
+    title: 'Imperatore del Reselling (Leggenda)',
+    badge: '👑',
+    badgeColor: '#EAB308',
+    minXP: 8000,
+    maxXP: 999999,
+    description: 'Il vertice supremo della community. Un vero impero del second-hand!',
+  },
 ];
 
 export const XP_REWARDS = {
@@ -67,6 +156,7 @@ export function getLevelInfo(xp: number): LevelInfo {
     badgeColor: currentLvl.badgeColor,
     minXP: currentLvl.minXP,
     maxXP: currentLvl.maxXP,
+    description: currentLvl.description,
     currentXP: xp,
     progress,
     nextLevelTitle: nextLvl ? nextLvl.title : null,

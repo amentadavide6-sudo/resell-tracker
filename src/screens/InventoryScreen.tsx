@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AddItemModal } from '../components/AddItemModal';
 import { MarkSoldModal } from '../components/MarkSoldModal';
 import { CustomAlertModal, CustomAlertConfig } from '../components/CustomAlertModal';
+import { CareerRoadmapModal } from '../components/CareerRoadmapModal';
 import {
   getAllInventoryItems,
   deleteInventoryItem,
@@ -38,6 +39,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const [modalVisible, setModalVisible] = useState(false);
   const [itemToSell, setItemToSell] = useState<InventoryItem | null>(null);
   const [userXP, setUserXP] = useState(0);
+  const [roadmapVisible, setRoadmapVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
     visible: false,
     title: '',
@@ -566,6 +568,14 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       <CustomAlertModal
         config={alertConfig}
         onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
+
+      {/* 10-Tier Reseller Club Career Roadmap Modal */}
+      <CareerRoadmapModal
+        visible={roadmapVisible}
+        currentLevelInfo={levelInfo}
+        onClose={() => setRoadmapVisible(false)}
+        onOpenProModal={onOpenProModal}
       />
 
       <MarkSoldModal

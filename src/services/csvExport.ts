@@ -16,8 +16,8 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
       return { success: false, message: 'Non ci sono articoli nell\'inventario da esportare.' };
     }
 
-    // UTF-8 BOM for flawless Excel encoding support (accents & symbols)
-    let csvContent = '\uFEFF';
+    // CSV content initialization without BOM to prevent ï»¿ artifact
+    let csvContent = '';
 
     // Headers with semicolon delimiter (European Excel standard)
     const headers = [
