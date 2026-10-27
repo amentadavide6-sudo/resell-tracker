@@ -150,6 +150,157 @@ export const StatsScreen: React.FC<{
           </View>
         </View>
 
+        {/* DAC7 European Fiscal Monitor Card */}
+        <View
+          style={[
+            styles.dac7Card,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            stats.dac7.status === 'warning' && { borderColor: '#F59E0B' },
+            stats.dac7.status === 'exceeded' && { borderColor: '#EF4444' },
+          ]}
+        >
+          <View style={styles.dac7HeaderRow}>
+            <View style={styles.dac7TitleGroup}>
+              <View
+                style={[
+                  styles.dac7IconWrap,
+                  {
+                    backgroundColor:
+                      stats.dac7.status === 'safe'
+                        ? (isDark ? '#064E3B' : '#ECFDF5')
+                        : stats.dac7.status === 'warning'
+                        ? (isDark ? '#451A03' : '#FFFBEB')
+                        : (isDark ? '#450A0A' : '#FEF2F2'),
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={
+                    stats.dac7.status === 'safe'
+                      ? 'shield-checkmark'
+                      : stats.dac7.status === 'warning'
+                      ? 'alert-circle'
+                      : 'warning'
+                  }
+                  size={20}
+                  color={
+                    stats.dac7.status === 'safe'
+                      ? '#10B981'
+                      : stats.dac7.status === 'warning'
+                      ? '#F59E0B'
+                      : '#EF4444'
+                  }
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.dac7BadgeTitle, { color: colors.textSecondary }]}>
+                  DIRETTIVA FISCALE UE (DAC7) • {stats.dac7.year}
+                </Text>
+                <Text style={[styles.dac7MainTitle, { color: colors.textPrimary }]}>
+                  {stats.dac7.status === 'safe'
+                    ? 'Sotto la soglia di segnalazione'
+                    : stats.dac7.status === 'warning'
+                    ? 'Attenzione: vicino alla soglia'
+                    : 'Soglia di comunicazione superata'}
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.dac7StatusPill,
+                {
+                  backgroundColor:
+                    stats.dac7.status === 'safe'
+                      ? (isDark ? '#064E3B' : '#ECFDF5')
+                      : stats.dac7.status === 'warning'
+                      ? (isDark ? '#451A03' : '#FEF3C7')
+                      : (isDark ? '#450A0A' : '#FEE2E2'),
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.dac7StatusPillText,
+                  {
+                    color:
+                      stats.dac7.status === 'safe'
+                        ? '#059669'
+                        : stats.dac7.status === 'warning'
+                        ? '#D97706'
+                        : '#DC2626',
+                  },
+                ]}
+              >
+                {stats.dac7.status === 'safe' ? 'SICURO' : stats.dac7.status === 'warning' ? 'ATTENZIONE' : 'REPORT FISCALE'}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={[styles.dac7Explanation, { color: colors.textSecondary }]}>
+            Le piattaforme UE comunicano al fisco i venditori che superano 30 vendite o 2.000 € di incasso annuo.
+          </Text>
+
+          {/* Progress Indicators */}
+          <View style={styles.dac7MetricsContainer}>
+            {/* Sales Count */}
+            <View style={styles.dac7MetricItem}>
+              <View style={styles.dac7MetricHeader}>
+                <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
+                  Vendite: <Text style={{ fontWeight: '800' }}>{stats.dac7.soldCount} / {stats.dac7.maxSales}</Text>
+                </Text>
+                <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
+                  {stats.dac7.remainingSales > 0 ? `Mancano ${stats.dac7.remainingSales}` : 'Soglia raggiunta'}
+                </Text>
+              </View>
+              <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
+                <View
+                  style={[
+                    styles.dac7Fill,
+                    {
+                      width: `${Math.round(stats.dac7.salesProgress * 100)}%`,
+                      backgroundColor:
+                        stats.dac7.salesProgress >= 1
+                          ? '#EF4444'
+                          : stats.dac7.salesProgress >= 0.8
+                          ? '#F59E0B'
+                          : '#10B981',
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+
+            {/* Gross Revenue */}
+            <View style={styles.dac7MetricItem}>
+              <View style={styles.dac7MetricHeader}>
+                <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
+                  Incasso Lordo: <Text style={{ fontWeight: '800' }}>{formatEuro(stats.dac7.grossRevenue)} / {formatEuro(stats.dac7.maxRevenue)}</Text>
+                </Text>
+                <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
+                  {stats.dac7.remainingRevenue > 0 ? `Mancano ${formatEuro(stats.dac7.remainingRevenue)}` : 'Soglia raggiunta'}
+                </Text>
+              </View>
+              <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
+                <View
+                  style={[
+                    styles.dac7Fill,
+                    {
+                      width: `${Math.round(stats.dac7.revenueProgress * 100)}%`,
+                      backgroundColor:
+                        stats.dac7.revenueProgress >= 1
+                          ? '#EF4444'
+                          : stats.dac7.revenueProgress >= 0.8
+                          ? '#F59E0B'
+                          : '#10B981',
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* Best Platform Highlight Banner */}
         {stats.bestPlatform && stats.bestPlatform.soldCount > 0 && (
           <View style={styles.bestPlatformCard}>
@@ -649,5 +800,83 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#6366F1',
+  },
+  dac7Card: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1.5,
+  },
+  dac7HeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  dac7TitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    marginRight: 8,
+  },
+  dac7IconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dac7BadgeTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  dac7MainTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 1,
+  },
+  dac7StatusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  dac7StatusPillText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  dac7Explanation: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  dac7MetricsContainer: {
+    gap: 10,
+  },
+  dac7MetricItem: {},
+  dac7MetricHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  dac7MetricLabel: {
+    fontSize: 12,
+  },
+  dac7MetricRemaining: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  dac7Track: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  dac7Fill: {
+    height: '100%',
+    borderRadius: 3,
   },
 });

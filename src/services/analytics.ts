@@ -21,6 +21,19 @@ export interface MonthlyStat {
   totalProfit: number;
 }
 
+export interface Dac7Stat {
+  year: number;
+  soldCount: number;
+  maxSales: number; // 30
+  grossRevenue: number;
+  maxRevenue: number; // 2000 €
+  salesProgress: number; // 0 to 1
+  revenueProgress: number; // 0 to 1
+  remainingSales: number;
+  remainingRevenue: number;
+  status: 'safe' | 'warning' | 'exceeded';
+}
+
 export interface AnalyticsSummary {
   totalSoldItems: number;
   totalActiveItems: number;
@@ -34,6 +47,7 @@ export interface AnalyticsSummary {
   bestPlatform: PlatformStat | null;
   platformStats: PlatformStat[];
   monthlyStats: MonthlyStat[];
+  dac7: Dac7Stat;
 }
 
 export function computeAnalytics(): AnalyticsSummary {
@@ -57,6 +71,10 @@ export function computeAnalytics(): AnalyticsSummary {
 
   // Monthly grouping
   const monthlyMap: Record<string, { count: number; profit: number; revenue: number }> = {};
+
+  const currentYear = new Date().getFullYear();
+  let dac7SoldCount = 0;
+  let dac7GrossRevenue = 0;
 
   let totalSoldPieces = 0;
   soldItems.forEach((item) => {
@@ -86,7 +104,8 @@ export function computeAnalytics(): AnalyticsSummary {
     // Aggregate by month (using soldAt or createdAt)
     const dateStr = item.soldAt || item.createdAt;
     const dateObj = new Date(dateStr);
-    const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+    const itemYear = dateObj.getFullYear();
+    const monthKey = `${itemYear}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
 
     if (!monthlyMap[monthKey]) {
       monthlyMap[monthKey] = { count: 0, profit: 0, revenue: 0 };
@@ -94,7 +113,32 @@ export function computeAnalytics(): AnalyticsSummary {
     monthlyMap[monthKey].count += qty;
     monthlyMap[monthKey].profit += calc.netProfit * qty;
     monthlyMap[monthKey].revenue += salePrice * qty;
+
+    // DAC7 annual accumulation
+    if (itemYear === currentYear) {
+      dac7SoldCount += qty;
+      dac7GrossRevenue += salePrice * qty;
+    }
   });
+
+  // DAC7 calculation
+  const dac7SalesProgress = Math.min(1, dac7SoldCount / 30);
+  const dac7RevenueProgress = Math.min(1, dac7GrossRevenue / 2000);
+  const isDac7Exceeded = dac7SoldCount >= 30 || dac7GrossRevenue >= 2000;
+  const isDac7Warning = !isDac7Exceeded && (dac7SoldCount >= 24 || dac7GrossRevenue >= 1600);
+
+  const dac7: Dac7Stat = {
+    year: currentYear,
+    soldCount: dac7SoldCount,
+    maxSales: 30,
+    grossRevenue: Math.round(dac7GrossRevenue * 100) / 100,
+    maxRevenue: 2000,
+    salesProgress: dac7SalesProgress,
+    revenueProgress: dac7RevenueProgress,
+    remainingSales: Math.max(0, 30 - dac7SoldCount),
+    remainingRevenue: Math.max(0, Math.round((2000 - dac7GrossRevenue) * 100) / 100),
+    status: isDac7Exceeded ? 'exceeded' : isDac7Warning ? 'warning' : 'safe',
+  };
 
   // Calculate platform statistics
   const platformStats: PlatformStat[] = PLATFORMS.map((p) => {
@@ -185,5 +229,6 @@ export function computeAnalytics(): AnalyticsSummary {
     bestPlatform,
     platformStats,
     monthlyStats,
+    dac7,
   };
 }

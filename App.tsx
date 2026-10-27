@@ -14,6 +14,7 @@ import { AdBanner } from './src/components/AdBanner';
 import { insertInventoryItem } from './src/services/db';
 import { hasSeenOnboarding } from './src/services/onboarding';
 import { canAddMoreItems } from './src/services/proManager';
+import { scheduleSmartNotifications } from './src/services/notifications';
 import { PlatformId } from './src/types';
 
 type Tab = 'calculator' | 'inventory' | 'stats' | 'settings';
@@ -25,6 +26,10 @@ function MainApp() {
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState<number>(0);
   const [proModalVisible, setProModalVisible] = useState<boolean>(false);
   const [onboardingVisible, setOnboardingVisible] = useState<boolean>(() => !hasSeenOnboarding());
+
+  useEffect(() => {
+    scheduleSmartNotifications();
+  }, []);
 
   const handleSaveFromCalculator = (itemData: {
     title: string;

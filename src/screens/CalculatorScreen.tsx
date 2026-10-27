@@ -16,6 +16,7 @@ import { PlatformSelector } from '../components/PlatformSelector';
 import { CustomInput } from '../components/CustomInput';
 import { FeeBreakdownCard } from '../components/FeeBreakdownCard';
 import { PLATFORMS } from '../constants/platforms';
+import { SHIPPING_PRESETS } from '../constants/shipping';
 import { calculateResellProfit } from '../services/feeCalculator';
 import { CalculationInput, PlatformId } from '../types';
 
@@ -206,6 +207,48 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                 />
               </View>
             </View>
+
+            {/* Quick Shipping Presets */}
+            <View style={styles.shippingPresetsSection}>
+              <Text style={[styles.shippingPresetsLabel, { color: colors.textSecondary }]}>
+                PRESET SPEDIZIONI RAPIDI
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.shippingPresetsScroll}
+              >
+                {SHIPPING_PRESETS.map((preset) => {
+                  const isSelected =
+                    parseFloat(sellerShippingCost.replace(',', '.')) === preset.cost;
+                  return (
+                    <TouchableOpacity
+                      key={preset.id}
+                      style={[
+                        styles.shippingPresetChip,
+                        { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
+                        isSelected && {
+                          backgroundColor: isDark ? '#312E81' : '#EEF2FF',
+                          borderColor: '#6366F1',
+                        },
+                      ]}
+                      onPress={() => setSellerShippingCost(preset.cost === 0 ? '0' : preset.cost.toFixed(2))}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.shippingPresetChipText,
+                          { color: isDark ? '#94A3B8' : '#475569' },
+                          isSelected && { color: '#6366F1', fontWeight: '800' },
+                        ]}
+                      >
+                        {preset.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
           </View>
 
           {/* Action Button: Save to Inventory */}
@@ -334,5 +377,29 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  shippingPresetsSection: {
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  shippingPresetsLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
+  shippingPresetsScroll: {
+    gap: 6,
+  },
+  shippingPresetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  shippingPresetChipText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

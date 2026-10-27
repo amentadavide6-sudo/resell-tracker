@@ -7,12 +7,19 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
+  Switch,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { exportBackup, importBackup } from '../services/backup';
 import { addXP, XP_REWARDS } from '../services/gamification';
+import {
+  areNotificationsEnabled,
+  setNotificationsEnabled,
+  scheduleSmartNotifications,
+  sendTestNotification,
+} from '../services/notifications';
 
 interface FAQItem {
   question: string;
@@ -57,6 +64,28 @@ export const SettingsScreen: React.FC<{
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [notificationsActive, setNotificationsActive] = useState<boolean>(() => areNotificationsEnabled());
+
+  const handleToggleNotifications = async (val: boolean) => {
+    setNotificationsActive(val);
+    setNotificationsEnabled(val);
+    await scheduleSmartNotifications();
+  };
+
+  const handleSendTestNotification = async () => {
+    const sent = await sendTestNotification();
+    if (sent) {
+      Alert.alert(
+        'Notifica Inviata! 🔔',
+        'Controlla la tendina delle notifiche del telefono tra 2 secondi.'
+      );
+    } else {
+      Alert.alert(
+        'Permesso Notifiche',
+        'Abilita i permessi di notifica nelle impostazioni di Android per ricevere avvisi strategici.'
+      );
+    }
+  };
 
   const toggleFaq = (index: number) => {
     setExpandedFaqIndex(expandedFaqIndex === index ? null : index);
@@ -200,6 +229,36 @@ export const SettingsScreen: React.FC<{
               );
             })}
           </View>
+        </View>
+
+        {/* Smart Notifications Card */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={styles.cardHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <Ionicons name="notifications-outline" size={20} color="#6366F1" />
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Notifiche Intelligenti</Text>
+            </View>
+            <Switch
+              value={notificationsActive}
+              onValueChange={handleToggleNotifications}
+              trackColor={{ false: '#94A3B8', true: '#6366F1' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Ricevi il riepilogo vendite la domenica sera e avvisi strategici quando un capo è fermo in armadio da oltre 30 giorni (100% offline, zero costi server).
+          </Text>
+
+          {notificationsActive && (
+            <TouchableOpacity
+              style={[styles.testNotificationBtn, { borderColor: isDark ? '#312E81' : '#EEF2FF', backgroundColor: isDark ? '#1E1B4B' : '#F8FAFC' }]}
+              onPress={handleSendTestNotification}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="paper-plane-outline" size={15} color="#6366F1" />
+              <Text style={styles.testNotificationBtnText}>Invia Notifica di Prova</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Support Card */}
@@ -684,5 +743,21 @@ const styles = StyleSheet.create({
   privacyLinkText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  testNotificationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  testNotificationBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6366F1',
   },
 });
