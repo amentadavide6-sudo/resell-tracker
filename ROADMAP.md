@@ -6,13 +6,14 @@ Documento operativo delle nuove funzionalità e ottimizzazioni UX pianificate du
 
 ## 🎯 1. Le Tue Richieste (Priorità Assoluta)
 
-### A. Cross-Listing Multi-Piattaforma (Stesso Capo su Più Mercatini)
-* **Problema reale:** I venditori mettono in vendita lo stesso articolo contemporaneamente su più canali (es. Vinted + Wallapop + eBay) per massimizzare la visibilità e vendere più in fretta.
-* **Soluzione tecnica:**
-  - Nel modale di inserimento capo, trasformare la selezione della piattaforma in una scelta multipla (es. checkbox o chip selezionabili insieme).
-  - Possibilità di definire prezzi di listino specifici per piattaforma (es. 25€ su Vinted dove non ci sono commissioni venditore, 28€ su eBay per compensare le fee).
-* **Killer Feature "Delist Assistant":** Quando l'articolo viene segnato come **Venduto** su una piattaforma (es. Vinted), l'app mostra un promemoria visivo immediato:  
-  > *"🎉 Venduto su Vinted! Ricordati di rimuovere l'annuncio da Wallapop ed eBay per evitare doppie vendite e penalità dall'algoritmo."*
+### A. Cross-Listing Multi-Piattaforma (Selezione Multipla con 1 Tap)
+* **Problema reale:** Attualmente per caricare un capo presente su Vinted ed eBay bisogna creare due articoli separati, duplicando foto, titolo, prezzo di acquisto e falsando il capitale investito (sembra che tu abbia speso il doppio per due capi diversi).
+* **Soluzione UX:**
+  - Nel modale di inserimento capo (*Aggiungi Articolo*), la barra delle piattaforme diventa a **selezione multipla (Multi-Select)**: puoi toccare contemporaneamente Vinted, Wallapop ed eBay con un tocco.
+  - **1 solo capo fisico salvato:** L'articolo rappresenta il capo reale nel tuo armadio (il costo di acquisto viene contato una volta sola, mantenendo le metriche e il capitale fermo precisi al 100%).
+  - **Badge multipli sulla scheda:** Nella lista dell'inventario il capo mostrerà i loghi di tutte le piattaforme su cui è attivo.
+* **Killer Feature "Delist Assistant":** Quando l'articolo viene segnato come **Venduto**, l'utente sceglie semplicemente dove è stato venduto (es. Vinted), e l'app mostra un promemoria visivo immediato:  
+  > *"🎉 Venduto su Vinted! Ricordati di rimuovere subito l'annuncio da Wallapop ed eBay per evitare doppie vendite e penalità dall'algoritmo."*
 
 ---
 
