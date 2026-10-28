@@ -254,6 +254,7 @@ export const en: TranslationDictionary = {
     allLevels: 'All 10 Career Ranks',
     youAreHere: 'YOU ARE HERE',
     levelPrefix: 'RANK',
+    proPassReward: '🎁 Unlock +{hours}h of Free Pro Pass',
     levels: [
       { title: 'Beginner (Wood)', desc: 'First steps sorting your wardrobe and listing your first items.' },
       { title: 'Novice Seller (Bronze)', desc: 'First successful sales completed and first parcels shipped.' },

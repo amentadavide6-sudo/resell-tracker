@@ -37,7 +37,9 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
         {/* Top Header */}
         <View style={[styles.topBar, { borderBottomColor: colors.cardBorder }]}>
           <View>
-            <Text style={[styles.topSub, { color: colors.primary }]}>ROADMAP RESELLER CLUB</Text>
+            <Text style={[styles.topSub, { color: colors.primary }]}>
+              {strings.gamification.resellerClub.toUpperCase()} ROADMAP
+            </Text>
             <Text style={[styles.topTitle, { color: colors.textPrimary }]}>
               {strings.gamification.roadmapTitle}
             </Text>
@@ -304,7 +306,7 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
                     <View style={styles.rewardRow}>
                       <Ionicons name="gift-outline" size={12} color="#10B981" />
                       <Text style={styles.rewardText}>
-                        🎁 Sblocca +{lvl.levelNumber <= 3 ? 24 : 48} ore di Pro Pass gratis
+                        {t('gamification.proPassReward', { hours: lvl.levelNumber <= 3 ? 24 : 48 })}
                       </Text>
                     </View>
                   </View>

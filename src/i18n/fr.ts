@@ -254,6 +254,7 @@ export const fr: TranslationDictionary = {
     allLevels: 'Les 10 Niveaux de la Carrière',
     youAreHere: 'VOUS ÊTES ICI',
     levelPrefix: 'NIVEAU',
+    proPassReward: '🎁 Débloque +{hours}h de Pass Pro gratuit',
     levels: [
       { title: 'Débutant (Bois)', desc: 'Premiers pas pour trier votre dressing et lister vos premiers articles.' },
       { title: 'Vendeur Novice (Bronze)', desc: 'Premières ventes réussies et premiers envois postaux expédiés.' },

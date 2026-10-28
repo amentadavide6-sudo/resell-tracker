@@ -254,6 +254,7 @@ export const es: TranslationDictionary = {
     allLevels: 'Los 10 Rangos de la Carrera',
     youAreHere: 'ESTÁS AQUÍ',
     levelPrefix: 'RANGO',
+    proPassReward: '🎁 Desbloquea +{hours}h de Pase Pro gratis',
     levels: [
       { title: 'Principiante (Madera)', desc: 'Primeros pasos organizando tu armario y catalogando tus primeras prendas.' },
       { title: 'Vendedor Novato (Bronce)', desc: 'Primeras ventas completadas con éxito y primeros envíos empaquetados.' },

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PlatformConfig, PlatformId } from '../types';
@@ -32,7 +32,13 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
   const { strings } = useTranslation();
   const { showAlert } = useAlert();
 
-  const platformList = platforms || getAllAvailablePlatforms();
+  const [platformList, setPlatformList] = useState<PlatformConfig[]>(() =>
+    platforms || getAllAvailablePlatforms()
+  );
+
+  useEffect(() => {
+    setPlatformList(platforms || getAllAvailablePlatforms());
+  }, [platforms]);
 
   const handlePress = (id: PlatformId) => {
     if (multiSelect && onToggle) {
@@ -54,6 +60,7 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
           style: 'destructive',
           onPress: () => {
             deleteCustomPlatform(platform.id);
+            setPlatformList((prev) => prev.filter((p) => p.id !== platform.id));
             if (onDeleteCustom) {
               onDeleteCustom(platform.id);
             }
@@ -119,16 +126,8 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
             : platform.id === selectedId;
 
           return (
-            <TouchableOpacity
+            <View
               key={platform.id}
-              activeOpacity={0.7}
-              onPress={() => handlePress(platform.id)}
-              onLongPress={() => {
-                if (platform.isCustom) {
-                  confirmDeleteCustom(platform);
-                }
-              }}
-              delayLongPress={400}
               style={[
                 styles.card,
                 {
@@ -145,56 +144,72 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
                 },
               ]}
             >
-              <View style={styles.headerRow}>
+              {/* Separate touchable delete icon for custom platforms - NOT nested */}
+              {platform.isCustom && (
+                <TouchableOpacity
+                  style={[
+                    styles.deleteCustomBtn,
+                    { backgroundColor: isDark ? '#450A0A' : '#FEE2E2' },
+                  ]}
+                  onPress={() => confirmDeleteCustom(platform)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="trash" size={12} color="#EF4444" />
+                </TouchableOpacity>
+              )}
+
+              {/* Main selection touchable */}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => handlePress(platform.id)}
+                onLongPress={() => {
+                  if (platform.isCustom) {
+                    confirmDeleteCustom(platform);
+                  }
+                }}
+                delayLongPress={350}
+                style={styles.cardContent}
+              >
+                <View style={styles.headerRow}>
+                  <View
+                    style={[
+                      styles.dot,
+                      { backgroundColor: platform.color },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.platformName,
+                      { color: colors.textPrimary },
+                      isSelected && { color: platform.color, fontWeight: '700' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {getPlatformName(platform)}
+                  </Text>
+                  {multiSelect && isSelected && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={16}
+                      color={platform.color}
+                      style={{ marginLeft: 4 }}
+                    />
+                  )}
+                </View>
+
                 <View
                   style={[
-                    styles.dot,
-                    { backgroundColor: platform.color },
+                    styles.badge,
+                    { backgroundColor: isDark ? '#1E293B' : platform.badgeBg },
                   ]}
-                />
-                <Text
-                  style={[
-                    styles.platformName,
-                    { color: colors.textPrimary },
-                    isSelected && { color: platform.color, fontWeight: '700' },
-                  ]}
-                  numberOfLines={1}
                 >
-                  {getPlatformName(platform)}
-                </Text>
-                {platform.isCustom && (
-                  <TouchableOpacity
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      confirmDeleteCustom(platform);
-                    }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    style={styles.deleteCustomBtn}
-                  >
-                    <Ionicons name="trash-outline" size={13} color="#EF4444" />
-                  </TouchableOpacity>
-                )}
-                {multiSelect && isSelected && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color={platform.color}
-                    style={{ marginLeft: 4 }}
-                  />
-                )}
-              </View>
-
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: isDark ? '#1E293B' : platform.badgeBg },
-                ]}
-              >
-                <Text style={[styles.badgeText, { color: platform.color }]} numberOfLines={1}>
-                  {getPlatformTagline(platform)}
-                </Text>
-              </View>
-            </TouchableOpacity>
+                  <Text style={[styles.badgeText, { color: platform.color }]} numberOfLines={1}>
+                    {getPlatformTagline(platform)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           );
         })}
       </ScrollView>
@@ -232,17 +247,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   card: {
+    position: 'relative',
     borderWidth: 1.5,
     borderRadius: 14,
+    minWidth: 135,
+    overflow: 'visible',
+  },
+  cardContent: {
     paddingVertical: 10,
     paddingHorizontal: 14,
-    minWidth: 130,
     justifyContent: 'space-between',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 6,
+    paddingRight: 16,
   },
   dot: {
     width: 8,
@@ -257,10 +277,18 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   deleteCustomBtn: {
-    marginLeft: 'auto',
-    padding: 2,
-    borderRadius: 4,
-    backgroundColor: '#FEE2E2',
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    zIndex: 20,
+    padding: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   badge: {
     alignSelf: 'flex-start',

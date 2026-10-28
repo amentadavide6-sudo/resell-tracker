@@ -254,6 +254,7 @@ export const it: TranslationDictionary = {
     allLevels: 'Tutti i 10 Livelli della Carriera',
     youAreHere: 'SEI QUI',
     levelPrefix: 'LIVELLO',
+    proPassReward: '🎁 Sblocca +{hours} ore di Pro Pass gratis',
     levels: [
       { title: 'Principiante (Legno)', desc: 'Primi passi per fare ordine nell\'armadio e catalogare i primi capi.' },
       { title: 'Venditore Novizio (Bronzo)', desc: 'Prime vendite concluse con successo e prime spedizioni andate a buon fine.' },

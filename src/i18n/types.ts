@@ -234,6 +234,7 @@ export interface TranslationDictionary {
     allLevels: string;
     youAreHere: string;
     levelPrefix: string;
+    proPassReward: string;
     levels: Array<{ title: string; desc: string }>;
   };
   socialProof: {

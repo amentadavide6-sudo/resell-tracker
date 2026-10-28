@@ -307,6 +307,12 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             onToggle={handleTogglePlatform}
             title={strings.addItemModal.activePlatformsTitle}
             platforms={getAllAvailablePlatforms()}
+            onDeleteCustom={(deletedId) => {
+              setSelectedPlatforms((prev) => {
+                const filtered = prev.filter((id) => id !== deletedId);
+                return filtered.length > 0 ? filtered : ['vinted'];
+              });
+            }}
           />
 
           {/* Quantity & Stock Stepper */}
