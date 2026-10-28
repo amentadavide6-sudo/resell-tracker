@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { PLATFORMS } from '../constants/platforms';
-import { PlatformId } from '../types';
+import { PlatformConfig, PlatformId } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
+import { getAllAvailablePlatforms } from '../services/customPlatformManager';
 
 interface PlatformSelectorProps {
   selectedId?: PlatformId;
@@ -12,6 +13,7 @@ interface PlatformSelectorProps {
   selectedIds?: PlatformId[];
   onToggle?: (id: PlatformId) => void;
   title?: string;
+  platforms?: PlatformConfig[];
 }
 
 export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
@@ -21,8 +23,12 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
   selectedIds = [],
   onToggle,
   title,
+  platforms,
 }) => {
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
+
+  const platformList = platforms || getAllAvailablePlatforms();
 
   const handlePress = (id: PlatformId) => {
     if (multiSelect && onToggle) {
@@ -33,8 +39,8 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
   };
 
   const defaultTitle = multiSelect
-    ? 'PIATTAFORME ATTIVE (MULTI-SELEZIONE)'
-    : 'SELEZIONA PIATTAFORMA';
+    ? strings.inventory.allPlatforms
+    : strings.calculator.selectPlatform;
 
   return (
     <View style={styles.container}>
@@ -45,7 +51,7 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
         {multiSelect && selectedIds.length > 1 && (
           <View style={[styles.multiCountBadge, { backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF' }]}>
             <Text style={[styles.multiCountText, { color: '#6366F1' }]}>
-              {selectedIds.length} selezionate
+              {selectedIds.length} {strings.common.pieces}
             </Text>
           </View>
         )}
@@ -56,7 +62,7 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {PLATFORMS.map((platform) => {
+        {platformList.map((platform) => {
           const isSelected = multiSelect
             ? selectedIds.includes(platform.id)
             : platform.id === selectedId;

@@ -232,3 +232,5 @@ export function computeAnalytics(): AnalyticsSummary {
     dac7,
   };
 }
+
+export const getAnalyticsData = computeAnalytics;

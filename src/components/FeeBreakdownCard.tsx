@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CalculationResult, PlatformConfig } from '../types';
 import { formatEuro } from '../services/feeCalculator';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 
 interface FeeBreakdownCardProps {
   result: CalculationResult;
@@ -14,6 +15,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
   platform,
 }) => {
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
 
   const isProfit = result.netProfit > 0;
@@ -48,7 +50,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
       >
         <View style={styles.profitHeader}>
           <View style={styles.profitLeft}>
-            <Text style={styles.profitLabel}>PROFITTO NETTO</Text>
+            <Text style={styles.profitLabel}>{strings.calculator.netProfit}</Text>
             <Text
               style={[styles.profitAmount, { color: profitColor }]}
               numberOfLines={1}
@@ -66,7 +68,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
               ]}
             >
               <Text style={[styles.metricLabel, { color: profitColor }]}>
-                Margine: {result.marginPercent}%
+                {strings.calculator.margin}: {result.marginPercent}%
               </Text>
             </View>
 
@@ -77,7 +79,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
               ]}
             >
               <Text style={[styles.metricLabel, { color: profitColor }]}>
-                ROI: {result.roiPercent}%
+                {strings.calculator.roi}: {result.roiPercent}%
               </Text>
             </View>
           </View>
@@ -124,18 +126,18 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
             <View style={styles.legendRow}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-                <Text style={styles.legendText}>Acquisto</Text>
+                <Text style={styles.legendText}>{strings.calculator.itemCost}</Text>
               </View>
               {feePct > 0 && (
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
-                  <Text style={styles.legendText}>Fee ({formatEuro(result.totalSellerFees)})</Text>
+                  <Text style={styles.legendText}>{strings.calculator.platformFee} ({formatEuro(result.totalSellerFees)})</Text>
                 </View>
               )}
               {isProfit && (
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-                  <Text style={styles.legendText}>Guadagno</Text>
+                  <Text style={styles.legendText}>{strings.calculator.netProfit}</Text>
                 </View>
               )}
             </View>
@@ -150,7 +152,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
         activeOpacity={0.7}
       >
         <Text style={styles.detailsToggleText}>
-          {showDetails ? '▲ Nascondi dettaglio calcoli' : '▼ Mostra dettaglio calcoli & acquirente'}
+          {showDetails ? `▲ ${strings.calculator.hideBreakdown}` : `▼ ${strings.calculator.showBreakdown}`}
         </Text>
       </TouchableOpacity>
 

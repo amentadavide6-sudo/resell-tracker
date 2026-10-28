@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LEVELS, LevelInfo } from '../services/gamification';
 import { isProUser } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 
 interface CareerRoadmapModalProps {
   visible: boolean;
@@ -26,6 +27,7 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
   onOpenProModal,
 }) => {
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
   const isPro = isProUser();
 
   return (
@@ -35,7 +37,9 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
         <View style={[styles.topBar, { borderBottomColor: colors.cardBorder }]}>
           <View>
             <Text style={[styles.topSub, { color: colors.primary }]}>ROADMAP RESELLER CLUB</Text>
-            <Text style={[styles.topTitle, { color: colors.textPrimary }]}>Carriera & Livelli 🏆</Text>
+            <Text style={[styles.topTitle, { color: colors.textPrimary }]}>
+              {strings.gamification.roadmapTitle}
+            </Text>
           </View>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
             <Ionicons name="close" size={24} color={colors.textSecondary} />
@@ -100,40 +104,132 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
             </View>
           </View>
 
-          {/* XP Rewards Guide */}
-          <View style={[styles.xpGuideCard, { backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF', borderColor: '#818CF8' }]}>
-            <Text style={[styles.xpGuideTitle, { color: colors.textPrimary }]}>Come guadagnare punti XP:</Text>
+          {/* XP Rewards Guide - High Contrast Modern Card */}
+          <View
+            style={[
+              styles.xpGuideCard,
+              {
+                backgroundColor: isDark ? '#111827' : '#F8FAFC',
+                borderColor: isDark ? '#374151' : '#E2E8F0',
+              },
+            ]}
+          >
+            <View style={styles.xpGuideHeaderRow}>
+              <Ionicons name="sparkles" size={16} color={isDark ? '#F59E0B' : '#D97706'} />
+              <Text style={[styles.xpGuideTitle, { color: colors.textPrimary }]}>
+                {strings.gamification.xpGuideTitle}
+              </Text>
+            </View>
+
             <View style={styles.xpGuideGrid}>
-              <View style={styles.xpGuideItem}>
-                <Text style={styles.xpRewardBadge}>+{isPro ? '50' : '25'} XP</Text>
-                <Text style={[styles.xpRewardLabel, { color: colors.textSecondary }]}>Capo inserito</Text>
+              {/* Item Added */}
+              <View
+                style={[
+                  styles.xpGuideItem,
+                  {
+                    backgroundColor: isDark ? '#1F2937' : '#F0F9FF',
+                    borderColor: isDark ? '#374151' : '#BAE6FD',
+                  },
+                ]}
+              >
+                <Text style={[styles.xpRewardBadge, { color: isDark ? '#38BDF8' : '#0284C7' }]}>
+                  +{isPro ? '50' : '25'} XP
+                </Text>
+                <Text
+                  style={[styles.xpRewardLabel, { color: isDark ? '#E2E8F0' : '#0369A1' }]}
+                  numberOfLines={1}
+                >
+                  {strings.gamification.itemAdded}
+                </Text>
               </View>
-              <View style={styles.xpGuideItem}>
-                <Text style={[styles.xpRewardBadge, { color: '#059669' }]}>+{isPro ? '200' : '100'} XP</Text>
-                <Text style={[styles.xpRewardLabel, { color: colors.textSecondary }]}>Vendita conclusa</Text>
+
+              {/* Sale Completed */}
+              <View
+                style={[
+                  styles.xpGuideItem,
+                  {
+                    backgroundColor: isDark ? '#1F2937' : '#ECFDF5',
+                    borderColor: isDark ? '#374151' : '#A7F3D0',
+                  },
+                ]}
+              >
+                <Text style={[styles.xpRewardBadge, { color: isDark ? '#34D399' : '#059669' }]}>
+                  +{isPro ? '200' : '100'} XP
+                </Text>
+                <Text
+                  style={[styles.xpRewardLabel, { color: isDark ? '#E2E8F0' : '#047857' }]}
+                  numberOfLines={1}
+                >
+                  {strings.gamification.saleCompleted}
+                </Text>
               </View>
-              <View style={styles.xpGuideItem}>
-                <Text style={[styles.xpRewardBadge, { color: '#D97706' }]}>+{isPro ? '100' : '50'} XP</Text>
-                <Text style={[styles.xpRewardLabel, { color: colors.textSecondary }]}>Export Excel</Text>
+
+              {/* Excel Export */}
+              <View
+                style={[
+                  styles.xpGuideItem,
+                  {
+                    backgroundColor: isDark ? '#1F2937' : '#FFFBEB',
+                    borderColor: isDark ? '#374151' : '#FDE68A',
+                  },
+                ]}
+              >
+                <Text style={[styles.xpRewardBadge, { color: isDark ? '#FBBF24' : '#D97706' }]}>
+                  +{isPro ? '100' : '50'} XP
+                </Text>
+                <Text
+                  style={[styles.xpRewardLabel, { color: isDark ? '#E2E8F0' : '#B45309' }]}
+                  numberOfLines={1}
+                >
+                  {strings.gamification.excelExport}
+                </Text>
               </View>
-              <View style={styles.xpGuideItem}>
-                <Text style={[styles.xpRewardBadge, { color: '#8B5CF6' }]}>+{isPro ? '100' : '50'} XP</Text>
-                <Text style={[styles.xpRewardLabel, { color: colors.textSecondary }]}>Backup locale</Text>
+
+              {/* Local Backup */}
+              <View
+                style={[
+                  styles.xpGuideItem,
+                  {
+                    backgroundColor: isDark ? '#1F2937' : '#F5F3FF',
+                    borderColor: isDark ? '#374151' : '#DDD6FE',
+                  },
+                ]}
+              >
+                <Text style={[styles.xpRewardBadge, { color: isDark ? '#C084FC' : '#7C3AED' }]}>
+                  +{isPro ? '100' : '50'} XP
+                </Text>
+                <Text
+                  style={[styles.xpRewardLabel, { color: isDark ? '#E2E8F0' : '#6D28D9' }]}
+                  numberOfLines={1}
+                >
+                  {strings.gamification.localBackup}
+                </Text>
               </View>
             </View>
 
             {!isPro && onOpenProModal && (
               <TouchableOpacity
-                style={styles.proBoostBanner}
+                style={[
+                  styles.proBoostBanner,
+                  {
+                    backgroundColor: isDark ? '#1E1B4B' : '#FEF3C7',
+                    borderColor: isDark ? '#4338CA' : '#FDE68A',
+                  },
+                ]}
                 onPress={() => {
                   onClose();
                   onOpenProModal();
                 }}
                 activeOpacity={0.8}
               >
-                <Ionicons name="flash" size={16} color="#D97706" />
-                <Text style={styles.proBoostBannerText}>
-                  Passa a Pro per raddoppiare ogni singolo XP (2x Booster permanente ⚡)
+                <Ionicons name="flash" size={16} color={isDark ? '#F59E0B' : '#D97706'} />
+                <Text
+                  style={[
+                    styles.proBoostBannerText,
+                    { color: isDark ? '#FDE68A' : '#92400E' },
+                  ]}
+                >
+                  {strings.gamification.proBooster}
                 </Text>
               </TouchableOpacity>
             )}
@@ -141,7 +237,7 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
 
           {/* 10 Levels Timeline */}
           <Text style={[styles.timelineHeader, { color: colors.textPrimary }]}>
-            Tutti i 10 Livelli della Carriera:
+            {strings.gamification.allLevels}:
           </Text>
 
           <View style={styles.levelsList}>
@@ -159,42 +255,57 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
                     isCurrent && { borderColor: lvl.badgeColor },
                   ]}
                 >
-                  <View style={styles.levelLeft}>
+                  {/* Badge & Level Number */}
+                  <View style={[styles.levelBadgeWrap, { backgroundColor: isUnlocked ? lvl.badgeColor + '20' : (isDark ? '#1E293B' : '#F1F5F9') }]}>
                     <Text style={styles.levelBadgeIcon}>{lvl.badge}</Text>
-                    <View style={styles.levelNumberPill}>
-                      <Text style={styles.levelNumberText}>Lvl {lvl.levelNumber}</Text>
-                    </View>
                   </View>
 
-                  <View style={styles.levelMid}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={[styles.lvlTitle, { color: colors.textPrimary }]}>
-                        {lvl.title}
+                  {/* Level Details */}
+                  <View style={styles.levelItemInfo}>
+                    <View style={styles.levelItemTitleRow}>
+                      <Text
+                        style={[
+                          styles.levelNumberText,
+                          { color: isUnlocked ? lvl.badgeColor : colors.textMuted },
+                        ]}
+                      >
+                        {strings.gamification.levelPrefix} {lvl.levelNumber}
                       </Text>
                       {isCurrent && (
-                        <View style={[styles.currentTag, { backgroundColor: lvl.badgeColor }]}>
-                          <Text style={styles.currentTagText}>TU SEI QUI</Text>
+                        <View style={[styles.currentLevelPill, { backgroundColor: lvl.badgeColor }]}>
+                          <Text style={styles.currentLevelPillText}>{strings.gamification.youAreHere}</Text>
+                        </View>
+                      )}
+                      {!isUnlocked && (
+                        <View style={styles.lockedPill}>
+                          <Ionicons name="lock-closed" size={11} color={colors.textMuted} />
+                          <Text style={[styles.lockedPillText, { color: colors.textMuted }]}>
+                            {lvl.minXP} XP
+                          </Text>
                         </View>
                       )}
                     </View>
-                    <Text style={[styles.lvlDesc, { color: colors.textSecondary }]}>
+
+                    <Text
+                      style={[
+                        styles.levelNameText,
+                        { color: isUnlocked ? colors.textPrimary : colors.textMuted },
+                      ]}
+                    >
+                      {lvl.title}
+                    </Text>
+
+                    <Text style={[styles.levelDescriptionText, { color: colors.textSecondary }]}>
                       {lvl.description}
                     </Text>
-                  </View>
 
-                  <View style={styles.levelRight}>
-                    <Text style={[styles.lvlXpReq, { color: isUnlocked ? colors.primary : colors.textMuted }]}>
-                      {lvl.minXP} XP
-                    </Text>
-                    {isUnlocked ? (
-                      <View style={styles.unlockedIconWrap}>
-                        <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                      </View>
-                    ) : (
-                      <View style={styles.lockedIconWrap}>
-                        <Ionicons name="lock-closed" size={14} color="#94A3B8" />
-                      </View>
-                    )}
+                    {/* Pro Pass Reward info */}
+                    <View style={styles.rewardRow}>
+                      <Ionicons name="gift-outline" size={12} color="#10B981" />
+                      <Text style={styles.rewardText}>
+                        🎁 Sblocca +{lvl.levelNumber <= 3 ? 24 : 48} ore di Pro Pass gratis
+                      </Text>
+                    </View>
                   </View>
                 </View>
               );
@@ -215,8 +326,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 45,
-    paddingBottom: 12,
+    paddingTop: 54,
+    paddingBottom: 14,
     borderBottomWidth: 1,
   },
   topSub: {
@@ -225,9 +336,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   topTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   closeBtn: {
     padding: 6,
@@ -237,7 +348,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingTop: 16,
     paddingBottom: 40,
   },
   currentHeroCard: {
@@ -246,7 +357,8 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -313,10 +425,15 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 18,
   },
+  xpGuideHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
   xpGuideTitle: {
     fontSize: 13,
     fontWeight: '800',
-    marginBottom: 10,
   },
   xpGuideGrid: {
     flexDirection: 'row',
@@ -326,14 +443,14 @@ const styles = StyleSheet.create({
   xpGuideItem: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
     paddingVertical: 8,
+    paddingHorizontal: 4,
     borderRadius: 8,
+    borderWidth: 1,
   },
   xpRewardBadge: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#4F46E5',
   },
   xpRewardLabel: {
     fontSize: 10,
@@ -344,17 +461,16 @@ const styles = StyleSheet.create({
   proBoostBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 8,
+    borderWidth: 1,
     marginTop: 10,
     gap: 6,
   },
   proBoostBannerText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#92400E',
     flex: 1,
   },
   timelineHeader: {
@@ -380,60 +496,68 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  levelLeft: {
+  levelBadgeWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
-    width: 44,
+    justifyContent: 'center',
   },
   levelBadgeIcon: {
-    fontSize: 26,
+    fontSize: 24,
   },
-  levelNumberPill: {
-    backgroundColor: 'rgba(100, 116, 139, 0.15)',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-    marginTop: 3,
-  },
-  levelNumberText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#64748B',
-  },
-  levelMid: {
+  levelItemInfo: {
     flex: 1,
   },
-  lvlTitle: {
-    fontSize: 14,
-    fontWeight: '800',
+  levelItemTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  lvlDesc: {
+  levelNumberText: {
     fontSize: 11,
-    lineHeight: 15,
-    marginTop: 2,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
-  currentTag: {
+  currentLevelPill: {
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
   },
-  currentTagText: {
-    fontSize: 8,
-    fontWeight: '900',
+  currentLevelPillText: {
+    fontSize: 9,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
-  levelRight: {
-    alignItems: 'flex-end',
-    width: 58,
+  lockedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: 'auto',
   },
-  lvlXpReq: {
-    fontSize: 12,
+  lockedPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  levelNameText: {
+    fontSize: 14,
     fontWeight: '800',
-    marginBottom: 2,
+    marginTop: 1,
   },
-  unlockedIconWrap: {
+  levelDescriptionText: {
+    fontSize: 11,
+    lineHeight: 15,
     marginTop: 2,
   },
-  lockedIconWrap: {
-    marginTop: 2,
+  rewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  rewardText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#10B981',
   },
 });

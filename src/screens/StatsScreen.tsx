@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
+import { useAlert } from '../context/AlertContext';
 import { computeAnalytics, AnalyticsSummary } from '../services/analytics';
 import { exportInventoryToCSV } from '../services/csvExport';
 import { formatEuro } from '../services/feeCalculator';
@@ -27,6 +27,7 @@ export const StatsScreen: React.FC<{
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { strings } = useTranslation();
+  const { showAlert } = useAlert();
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -48,10 +49,12 @@ export const StatsScreen: React.FC<{
 
   const handleExportCSV = async () => {
     if (!isPro && exportCount >= 1) {
-      Alert.alert(
-        'Esportazione Fiscale Excel & CSV',
-        'Hai già usufruito del tuo 1° export dimostrativo gratuito.\n\nPassa a ResellTracker Pro per esportare registri contabili completi Excel e CSV illimitati in qualsiasi momento!',
-        [
+      showAlert({
+        title: 'Esportazione Fiscale Excel & CSV',
+        message:
+          'Hai già usufruito del tuo 1° export dimostrativo gratuito.\n\nPassa a ResellTracker Pro per esportare registri contabili completi Excel e CSV illimitati in qualsiasi momento!',
+        type: 'warning',
+        buttons: [
           { text: 'Annulla', style: 'cancel' },
           {
             text: 'Passa a Pro ⚡',
@@ -59,8 +62,8 @@ export const StatsScreen: React.FC<{
               if (onOpenProModal) onOpenProModal();
             },
           },
-        ]
-      );
+        ],
+      });
       return;
     }
 
@@ -72,13 +75,19 @@ export const StatsScreen: React.FC<{
       addXP(XP_REWARDS.EXPORT_CSV, 'Esportazione CSV');
       if (!isPro && exportCount === 0) {
         incrementCSVExportCount();
-        Alert.alert(
-          '🎉 1° Export Gratuito Completato!',
-          'Il registro Excel/CSV è stato generato e condiviso con successo.\n\nQuesto primo export completo era in omaggio: i successivi export sono illimitati con il piano ResellTracker Pro.'
-        );
+        showAlert({
+          title: '🎉 1° Export Gratuito Completato!',
+          message:
+            'Il registro Excel/CSV è stato generato e condiviso con successo.\n\nQuesto primo export completo era in omaggio: i successivi export sono illimitati con il piano ResellTracker Pro.',
+          type: 'success',
+        });
       }
     } else if (result.message !== 'Nessun file selezionato.') {
-      Alert.alert('Esportazione Registro', result.message);
+      showAlert({
+        title: 'Esportazione Registro',
+        message: result.message,
+        type: 'info',
+      });
     }
   };
 

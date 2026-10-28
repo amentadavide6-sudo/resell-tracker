@@ -1,5 +1,5 @@
-import { PLATFORMS } from '../constants/platforms';
 import { CalculationInput, CalculationResult, PlatformConfig } from '../types';
+import { getPlatformById } from './customPlatformManager';
 
 export function calculateResellProfit(input: CalculationInput): CalculationResult {
   const {
@@ -12,8 +12,7 @@ export function calculateResellProfit(input: CalculationInput): CalculationResul
     customSellerFixedFee,
   } = input;
 
-  const platform: PlatformConfig =
-    PLATFORMS.find((p) => p.id === platformId) || PLATFORMS[0];
+  const platform: PlatformConfig = getPlatformById(platformId);
 
   // Determine seller fee percentages
   const sellerFeePercent =

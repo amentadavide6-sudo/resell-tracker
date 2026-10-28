@@ -6,7 +6,6 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -16,6 +15,7 @@ import {
   PLAN_CONFIGS,
 } from '../services/purchaseService';
 import { useTheme } from '../context/ThemeContext';
+import { useAlert } from '../context/AlertContext';
 
 interface ProModalProps {
   visible: boolean;
@@ -29,6 +29,7 @@ export const ProModal: React.FC<ProModalProps> = ({
   onProUnlocked,
 }) => {
   const { colors, isDark } = useTheme();
+  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PurchasePlanId>('lifetime');
 
@@ -37,12 +38,14 @@ export const ProModal: React.FC<ProModalProps> = ({
       setLoading(true);
       const success = await purchaseProProduct(selectedPlan);
       if (success) {
-        Alert.alert(
-          '🎉 Benvenuto in ResellTracker Pro!',
-          selectedPlan === 'lifetime'
-            ? 'Hai sbloccato con successo l\'accesso Pro a vita senza limiti né canoni!'
-            : 'Il tuo abbonamento mensile Pro è ora attivo.',
-          [
+        showAlert({
+          title: '🎉 Benvenuto in ResellTracker Pro!',
+          message:
+            selectedPlan === 'lifetime'
+              ? 'Hai sbloccato con successo l\'accesso Pro a vita senza limiti né canoni!'
+              : 'Il tuo abbonamento mensile Pro è ora attivo.',
+          type: 'success',
+          buttons: [
             {
               text: 'Inizia subito',
               onPress: () => {
@@ -50,8 +53,8 @@ export const ProModal: React.FC<ProModalProps> = ({
                 onClose();
               },
             },
-          ]
-        );
+          ],
+        });
       }
     } finally {
       setLoading(false);
@@ -63,17 +66,26 @@ export const ProModal: React.FC<ProModalProps> = ({
       setLoading(true);
       const restored = await restoreProPurchases();
       if (restored) {
-        Alert.alert(
-          'Acquisto Ripristinato',
-          'Il tuo acquisto Pro è stato verificato e ripristinato con successo.'
-        );
-        onProUnlocked();
-        onClose();
+        showAlert({
+          title: 'Acquisto Ripristinato',
+          message: 'Il tuo acquisto Pro è stato verificato e ripristinato con successo.',
+          type: 'success',
+          buttons: [
+            {
+              text: 'OK',
+              onPress: () => {
+                onProUnlocked();
+                onClose();
+              },
+            },
+          ],
+        });
       } else {
-        Alert.alert(
-          'Nessun Acquisto Trovato',
-          'Non sono stati trovati acquisti precedenti associati a questo account Google.'
-        );
+        showAlert({
+          title: 'Nessun Acquisto Trovato',
+          message: 'Non sono stati trovati acquisti precedenti associati a questo account Google.',
+          type: 'info',
+        });
       }
     } finally {
       setLoading(false);

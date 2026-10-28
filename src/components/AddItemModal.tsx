@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -21,6 +20,9 @@ import { insertInventoryItem, getTotalInventoryCount } from '../services/db';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import { getProPassInfo, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
+import { useAlert } from '../context/AlertContext';
+import { getAllAvailablePlatforms } from '../services/customPlatformManager';
 import { InventoryItem, ItemStatus, PlatformId } from '../types';
 
 interface AddItemModalProps {
@@ -42,6 +44,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   initialValues,
 }) => {
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
+  const { showAlert } = useAlert();
   const [title, setTitle] = useState(initialValues?.title || '');
   const [selectedPlatforms, setSelectedPlatforms] = useState<PlatformId[]>([
     initialValues?.platformId || 'vinted',
@@ -57,6 +61,24 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const [packagingCost, setPackagingCost] = useState('0.50');
   const [status, setStatus] = useState<ItemStatus>('listed');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setTitle(initialValues?.title || '');
+      setSelectedPlatforms([initialValues?.platformId || 'vinted']);
+      setQuantity(1);
+      setSellingPrice(
+        initialValues?.sellingPrice !== undefined ? initialValues.sellingPrice.toString() : '20'
+      );
+      setPurchaseCost(
+        initialValues?.purchaseCost !== undefined ? initialValues.purchaseCost.toString() : '5'
+      );
+      setSellerShippingCost('0');
+      setPackagingCost('0.50');
+      setStatus('listed');
+      setPhotoUri(null);
+    }
+  }, [visible, initialValues]);
 
   const proPassInfo = useMemo(() => getProPassInfo(), [visible]);
   const currentTotalItems = useMemo(() => (visible ? getTotalInventoryCount() : 0), [visible]);
@@ -102,7 +124,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       if (useCamera) {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permesso negato', 'Serve il permesso fotocamera per scattare una foto al capo.');
+          showAlert({
+            title: strings.addItemModal.permissionDenied,
+            message: strings.addItemModal.cameraPermissionMsg,
+            type: 'warning',
+          });
           return;
         }
         result = await ImagePicker.launchCameraAsync({
@@ -113,7 +139,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permesso negato', 'Serve il permesso galleria per selezionare una foto.');
+          showAlert({
+            title: strings.addItemModal.permissionDenied,
+            message: strings.addItemModal.galleryPermissionMsg,
+            type: 'warning',
+          });
           return;
         }
         result = await ImagePicker.launchImageLibraryAsync({
@@ -128,13 +158,21 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       }
     } catch (err) {
       console.error(err);
-      Alert.alert('Errore', 'Impossibile caricare la foto.');
+      showAlert({
+        title: strings.common.error,
+        message: 'Impossibile caricare la foto.',
+        type: 'error',
+      });
     }
   };
 
   const handleSave = () => {
     if (!title.trim()) {
-      Alert.alert('Titolo mancante', "Inserisci un nome o una descrizione breve dell'articolo.");
+      showAlert({
+        title: strings.common.attention,
+        message: strings.addItemModal.missingTitleError,
+        type: 'warning',
+      });
       return;
     }
 
@@ -161,17 +199,22 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       insertInventoryItem(newItem);
       const xpRes = addXP(XP_REWARDS.ITEM_ADDED, `Aggiunto: ${newItem.title}`);
       if (xpRes.leveledUp) {
-        Alert.alert(
-          '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
-          `Congratulazioni! Sei salito al livello ${xpRes.newLevel.levelNumber}: ${xpRes.newLevel.badge} ${xpRes.newLevel.title}!\n\n🎁 Hai sbloccato ${xpRes.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!`
-        );
+        showAlert({
+          title: strings.gamification.levelUpTitle,
+          message: `${strings.gamification.youAreHere}: ${xpRes.newLevel.levelNumber} - ${xpRes.newLevel.badge} ${xpRes.newLevel.title}!\n\n🎁 ${xpRes.proPassAwardedHours}h ${strings.gamification.proBoost}!`,
+          type: 'success',
+        });
       }
       onItemAdded();
       handleResetForm();
       onClose();
     } catch (error) {
       console.error(error);
-      Alert.alert('Errore', 'Impossibile salvare l\'articolo nel database.');
+      showAlert({
+        title: strings.common.error,
+        message: 'Impossibile salvare l\'articolo nel database.',
+        type: 'error',
+      });
     }
   };
 
@@ -198,9 +241,9 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Ionicons name="close" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Nuovo Articolo</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{strings.addItemModal.modalTitle}</Text>
           <TouchableOpacity onPress={handleSave} style={styles.saveTopBtn}>
-            <Text style={styles.saveTopBtnText}>Salva</Text>
+            <Text style={styles.saveTopBtnText}>{strings.addItemModal.saveTopBtn}</Text>
           </TouchableOpacity>
         </View>
 
@@ -230,7 +273,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <Ionicons name="camera" size={26} color="#6366F1" />
-                  <Text style={styles.photoPickerText}>Scatta Foto</Text>
+                  <Text style={styles.photoPickerText}>{strings.addItemModal.takePhoto}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -239,7 +282,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <Ionicons name="images" size={26} color="#6366F1" />
-                  <Text style={styles.photoPickerText}>Dalla Galleria</Text>
+                  <Text style={styles.photoPickerText}>{strings.addItemModal.fromGallery}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -248,11 +291,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           {/* Title Input */}
           <View style={styles.inputCard}>
             <CustomInput
-              label="Nome o Descrizione Articolo"
-              subtitle="Es. Giacca Vintage Levi's, Sneakers Nike, Gioco PS4"
+              label={strings.addItemModal.itemTitleLabel}
+              subtitle={strings.addItemModal.itemTitleSubtitle}
               value={title}
               onChangeValue={setTitle}
-              placeholder="Inserisci titolo..."
+              placeholder={strings.addItemModal.itemTitlePlaceholder}
               isCurrency={false}
             />
           </View>
@@ -262,16 +305,19 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             multiSelect
             selectedIds={selectedPlatforms}
             onToggle={handleTogglePlatform}
-            title="PIATTAFORME ATTIVE (MULTI-SELEZIONE)"
+            title={strings.addItemModal.activePlatformsTitle}
+            platforms={getAllAvailablePlatforms()}
           />
 
           {/* Quantity & Stock Stepper */}
           <View style={styles.quantitySection}>
             <View style={styles.quantityHeaderRow}>
               <View>
-                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>QUANTITÀ / STOCK DISPONIBILE</Text>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{strings.addItemModal.quantityTitle}</Text>
                 <Text style={[styles.quantitySubtitle, { color: colors.textSecondary }]}>
-                  {quantity > 1 ? `Stock di ${quantity} copie identiche dello stesso capo` : 'Capo singolo (1 pezzo)'}
+                  {quantity > 1
+                    ? strings.addItemModal.stockCopies.replace('{n}', quantity.toString())
+                    : strings.addItemModal.singlePiece}
                 </Text>
               </View>
             </View>
@@ -289,7 +335,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
               <View style={styles.stepperValueContainer}>
                 <Text style={[styles.stepperValueText, { color: colors.textPrimary }]}>{quantity}</Text>
                 <Text style={[styles.stepperUnitText, { color: colors.textSecondary }]}>
-                  {quantity === 1 ? 'pezzo' : 'pezzi'}
+                  {quantity === 1 ? 'pz' : 'pz'}
                 </Text>
               </View>
 
@@ -331,14 +377,14 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Status Selector */}
           <View style={styles.statusSection}>
-            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>STATO INIZIALE</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{strings.addItemModal.initialStatusTitle}</Text>
             <View style={[styles.statusTabs, { backgroundColor: isDark ? '#111827' : '#E2E8F0' }]}>
               <TouchableOpacity
                 style={[styles.statusTab, status === 'listed' && { backgroundColor: colors.card }]}
                 onPress={() => setStatus('listed')}
               >
                 <Text style={[styles.statusTabText, status === 'listed' && { color: colors.textPrimary, fontWeight: '700' }]}>
-                  In Vendita
+                  {strings.addItemModal.statusListed}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -346,7 +392,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                 onPress={() => setStatus('draft')}
               >
                 <Text style={[styles.statusTabText, status === 'draft' && { color: colors.textPrimary, fontWeight: '700' }]}>
-                  Bozza
+                  {strings.addItemModal.statusDraft}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -354,10 +400,10 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
           {/* Financial Inputs */}
           <View style={styles.financialSection}>
-            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>COSTI & PREZZI UNITARI</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{strings.addItemModal.costsAndPricesTitle}</Text>
 
             <CustomInput
-              label="Prezzo di Vendita Unitario (€)"
+              label={strings.addItemModal.sellingPriceUnitLabel}
               subtitle={quantity > 1 ? `Prezzo al pezzo per ciascuno dei ${quantity} capi` : undefined}
               value={sellingPrice}
               onChangeValue={setSellingPrice}
@@ -365,7 +411,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             />
 
             <CustomInput
-              label="Costo d'Acquisto Unitario (€)"
+              label={strings.addItemModal.purchaseCostUnitLabel}
               subtitle={quantity > 1 ? `Costo pagato per singolo pezzo (Totale stock: ${formatEuro(totalPurchaseInvested)})` : undefined}
               value={purchaseCost}
               onChangeValue={setPurchaseCost}
@@ -375,16 +421,16 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             <View style={styles.row}>
               <View style={styles.col}>
                 <CustomInput
-                  label="Spedizione tua (€)"
-                  subtitle="Se a tuo carico"
+                  label={strings.addItemModal.shippingLabel}
+                  subtitle={strings.addItemModal.shippingSubtitle}
                   value={sellerShippingCost}
                   onChangeValue={setSellerShippingCost}
                 />
               </View>
               <View style={styles.col}>
                 <CustomInput
-                  label="Imballo (€)"
-                  subtitle="Busta, scatola"
+                  label={strings.addItemModal.packagingLabel}
+                  subtitle={strings.addItemModal.packagingSubtitle}
                   value={packagingCost}
                   onChangeValue={setPackagingCost}
                 />
@@ -394,7 +440,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             {/* Quick Shipping Presets */}
             <View style={styles.shippingPresetsSection}>
               <Text style={[styles.shippingPresetsLabel, { color: colors.textSecondary }]}>
-                PRESET SPEDIZIONI RAPIDI
+                {strings.addItemModal.shippingPresetsLabel}
               </Text>
               <ScrollView
                 horizontal
@@ -446,7 +492,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           >
             <View style={styles.previewProfitRow}>
               <Text style={[styles.previewProfitLabel, { color: colors.textPrimary }]}>
-                {quantity > 1 ? 'Guadagno al Pezzo:' : 'Stima Guadagno Netto:'}
+                {quantity > 1 ? strings.addItemModal.profitPerPiece : strings.addItemModal.estimatedNetProfit}
               </Text>
               <Text
                 style={[
@@ -461,7 +507,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             {quantity > 1 && (
               <View style={[styles.totalStockProfitRow, { borderTopColor: isDark ? '#334155' : '#E2E8F0' }]}>
                 <Text style={[styles.totalStockProfitLabel, { color: colors.textSecondary }]}>
-                  Guadagno Totale Stock ({quantity} pz):
+                  {strings.addItemModal.totalStockProfit.replace('{n}', quantity.toString())}
                 </Text>
                 <Text
                   style={[
@@ -475,7 +521,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             )}
 
             <Text style={styles.previewProfitSub}>
-              Margine: {liveResult.marginPercent}% | ROI: {liveResult.roiPercent}%
+              {strings.calculator.margin}: {liveResult.marginPercent}% | {strings.calculator.roi}: {liveResult.roiPercent}%
             </Text>
           </View>
 
@@ -498,8 +544,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           <TouchableOpacity style={styles.bottomSaveBtn} onPress={handleSave} activeOpacity={0.8}>
             <Text style={styles.bottomSaveBtnText}>
               {quantity > 1
-                ? `Conferma e Salva Stock (${quantity} pz)`
-                : "Conferma e Salva nell'Inventario"}
+                ? strings.addItemModal.saveStockBtn.replace('{n}', quantity.toString())
+                : strings.addItemModal.saveSingleBtn}
             </Text>
           </TouchableOpacity>
         </ScrollView>

@@ -1,4 +1,4 @@
-export type PlatformId = 'vinted' | 'ebay' | 'subito' | 'wallapop' | 'depop' | 'custom';
+export type PlatformId = 'vinted' | 'ebay' | 'subito' | 'wallapop' | 'depop' | 'custom' | (string & {});
 
 export type ItemStatus = 'listed' | 'sold' | 'shipped' | 'draft';
 
@@ -15,6 +15,7 @@ export interface PlatformConfig {
   paymentProcessingPercent: number;
   paymentProcessingFixed: number;
   description: string;
+  isCustom?: boolean;
 }
 
 export interface CalculationInput {

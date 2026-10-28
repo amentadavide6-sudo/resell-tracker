@@ -6,13 +6,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
+import { useAlert } from '../context/AlertContext';
 import { InventoryItem, PlatformId } from '../types';
 import { CustomInput } from './CustomInput';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
@@ -21,6 +22,8 @@ import { markItemAsSold, recordPartialSale } from '../services/db';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import { isProUser } from '../services/proManager';
 import { shareSoldProfit } from '../services/socialProof';
+import { getAnalyticsData } from '../services/analytics';
+import { sendDac7PushNotification } from '../services/notifications';
 
 interface MarkSoldModalProps {
   visible: boolean;
@@ -36,6 +39,8 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
   onSuccess,
 }) => {
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
+  const { showAlert } = useAlert();
   const [actualPrice, setActualPrice] = useState<string>('');
   const [soldPlatform, setSoldPlatform] = useState<PlatformId>('vinted');
   const [soldQuantity, setSoldQuantity] = useState<number>(1);
@@ -79,6 +84,8 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
     const isPartialSale = totalAvailableQty > 1 && soldQuantity < totalAvailableQty;
 
     try {
+      const prevAnalytics = getAnalyticsData();
+
       if (isPartialSale) {
         // Split logic: update remaining on listed item and insert new sold item
         recordPartialSale(item, soldQuantity, finalUnitPrice, soldPlatform);
@@ -87,25 +94,64 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
         markItemAsSold(item.id, finalUnitPrice, soldPlatform);
       }
 
-      // 2. Award XP
+      // Check DAC7 threshold changes
+      const newAnalytics = getAnalyticsData();
+      const status = newAnalytics.dac7.status;
+      const crossedThreshold =
+        status !== prevAnalytics.dac7.status &&
+        (status === 'warning' || status === 'exceeded');
+
+      if (crossedThreshold && (status === 'warning' || status === 'exceeded')) {
+        // Trigger push notification immediately
+        sendDac7PushNotification(
+          status,
+          newAnalytics.dac7.soldCount,
+          newAnalytics.dac7.grossRevenue
+        );
+      }
+
+      // Award XP
       const xpResult = addXP(XP_REWARDS.ITEM_SOLD, `Vendita (${soldQuantity}x): ${item.title}`);
 
-      // 3. Delist Assistant Alert or Level Up with Pro Pass
+      // Delist Assistant Alert or Level Up with Pro Pass or DAC7 Alert
       const otherPlatforms = activePlatforms.filter((p) => p !== soldPlatform);
       const isMulti = otherPlatforms.length > 0;
       const otherNames = otherPlatforms
         .map((id) => PLATFORMS.find((p) => p.id === id)?.name || id)
         .join(', ');
 
-      if (xpResult.leveledUp) {
-        Alert.alert(
-          '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
-          `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n🎁 Hai sbloccato ${xpResult.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!${
+      if (crossedThreshold) {
+        const isExceeded = newAnalytics.dac7.status === 'exceeded';
+        showAlert({
+          title: isExceeded ? strings.dac7Alert.exceededTitle : strings.dac7Alert.warningTitle,
+          message: (isExceeded ? strings.dac7Alert.exceededMessage : strings.dac7Alert.warningMessage)
+            .replace('{count}', newAnalytics.dac7.soldCount.toString())
+            .replace('{revenue}', newAnalytics.dac7.grossRevenue.toFixed(2))
+            .replace('{year}', new Date().getFullYear().toString()),
+          type: isExceeded ? 'error' : 'warning',
+          buttons: [
+            {
+              text: strings.dac7Alert.gotIt,
+              style: 'cancel',
+            },
+            {
+              text: 'Condividi Affare 🚀',
+              onPress: () => {
+                shareSoldProfit(item, totalNetProfit, unitBreakdown.roiPercent);
+              },
+            },
+          ],
+        });
+      } else if (xpResult.leveledUp) {
+        showAlert({
+          title: '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
+          message: `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n🎁 Hai sbloccato ${xpResult.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!${
             isMulti
               ? `\n\n⚠️ Promemoria Delist: Ricordati di rimuovere l'annuncio da: ${otherNames}`
               : ''
           }`,
-          [
+          type: 'success',
+          buttons: [
             {
               text: 'Condividi Affare 🚀',
               onPress: () => {
@@ -113,13 +159,14 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
               },
             },
             { text: 'Continua', style: 'cancel' },
-          ]
-        );
+          ],
+        });
       } else if (isMulti) {
-        Alert.alert(
-          '🎉 Vendita Registrata con Successo!',
-          `Hai guadagnato +${xpResult.earnedXP} XP nel Reseller Club!\n\n⚠️ Promemoria Delist Assistant:\nRicordati di eliminare o disattivare subito l'annuncio da:\n👉 ${otherNames}\nper evitare doppie vendite accidentali e reclami.`,
-          [
+        showAlert({
+          title: '🎉 Vendita Registrata con Successo!',
+          message: `Hai guadagnato +${xpResult.earnedXP} XP nel Reseller Club!\n\n⚠️ Promemoria Delist Assistant:\nRicordati di eliminare o disattivare subito l'annuncio da:\n👉 ${otherNames}\nper evitare doppie vendite accidentali e reclami.`,
+          type: 'success',
+          buttons: [
             {
               text: 'Condividi Affare 🚀',
               onPress: () => {
@@ -127,8 +174,8 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
               },
             },
             { text: 'Ho Capito', style: 'cancel' },
-          ]
-        );
+          ],
+        });
       }
 
       onSuccess({
@@ -142,7 +189,11 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
       onClose();
     } catch (err) {
       console.error('Error marking as sold:', err);
-      Alert.alert('Errore', 'Impossibile salvare la vendita.');
+      showAlert({
+        title: strings.common.error,
+        message: 'Impossibile salvare la vendita.',
+        type: 'error',
+      });
     }
   };
 

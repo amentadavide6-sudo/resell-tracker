@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,64 +7,116 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
+import { useAlert } from '../context/AlertContext';
 import { PlatformSelector } from '../components/PlatformSelector';
 import { CustomInput } from '../components/CustomInput';
 import { FeeBreakdownCard } from '../components/FeeBreakdownCard';
+import { AddItemModal } from '../components/AddItemModal';
 import { PLATFORMS } from '../constants/platforms';
 import { SHIPPING_PRESETS } from '../constants/shipping';
 import { calculateResellProfit } from '../services/feeCalculator';
 import {
-  getCustomPlatformSettings,
-  saveCustomPlatformSettings,
+  getAllAvailablePlatforms,
+  getAllCustomPlatforms,
+  addCustomPlatform,
+  deleteCustomPlatform,
 } from '../services/customPlatformManager';
-import { CalculationInput, PlatformId } from '../types';
+import { CalculationInput, PlatformConfig, PlatformId } from '../types';
 
 interface CalculatorScreenProps {
-  onSaveItemSuccess?: (itemData: {
-    title: string;
-    sellingPrice: number;
-    purchaseCost: number;
-    platformId: PlatformId;
-  }) => void;
+  onSaveItemSuccess?: () => void;
 }
 
 export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSuccess }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { strings } = useTranslation();
+  const { showAlert } = useAlert();
+
+  const [availablePlatforms, setAvailablePlatforms] = useState<PlatformConfig[]>(() =>
+    getAllAvailablePlatforms()
+  );
   const [platformId, setPlatformId] = useState<PlatformId>('vinted');
   const [sellingPrice, setSellingPrice] = useState<string>('25');
   const [purchaseCost, setPurchaseCost] = useState<string>('5');
   const [sellerShippingCost, setSellerShippingCost] = useState<string>('0');
   const [packagingCost, setPackagingCost] = useState<string>('0.50');
 
-  // Custom platform saved settings
-  const savedCustom = useMemo(() => getCustomPlatformSettings(), []);
-  const [customName, setCustomName] = useState<string>(savedCustom.name);
-  const [customPercent, setCustomPercent] = useState<string>(savedCustom.sellerFeePercent.toString());
-  const [customFixed, setCustomFixed] = useState<string>(savedCustom.sellerFixedFee.toString());
+  // Custom platform form state
+  const [customName, setCustomName] = useState<string>('');
+  const [customPercent, setCustomPercent] = useState<string>('5');
+  const [customFixed, setCustomFixed] = useState<string>('0');
 
-  const handleSaveCustomSettings = () => {
-    saveCustomPlatformSettings({
-      name: customName.trim() || 'Personalizzato',
-      sellerFeePercent: parseFloat(customPercent.replace(',', '.')) || 0,
-      sellerFixedFee: parseFloat(customFixed.replace(',', '.')) || 0,
+  // Add Item Modal state
+  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+
+  const refreshPlatforms = useCallback(() => {
+    const list = getAllAvailablePlatforms();
+    setAvailablePlatforms(list);
+  }, []);
+
+  const customPlatformsList = useMemo(() => {
+    return getAllCustomPlatforms();
+  }, [availablePlatforms]);
+
+  const handleAddCustomPlatform = () => {
+    const trimmed = customName.trim();
+    if (!trimmed) {
+      showAlert({
+        title: strings.common.attention,
+        message: strings.calculator.customNamePlaceholder,
+        type: 'warning',
+      });
+      return;
+    }
+
+    const feePct = parseFloat(customPercent.replace(',', '.')) || 0;
+    const fixFee = parseFloat(customFixed.replace(',', '.')) || 0;
+
+    const created = addCustomPlatform(trimmed, feePct, fixFee);
+    refreshPlatforms();
+    setPlatformId(created.id);
+    setCustomName('');
+    setCustomPercent('5');
+    setCustomFixed('0');
+
+    showAlert({
+      title: strings.common.success,
+      message: `"${trimmed}" (${feePct}% + ${fixFee.toFixed(2)}€) ${strings.calculator.customPlatformsListTitle.toLowerCase()}`,
+      type: 'success',
     });
-    Alert.alert(
-      'Piattaforma Salvata! 💾',
-      `I parametri di "${customName.trim() || 'Personalizzato'}" (${customPercent}% + ${customFixed}€) sono stati memorizzati per tutti i tuoi calcoli futuri.`
-    );
+  };
+
+  const handleDeleteCustomPlatform = (id: string, name: string) => {
+    showAlert({
+      title: strings.inventory.deleteConfirmTitle,
+      message: `${strings.inventory.deleteConfirmDesc} "${name}"?`,
+      type: 'warning',
+      buttons: [
+        { text: strings.common.cancel, style: 'cancel' },
+        {
+          text: strings.inventory.filterAll,
+          style: 'destructive',
+          onPress: () => {
+            deleteCustomPlatform(id);
+            refreshPlatforms();
+            if (platformId === id) {
+              setPlatformId('vinted');
+            }
+          },
+        },
+      ],
+    });
   };
 
   const selectedPlatform = useMemo(() => {
-    return PLATFORMS.find((p) => p.id === platformId) || PLATFORMS[0];
-  }, [platformId]);
+    return availablePlatforms.find((p) => p.id === platformId) || PLATFORMS[0];
+  }, [availablePlatforms, platformId]);
 
   const calculationInput: CalculationInput = useMemo(() => {
     return {
@@ -104,19 +156,21 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
   };
 
   const handleSaveToInventory = () => {
-    if (onSaveItemSuccess) {
-      onSaveItemSuccess({
-        title: `Articolo ${selectedPlatform.name}`,
-        sellingPrice: result.sellingPrice,
-        purchaseCost: result.purchaseCost,
-        platformId,
-      });
-    } else {
-      Alert.alert(
-        'Salvataggio Articolo',
-        `Articolo (${result.sellingPrice} € su ${selectedPlatform.name}) con profitto netto di ${result.netProfit.toFixed(2)} € pronto per l'Inventario!`,
-        [{ text: 'OK' }]
-      );
+    setIsAddModalOpen(true);
+  };
+
+  const getPresetLabel = (presetId: string, defaultLabel: string) => {
+    switch (presetId) {
+      case 'free':
+        return strings.calculator.shippingPresetFree;
+      case 'inpost':
+        return strings.calculator.shippingPresetInpost;
+      case 'poste':
+        return strings.calculator.shippingPresetPoste;
+      case 'courier':
+        return strings.calculator.shippingPresetCourier;
+      default:
+        return defaultLabel;
     }
   };
 
@@ -127,7 +181,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/* Top Header: Left-aligned only, top-right completely empty to avoid Expo Go / camera overlaps */}
+        {/* Top Header */}
         <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
           <View style={styles.headerTitles}>
             <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{strings.calculator.headerSubtitle}</Text>
@@ -141,33 +195,37 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Platform Selector */}
+          {/* Horizontal Platform Selector with Custom Platforms */}
           <PlatformSelector
             selectedId={platformId}
             onSelect={(id) => setPlatformId(id)}
+            platforms={availablePlatforms}
+            title={strings.calculator.selectPlatform}
           />
 
-          {/* Custom Platform Extra Inputs & Saved Manager */}
+          {/* If Custom "+ Personalizzata" is selected: show Add Platform Form */}
           {platformId === 'custom' && (
             <View style={[styles.customCard, isDark && { backgroundColor: '#1E1B4B', borderColor: '#312E81' }]}>
               <View style={styles.customCardHeader}>
                 <Ionicons name="options-outline" size={18} color="#6366F1" />
-                <Text style={[styles.customTitle, isDark && { color: '#C7D2FE' }]}>PARAMETRI PIATTAFORMA PERSONALIZZATA</Text>
+                <Text style={[styles.customTitle, isDark && { color: '#C7D2FE' }]}>
+                  {strings.calculator.customPlatformTitle}
+                </Text>
               </View>
 
               <CustomInput
-                label="Nome Piattaforma / Canale"
-                subtitle="Es. Vestiaire Collective, Mercatino Locale, Etsy"
+                label={strings.calculator.customNameLabel}
+                subtitle="Es. Vestiaire Collective, Mercatino, Etsy, Subito a mano"
                 value={customName}
                 onChangeValue={setCustomName}
-                placeholder="Nome piattaforma..."
+                placeholder={strings.calculator.customNamePlaceholder}
                 isCurrency={false}
               />
 
               <View style={styles.row}>
                 <View style={styles.col}>
                   <CustomInput
-                    label="Commissione %"
+                    label={strings.calculator.customFeePercent}
                     value={customPercent}
                     onChangeValue={setCustomPercent}
                     placeholder="5.0"
@@ -176,7 +234,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                 </View>
                 <View style={styles.col}>
                   <CustomInput
-                    label="Costo Fisso €"
+                    label={strings.calculator.customFixedFee}
                     value={customFixed}
                     onChangeValue={setCustomFixed}
                     placeholder="0.50"
@@ -186,12 +244,54 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
 
               <TouchableOpacity
                 style={styles.saveCustomBtn}
-                onPress={handleSaveCustomSettings}
+                onPress={handleAddCustomPlatform}
                 activeOpacity={0.7}
               >
-                <Ionicons name="save-outline" size={15} color="#FFFFFF" />
-                <Text style={styles.saveCustomBtnText}>Salva Parametri Predefiniti</Text>
+                <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" />
+                <Text style={styles.saveCustomBtnText}>{strings.calculator.addPlatformBtn}</Text>
               </TouchableOpacity>
+
+              {/* List of existing custom platforms with delete buttons */}
+              {customPlatformsList.length > 0 && (
+                <View style={styles.savedCustomListContainer}>
+                  <Text style={[styles.savedCustomListTitle, isDark && { color: '#A5B4FC' }]}>
+                    {strings.calculator.customPlatformsListTitle}
+                  </Text>
+                  {customPlatformsList.map((cp) => (
+                    <View
+                      key={cp.id}
+                      style={[
+                        styles.savedCustomRow,
+                        isDark && { backgroundColor: '#312E81', borderColor: '#4338CA' },
+                      ]}
+                    >
+                      <View style={styles.savedCustomInfo}>
+                        <View style={[styles.savedCustomDot, { backgroundColor: cp.color }]} />
+                        <Text style={[styles.savedCustomName, isDark && { color: '#FFFFFF' }]}>
+                          {cp.name}
+                        </Text>
+                        <Text style={[styles.savedCustomFee, isDark && { color: '#C7D2FE' }]}>
+                          ({cp.sellerFeePercent}% + {cp.sellerFixedFee.toFixed(2)}€)
+                        </Text>
+                      </View>
+                      <View style={styles.savedCustomActions}>
+                        <TouchableOpacity
+                          style={styles.selectCustomBtn}
+                          onPress={() => setPlatformId(cp.id)}
+                        >
+                          <Text style={styles.selectCustomBtnText}>Usa</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.deleteCustomBtn}
+                          onPress={() => handleDeleteCustomPlatform(cp.id, cp.name)}
+                        >
+                          <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           )}
 
@@ -203,47 +303,51 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
           {/* Inputs Section */}
           <View style={styles.inputsSection}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>DATI TRANSAZIONE</Text>
+              <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
+                {strings.calculator.transactionData}
+              </Text>
               <TouchableOpacity
                 onPress={handleReset}
                 style={[styles.resetLink, isDark && { backgroundColor: '#1E293B' }]}
                 activeOpacity={0.6}
               >
                 <Ionicons name="refresh" size={13} color={colors.primary} style={{ marginRight: 4 }} />
-                <Text style={[styles.resetLinkText, { color: colors.primary }]}>Azzera Campi</Text>
+                <Text style={[styles.resetLinkText, { color: colors.primary }]}>
+                  {strings.calculator.resetFields}
+                </Text>
               </TouchableOpacity>
             </View>
 
             <CustomInput
-              label="Prezzo di Vendita Previsto"
-              subtitle="Quanto pagherà chi compra l'oggetto"
+              label={strings.calculator.sellingPriceLabel}
+              subtitle={strings.calculator.sellingPriceSubtitle}
               value={sellingPrice}
               onChangeValue={setSellingPrice}
               quickAddAmounts={[5, 10, 20]}
             />
 
             <CustomInput
-              label="Costo di Acquisto (Spesa iniziale)"
-              subtitle="Quanto hai pagato (0€ se trovato o regalo)"
+              label={strings.calculator.purchaseCostLabel}
+              subtitle={strings.calculator.purchaseCostSubtitle}
               value={purchaseCost}
               onChangeValue={setPurchaseCost}
               quickAddAmounts={[1, 5, 10]}
             />
 
-            {/* Two-column layout with isolated columns */}
+            {/* Two-column layout for shipping and packaging */}
             <View style={styles.row}>
               <View style={styles.col}>
                 <CustomInput
-                  label="Spedizione tua"
-                  subtitle="Se a tuo carico"
+                  label={strings.calculator.shippingLabel}
+                  subtitle={strings.calculator.shippingSubtitle}
                   value={sellerShippingCost}
                   onChangeValue={setSellerShippingCost}
                 />
               </View>
               <View style={styles.col}>
                 <CustomInput
-                  label="Imballo / Box"
-                  subtitle="Busta, etichetta"
+                  label={strings.calculator.packagingLabel}
+                  subtitle={strings.calculator.packagingSubtitle}
                   value={packagingCost}
                   onChangeValue={setPackagingCost}
                 />
@@ -253,7 +357,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
             {/* Quick Shipping Presets */}
             <View style={styles.shippingPresetsSection}>
               <Text style={[styles.shippingPresetsLabel, { color: colors.textSecondary }]}>
-                PRESET SPEDIZIONI RAPIDI
+                {strings.calculator.presetsTitle}
               </Text>
               <ScrollView
                 horizontal
@@ -284,7 +388,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                           isSelected && { color: '#6366F1', fontWeight: '800' },
                         ]}
                       >
-                        {preset.label}
+                        {getPresetLabel(preset.id, preset.label)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -304,6 +408,21 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Add Item Modal directly launched from Calculator */}
+      <AddItemModal
+        visible={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onItemAdded={() => {
+          setIsAddModalOpen(false);
+          onSaveItemSuccess?.();
+        }}
+        initialValues={{
+          sellingPrice: result.sellingPrice,
+          purchaseCost: result.purchaseCost,
+          platformId,
+        }}
+      />
     </View>
   );
 };
@@ -404,14 +523,79 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: '#6366F1',
-    paddingVertical: 9,
+    paddingVertical: 10,
     borderRadius: 8,
     marginTop: 8,
   },
   saveCustomBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  savedCustomListContainer: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#C7D2FE',
+    paddingTop: 10,
+  },
+  savedCustomListTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#4338CA',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  savedCustomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  savedCustomInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  savedCustomDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  savedCustomName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  savedCustomFee: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  savedCustomActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  selectCustomBtn: {
+    backgroundColor: '#6366F1',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  selectCustomBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  deleteCustomBtn: {
+    padding: 4,
   },
   row: {
     flexDirection: 'row',

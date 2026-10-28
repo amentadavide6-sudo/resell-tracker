@@ -6,13 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
-  Alert,
   Switch,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { useTranslation, LanguageMode } from '../i18n';
+import { useAlert } from '../context/AlertContext';
 import { exportBackup, importBackup } from '../services/backup';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import {
@@ -63,6 +63,7 @@ export const SettingsScreen: React.FC<{
   const insets = useSafeAreaInsets();
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const { strings, languageMode, setLanguageMode } = useTranslation();
+  const { showAlert } = useAlert();
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -77,15 +78,17 @@ export const SettingsScreen: React.FC<{
   const handleSendTestNotification = async () => {
     const sent = await sendTestNotification();
     if (sent) {
-      Alert.alert(
-        'Notifica Inviata! 🔔',
-        'Controlla la tendina delle notifiche del telefono tra 2 secondi.'
-      );
+      showAlert({
+        title: 'Notifica Inviata! 🔔',
+        message: 'Controlla la tendina delle notifiche del telefono tra 2 secondi.',
+        type: 'success',
+      });
     } else {
-      Alert.alert(
-        'Permesso Notifiche',
-        'Abilita i permessi di notifica nelle impostazioni di Android per ricevere avvisi strategici.'
-      );
+      showAlert({
+        title: 'Permesso Notifiche',
+        message: 'Abilita i permessi di notifica nelle impostazioni di Android per ricevere avvisi strategici.',
+        type: 'warning',
+      });
     }
   };
 
@@ -106,14 +109,18 @@ export const SettingsScreen: React.FC<{
       if (canOpen) {
         await Linking.openURL(mailtoUrl);
       } else {
-        Alert.alert(
-          'Email di Supporto',
-          `Puoi scriverci direttamente a:\n\n${supportEmail}`,
-          [{ text: 'Copia Email' }]
-        );
+        showAlert({
+          title: 'Email di Supporto',
+          message: `Puoi scriverci direttamente a:\n\n${supportEmail}`,
+          type: 'info',
+        });
       }
     } catch {
-      Alert.alert('Email di Supporto', `Puoi scriverci a:\n\n${supportEmail}`);
+      showAlert({
+        title: 'Email di Supporto',
+        message: `Puoi scriverci a:\n\n${supportEmail}`,
+        type: 'info',
+      });
     }
   };
 
@@ -123,16 +130,26 @@ export const SettingsScreen: React.FC<{
     setIsExporting(false);
     if (res.success) {
       addXP(XP_REWARDS.BACKUP_SAVED, 'Backup archivio');
+      showAlert({
+        title: 'Backup Salvato! 💾',
+        message: res.message,
+        type: 'success',
+      });
     } else if (res.message !== 'Nessun file selezionato.') {
-      Alert.alert('Backup', res.message);
+      showAlert({
+        title: 'Backup',
+        message: res.message,
+        type: 'warning',
+      });
     }
   };
 
   const handleImport = async () => {
-    Alert.alert(
-      'Ripristina Archivio',
-      'Vuoi selezionare un file di backup (.json) per ripristinare i tuoi articoli nell\'inventario?',
-      [
+    showAlert({
+      title: 'Ripristina Archivio',
+      message: 'Vuoi selezionare un file di backup (.json) per ripristinare i tuoi articoli nell\'inventario?',
+      type: 'info',
+      buttons: [
         { text: 'Annulla', style: 'cancel' },
         {
           text: 'Seleziona File',
@@ -140,14 +157,18 @@ export const SettingsScreen: React.FC<{
             setIsImporting(true);
             const res = await importBackup();
             setIsImporting(false);
-            Alert.alert('Ripristino', res.message);
+            showAlert({
+              title: 'Ripristino',
+              message: res.message,
+              type: res.success ? 'success' : 'error',
+            });
             if (res.success && onDataRestored) {
               onDataRestored();
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   return (

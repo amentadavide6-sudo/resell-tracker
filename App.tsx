@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LanguageProvider, useTranslation } from './src/i18n';
+import { AlertProvider, useAlert } from './src/context/AlertContext';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { InventoryScreen } from './src/screens/InventoryScreen';
 import { StatsScreen } from './src/screens/StatsScreen';
@@ -12,11 +13,8 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { ProModal } from './src/components/ProModal';
 import { OnboardingModal } from './src/components/OnboardingModal';
 import { AdBanner } from './src/components/AdBanner';
-import { insertInventoryItem } from './src/services/db';
 import { hasSeenOnboarding } from './src/services/onboarding';
-import { canAddMoreItems } from './src/services/proManager';
 import { scheduleSmartNotifications } from './src/services/notifications';
-import { PlatformId } from './src/types';
 
 type Tab = 'calculator' | 'inventory' | 'stats' | 'settings';
 
@@ -24,6 +22,7 @@ function MainApp() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { strings } = useTranslation();
+  const { showAlert } = useAlert();
   const [activeTab, setActiveTab] = useState<Tab>('calculator');
   const [inventoryRefreshKey, setInventoryRefreshKey] = useState<number>(0);
   const [proModalVisible, setProModalVisible] = useState<boolean>(false);
@@ -33,54 +32,20 @@ function MainApp() {
     scheduleSmartNotifications();
   }, []);
 
-  const handleSaveFromCalculator = (itemData: {
-    title: string;
-    sellingPrice: number;
-    purchaseCost: number;
-    platformId: PlatformId;
-  }) => {
-    try {
-      if (!canAddMoreItems()) {
-        Alert.alert(
-          strings.calculator.freeLimitTitle,
-          strings.calculator.freeLimitDesc,
-          [
-            { text: strings.calculator.later, style: 'cancel' },
-            {
-              text: strings.calculator.upgradePro,
-              onPress: () => setProModalVisible(true),
-            },
-          ]
-        );
-        return;
-      }
-
-      insertInventoryItem({
-        title: itemData.title,
-        platformId: itemData.platformId,
-        purchaseCost: itemData.purchaseCost,
-        targetSellingPrice: itemData.sellingPrice,
-        sellerShippingCost: 0,
-        packagingCost: 0.5,
-        status: 'listed',
-        createdAt: new Date().toISOString(),
-      });
-      setInventoryRefreshKey((prev) => prev + 1);
-      Alert.alert(
-        strings.calculator.saveSuccess,
-        `"${itemData.title}" ${strings.calculator.saveSuccessDesc}`,
-        [
-          {
-            text: strings.calculator.goToInventory,
-            onPress: () => setActiveTab('inventory'),
-          },
-          { text: strings.calculator.stayHere, style: 'cancel' },
-        ]
-      );
-    } catch (e) {
-      console.error(e);
-      Alert.alert(strings.common.error, 'Impossibile salvare l\'articolo nell\'inventario.');
-    }
+  const handleSaveFromCalculator = () => {
+    setInventoryRefreshKey((prev) => prev + 1);
+    showAlert({
+      title: strings.calculator.saveSuccess,
+      message: strings.calculator.saveSuccessDesc,
+      type: 'success',
+      buttons: [
+        {
+          text: strings.calculator.goToInventory,
+          onPress: () => setActiveTab('inventory'),
+        },
+        { text: strings.calculator.stayHere, style: 'cancel' },
+      ],
+    });
   };
 
   const inactiveTabColor = isDark ? '#64748B' : '#94A3B8';

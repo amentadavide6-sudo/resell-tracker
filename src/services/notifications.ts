@@ -147,3 +147,34 @@ export async function sendTestNotification(): Promise<boolean> {
     return false;
   }
 }
+
+export async function sendDac7PushNotification(
+  status: 'warning' | 'exceeded',
+  count: number,
+  revenue: number
+): Promise<void> {
+  try {
+    const hasPermission = await requestNotificationPermissions();
+    if (!hasPermission) return;
+
+    const isExceeded = status === 'exceeded';
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: isExceeded
+          ? '🚨 ATTENZIONE: Soglia Fiscale DAC7 Raggiunta!'
+          : '⚠️ AVVISO: Ti stai avvicinando alla soglia DAC7!',
+        body: isExceeded
+          ? `Hai raggiunto ${count} vendite o ${revenue.toFixed(2)}€ incassati quest'anno. Le piattaforme comunicheranno i dati al fisco.`
+          : `Sei a quota ${count} vendite / ${revenue.toFixed(2)}€. Ricordati delle soglie annuali di 30 vendite o 2.000€.`,
+        sound: true,
+        data: { screen: 'stats' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 1,
+      },
+    });
+  } catch (err) {
+    console.error('Error triggering DAC7 notification:', err);
+  }
+}
