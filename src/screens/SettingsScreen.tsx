@@ -199,7 +199,7 @@ export const SettingsScreen: React.FC<{
                 <Text style={styles.proTitle}>{strings.settings.proCardTitle}</Text>
               </View>
               <View style={styles.proPriceTag}>
-                <Text style={styles.proPriceText}>3,49 €</Text>
+                <Text style={styles.proPriceText}>5,99 €</Text>
               </View>
             </View>
             <Text style={styles.proDesc}>

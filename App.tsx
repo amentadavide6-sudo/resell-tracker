@@ -15,6 +15,7 @@ import { OnboardingModal } from './src/components/OnboardingModal';
 import { AdBanner } from './src/components/AdBanner';
 import { hasSeenOnboarding } from './src/services/onboarding';
 import { scheduleSmartNotifications } from './src/services/notifications';
+import { initIapConnection } from './src/services/purchaseService';
 
 type Tab = 'calculator' | 'inventory' | 'stats' | 'settings';
 
@@ -30,6 +31,7 @@ function MainApp() {
 
   useEffect(() => {
     scheduleSmartNotifications();
+    initIapConnection();
   }, []);
 
   const handleSaveFromCalculator = () => {

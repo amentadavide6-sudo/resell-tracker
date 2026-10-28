@@ -6,6 +6,7 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -16,6 +17,7 @@ import {
 } from '../services/purchaseService';
 import { useTheme } from '../context/ThemeContext';
 import { useAlert } from '../context/AlertContext';
+import { useTranslation } from '../i18n';
 
 interface ProModalProps {
   visible: boolean;
@@ -29,9 +31,13 @@ export const ProModal: React.FC<ProModalProps> = ({
   onProUnlocked,
 }) => {
   const { colors, isDark } = useTheme();
+  const { strings, t } = useTranslation();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PurchasePlanId>('lifetime');
+
+  const lifetimeConfig = PLAN_CONFIGS.lifetime;
+  const monthlyConfig = PLAN_CONFIGS.monthly;
 
   const handlePurchase = async () => {
     try {
@@ -39,15 +45,15 @@ export const ProModal: React.FC<ProModalProps> = ({
       const success = await purchaseProProduct(selectedPlan);
       if (success) {
         showAlert({
-          title: '🎉 Benvenuto in ResellTracker Pro!',
+          title: strings.proModal.welcomeTitle,
           message:
             selectedPlan === 'lifetime'
-              ? 'Hai sbloccato con successo l\'accesso Pro a vita senza limiti né canoni!'
-              : 'Il tuo abbonamento mensile Pro è ora attivo.',
+              ? strings.proModal.welcomeLifetimeMsg
+              : strings.proModal.welcomeMonthlyMsg,
           type: 'success',
           buttons: [
             {
-              text: 'Inizia subito',
+              text: strings.proModal.welcomeAction,
               onPress: () => {
                 onProUnlocked();
                 onClose();
@@ -56,6 +62,12 @@ export const ProModal: React.FC<ProModalProps> = ({
           ],
         });
       }
+    } catch (err: any) {
+      showAlert({
+        title: strings.common.error,
+        message: err?.message || 'Si è verificato un errore durante la transazione con Google Play.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -67,8 +79,8 @@ export const ProModal: React.FC<ProModalProps> = ({
       const restored = await restoreProPurchases();
       if (restored) {
         showAlert({
-          title: 'Acquisto Ripristinato',
-          message: 'Il tuo acquisto Pro è stato verificato e ripristinato con successo.',
+          title: strings.proModal.restoreSuccessTitle,
+          message: strings.proModal.restoreSuccessMsg,
           type: 'success',
           buttons: [
             {
@@ -82,8 +94,8 @@ export const ProModal: React.FC<ProModalProps> = ({
         });
       } else {
         showAlert({
-          title: 'Nessun Acquisto Trovato',
-          message: 'Non sono stati trovati acquisti precedenti associati a questo account Google.',
+          title: strings.proModal.restoreNotFoundTitle,
+          message: strings.proModal.restoreNotFoundMsg,
           type: 'info',
         });
       }
@@ -92,15 +104,12 @@ export const ProModal: React.FC<ProModalProps> = ({
     }
   };
 
-  const lifetimeConfig = PLAN_CONFIGS.lifetime;
-  const monthlyConfig = PLAN_CONFIGS.monthly;
-
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <View style={[styles.root, { backgroundColor: colors.background }]}>
         {/* Top Close button */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
             <Ionicons name="close" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
@@ -114,11 +123,13 @@ export const ProModal: React.FC<ProModalProps> = ({
           <View style={styles.heroSection}>
             <View style={styles.proBadge}>
               <Ionicons name="sparkles" size={15} color="#D97706" />
-              <Text style={styles.proBadgeText}>OFFERTA LANCIO FONDATORI</Text>
+              <Text style={styles.proBadgeText}>{strings.proModal.badgeOffer}</Text>
             </View>
-            <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>ResellTracker Pro</Text>
+            <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>
+              {strings.proModal.heroTitle}
+            </Text>
             <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
-              Il toolkit completo per vendere con profitto su Vinted, eBay, Wallapop e Subito.
+              {strings.proModal.heroSubtitle}
             </Text>
           </View>
 
@@ -137,7 +148,7 @@ export const ProModal: React.FC<ProModalProps> = ({
             >
               <View style={styles.planBadgeRow}>
                 <View style={styles.highlightBadge}>
-                  <Text style={styles.highlightBadgeText}>{lifetimeConfig.badge}</Text>
+                  <Text style={styles.highlightBadgeText}>{strings.proModal.lifetimeBadge}</Text>
                 </View>
                 <Ionicons
                   name={selectedPlan === 'lifetime' ? 'radio-button-on' : 'radio-button-off'}
@@ -147,12 +158,12 @@ export const ProModal: React.FC<ProModalProps> = ({
               </View>
 
               <View style={styles.planMainRow}>
-                <View>
+                <View style={{ flex: 1, paddingRight: 8 }}>
                   <Text style={[styles.planTitle, { color: colors.textPrimary }]}>
-                    {lifetimeConfig.title}
+                    {strings.proModal.lifetimeTitle}
                   </Text>
                   <Text style={[styles.planSubtitle, { color: colors.textSecondary }]}>
-                    {lifetimeConfig.description}
+                    {strings.proModal.lifetimeDesc}
                   </Text>
                 </View>
 
@@ -166,7 +177,7 @@ export const ProModal: React.FC<ProModalProps> = ({
                   <Text style={[styles.planPriceAmount, { color: colors.textPrimary }]}>
                     {lifetimeConfig.price}
                   </Text>
-                  <Text style={styles.planPeriodText}>{lifetimeConfig.billingPeriod}</Text>
+                  <Text style={styles.planPeriodText}>{strings.proModal.lifetimePeriod}</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -185,7 +196,7 @@ export const ProModal: React.FC<ProModalProps> = ({
               <View style={styles.planBadgeRow}>
                 <View style={[styles.highlightBadge, { backgroundColor: isDark ? '#374151' : '#F1F5F9' }]}>
                   <Text style={[styles.highlightBadgeText, { color: colors.textSecondary }]}>
-                    {monthlyConfig.badge}
+                    {strings.proModal.monthlyBadge}
                   </Text>
                 </View>
                 <Ionicons
@@ -198,10 +209,10 @@ export const ProModal: React.FC<ProModalProps> = ({
               <View style={styles.planMainRow}>
                 <View style={{ flex: 1, paddingRight: 8 }}>
                   <Text style={[styles.planTitle, { color: colors.textPrimary }]}>
-                    {monthlyConfig.title}
+                    {strings.proModal.monthlyTitle}
                   </Text>
                   <Text style={[styles.planSubtitle, { color: colors.textSecondary }]}>
-                    {monthlyConfig.description}
+                    {strings.proModal.monthlyDesc}
                   </Text>
                 </View>
 
@@ -209,7 +220,7 @@ export const ProModal: React.FC<ProModalProps> = ({
                   <Text style={[styles.planPriceAmount, { color: colors.textPrimary }]}>
                     {monthlyConfig.price}
                   </Text>
-                  <Text style={styles.planPeriodText}>{monthlyConfig.billingPeriod}</Text>
+                  <Text style={styles.planPeriodText}>{strings.proModal.monthlyPeriod}</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -218,7 +229,7 @@ export const ProModal: React.FC<ProModalProps> = ({
           {/* Features Comparison Checklist */}
           <View style={[styles.featuresCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <Text style={[styles.featuresHeader, { color: colors.textPrimary }]}>
-              Cosa include ResellTracker Pro:
+              {strings.proModal.featuresHeader}
             </Text>
 
             <View style={styles.featureItem}>
@@ -227,10 +238,10 @@ export const ProModal: React.FC<ProModalProps> = ({
               </View>
               <View style={styles.featureTextWrap}>
                 <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
-                  Inventario Capi Illimitato
+                  {strings.proModal.feature1Title}
                 </Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Sblocca gli slot infiniti. La versione Free è limitata a 15 capi massimi salvati.
+                  {strings.proModal.feature1Desc}
                 </Text>
               </View>
             </View>
@@ -241,10 +252,10 @@ export const ProModal: React.FC<ProModalProps> = ({
               </View>
               <View style={styles.featureTextWrap}>
                 <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
-                  Esportazione Registro Excel & CSV Illimitata
+                  {strings.proModal.feature2Title}
                 </Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Genera con 1 tap il foglio di calcolo completo con tutti i profitti, tasse e margini per Excel e Fogli Google.
+                  {strings.proModal.feature2Desc}
                 </Text>
               </View>
             </View>
@@ -255,10 +266,10 @@ export const ProModal: React.FC<ProModalProps> = ({
               </View>
               <View style={styles.featureTextWrap}>
                 <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
-                  Zero Pubblicità (100% Ad-Free)
+                  {strings.proModal.feature3Title}
                 </Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Rimozione immediata di qualsiasi banner promozionale e interfaccia ultra rapida.
+                  {strings.proModal.feature3Desc}
                 </Text>
               </View>
             </View>
@@ -269,10 +280,10 @@ export const ProModal: React.FC<ProModalProps> = ({
               </View>
               <View style={styles.featureTextWrap}>
                 <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>
-                  2x XP Booster Permanente ⚡
+                  {strings.proModal.feature4Title}
                 </Text>
                 <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  Punti doppi per ogni articolo registrato o venduto, per raggiungere il badge Top Seller in metà tempo!
+                  {strings.proModal.feature4Desc}
                 </Text>
               </View>
             </View>
@@ -285,21 +296,27 @@ export const ProModal: React.FC<ProModalProps> = ({
             disabled={loading}
             activeOpacity={0.85}
           >
-            <Ionicons name="sparkles" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.buyBtnText}>
-              {selectedPlan === 'lifetime'
-                ? `Sblocca Accesso a Vita a ${lifetimeConfig.price}`
-                : `Attiva Abbonamento a ${monthlyConfig.price} / mese`}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Ionicons name="sparkles" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.buyBtnText}>
+                  {selectedPlan === 'lifetime'
+                    ? t('proModal.buyLifetimeBtn', { price: lifetimeConfig.price })
+                    : t('proModal.buyMonthlyBtn', { price: monthlyConfig.price })}
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Restore link */}
-          <TouchableOpacity style={styles.restoreBtn} onPress={handleRestore} disabled={loading}>
-            <Text style={styles.restoreBtnText}>Hai già acquistato Pro? Ripristina acquisti</Text>
+          <TouchableOpacity style={styles.restoreBtn} onPress={handleRestore} disabled={loading} activeOpacity={0.7}>
+            <Text style={styles.restoreBtnText}>{strings.proModal.restoreBtn}</Text>
           </TouchableOpacity>
 
           <Text style={styles.legalNotice}>
-            Transazione protetta e gestita direttamente da Google Play.
+            {strings.proModal.legalNotice}
           </Text>
         </ScrollView>
       </View>
@@ -351,66 +368,61 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: -0.5,
+    marginBottom: 4,
+    textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 13,
-    textAlign: 'center',
     lineHeight: 18,
-    marginTop: 6,
-    paddingHorizontal: 10,
+    textAlign: 'center',
+    maxWidth: 290,
   },
   plansContainer: {
     gap: 12,
-    marginVertical: 14,
+    marginVertical: 16,
   },
   planCard: {
-    borderRadius: 14,
-    padding: 14,
     borderWidth: 1.5,
+    borderRadius: 16,
+    padding: 14,
   },
   planCardSelected: {
     borderColor: '#6366F1',
     borderWidth: 2,
-    shadowColor: '#6366F1',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 2,
   },
   planBadgeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   highlightBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 4,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   highlightBadgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
-    color: '#B45309',
-    letterSpacing: 0.5,
+    color: '#6366F1',
+    letterSpacing: 0.6,
   },
   planMainRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   planTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   planSubtitle: {
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 2,
-    maxWidth: 200,
+    fontSize: 12,
+    maxWidth: 180,
   },
   planPriceCol: {
     alignItems: 'flex-end',
@@ -419,28 +431,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 1,
+    marginBottom: 2,
   },
   strikethroughPrice: {
     fontSize: 11,
     color: '#94A3B8',
     textDecorationLine: 'line-through',
-    fontWeight: '600',
   },
   discountTag: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#DC2626',
     paddingHorizontal: 4,
     paddingVertical: 1,
-    borderRadius: 3,
+    borderRadius: 4,
   },
   discountTagText: {
-    fontSize: 8,
-    fontWeight: '900',
+    fontSize: 9,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   planPriceAmount: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
+    letterSpacing: -0.5,
   },
   planPeriodText: {
     fontSize: 10,
@@ -448,21 +460,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   featuresCard: {
-    borderRadius: 14,
-    padding: 16,
     borderWidth: 1,
-    gap: 12,
-    marginVertical: 10,
+    borderRadius: 16,
+    padding: 16,
+    gap: 14,
+    marginBottom: 20,
   },
   featuresHeader: {
     fontSize: 13,
     fontWeight: '800',
-    marginBottom: 2,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
   featureItem: {
     flexDirection: 'row',
-    gap: 12,
     alignItems: 'flex-start',
+    gap: 12,
   },
   featureIconWrap: {
     width: 32,
@@ -470,6 +484,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   featureTextWrap: {
     flex: 1,
@@ -477,34 +492,35 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 13,
     fontWeight: '700',
+    marginBottom: 2,
   },
   featureDesc: {
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 16,
   },
   buyBtn: {
     backgroundColor: '#6366F1',
-    borderRadius: 14,
-    paddingVertical: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 18,
+    paddingVertical: 15,
+    borderRadius: 14,
     shadowColor: '#6366F1',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 12,
   },
   buyBtnText: {
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
-    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   restoreBtn: {
-    alignSelf: 'center',
-    paddingVertical: 12,
+    alignItems: 'center',
+    paddingVertical: 6,
+    marginBottom: 8,
   },
   restoreBtnText: {
     fontSize: 12,
@@ -512,7 +528,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   legalNotice: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#94A3B8',
     textAlign: 'center',
     marginTop: 4,

@@ -323,4 +323,38 @@ export interface TranslationDictionary {
     earnedProfit: string;
     confirmSoldBtn: string;
   };
+  proModal: {
+    badgeOffer: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    lifetimeBadge: string;
+    lifetimeTitle: string;
+    lifetimeDesc: string;
+    lifetimePeriod: string;
+    monthlyBadge: string;
+    monthlyTitle: string;
+    monthlyDesc: string;
+    monthlyPeriod: string;
+    featuresHeader: string;
+    feature1Title: string;
+    feature1Desc: string;
+    feature2Title: string;
+    feature2Desc: string;
+    feature3Title: string;
+    feature3Desc: string;
+    feature4Title: string;
+    feature4Desc: string;
+    buyLifetimeBtn: string;
+    buyMonthlyBtn: string;
+    restoreBtn: string;
+    legalNotice: string;
+    welcomeTitle: string;
+    welcomeLifetimeMsg: string;
+    welcomeMonthlyMsg: string;
+    welcomeAction: string;
+    restoreSuccessTitle: string;
+    restoreSuccessMsg: string;
+    restoreNotFoundTitle: string;
+    restoreNotFoundMsg: string;
+  };
 }

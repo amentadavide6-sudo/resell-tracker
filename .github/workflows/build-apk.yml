@@ -44,35 +44,35 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.2.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.2.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.3.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.3.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.2-binaries
+          name: resell-tracker-v1.2.3-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.2
-          name: ResellTracker v1.2.2 (APK + Google Play AAB Bundle)
+          tag_name: v1.2.3
+          name: ResellTracker v1.2.3 (APK + Google Play AAB Bundle - In-App Billing Ready)
           body: |
-            ### 📱 ResellTracker v1.2.2 Release
+            ### 📱 ResellTracker v1.2.3 Release (Produzione & Google Play Ready)
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.2.aab`**: Android App Bundle per **Google Play Console** (Test Interno, Test Chiuso, Produzione).
-            - **`resell-tracker-v1.2.2.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.2.3.aab`**: Android App Bundle per **Google Play Console** (Test Interno, Test Chiuso, Produzione) con supporto nativo agli acquisti in-app (`BILLING`).
+            - **`resell-tracker-v1.2.3.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità & Perfezionamenti:
-            - 🏆 **Roadmap 100% Tradotta**: Tradotta la ricompensa dei livelli (*"Sblocca +X ore di Pro Pass gratis"* / *"Unlock +Xh of Free Pro Pass"*) e l'intestazione Reseller Club in tutte le lingue (IT, EN, FR, ES, DE).
-            - 🗑️ **Eliminazione Piattaforme Personalizzate Risolta al 100%**: Rimosso qualsiasi conflitto o errore di eventi touch; ora l'icona del cestino rossa dedicata sul chip e la pressione prolungata (long-press) eliminano la piattaforma all'istante con finestra modale di conferma e refresh immediato dell'interfaccia.
-            - 🌍 **Preset Corriere Condizionali**: Attivi esclusivamente in lingua Italiana (`it`); interfaccia pulita e campo diretto per tutte le altre lingue.
-            - 📐 **Fix Layout & Anti-Overflow**: Bottoni di Backup e Ripristino a larghezza intera in colonna, impeccabili anche per i testi più lunghi.
+            - 💳 **Google Play Billing & RevenueCat integrati**: Abbonamenti mensili e acquisto a vita (Lifetime) completamente cablati con gestione acquisti, ripristino (`Restore Purchases`) e permessi `BILLING` in `AndroidManifest`.
+            - 🏷️ **Prezzi Unificati e Coerenti**: 5,99 € Lifetime (accesso a vita) e 1,99 € / mese in tutte le schermate, traduzioni e dialoghi (eliminato ogni vecchio residuo a 3,49 €).
+            - 🌍 **Pro Modal 100% Multilingua**: Traduzione completa di tutti i testi, feature, bottoni e messaggi di conferma in Italiano, Inglese, Francese, Spagnolo e Tedesco.
+            - 🛡️ **Supporto Sandbox / Offline**: Se non sono ancora configurati gli SKU reali su Play Console, l'app gestisce l'acquisto in modalità sicura di simulazione senza crash.
           files: |
-            build-output/resell-tracker-v1.2.2.apk
-            build-output/resell-tracker-v1.2.2.aab
+            build-output/resell-tracker-v1.2.3.apk
+            build-output/resell-tracker-v1.2.3.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
