@@ -56,34 +56,34 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.4.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.4.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.5.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.5.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.4-binaries
+          name: resell-tracker-v1.2.5-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.4
-          name: ResellTracker v1.2.4 (APK + Google Play AAB Bundle)
+          tag_name: v1.2.5
+          name: ResellTracker v1.2.5 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.2.4 Release
+            ### 📱 ResellTracker v1.2.5 Release
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.4.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.2.4.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.2.5.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.2.5.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità:
-            - 🎉 **Celebration Screen Pro Integrata**: Risolto il pop-up invisibile su Android: ora lo sblocco Pro mostra una schermata di celebrazione integrata nella modale con conferma chiara e bottone di avvio.
+            - 👑 **Card Pro Attivo & Gestione Abbonamento**: Quando l'utente è Pro, il banner promozionale e il tasto di acquisto scompaiono completamente, sostituiti da un badge di stato "Pro Attivo" con tasto discreto per gestire o disdire l'abbonamento direttamente su Google Play.
+            - 🎉 **Celebration Screen Pro Integrata**: Conclusione dell'acquisto visibile e chiara senza pop-up bloccati.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
-            - 📢 **Credenziali AdMob integrate**: Agganciati l'App ID e il Banner Unit ID di produzione.
           files: |
-            build-output/resell-tracker-v1.2.4.apk
-            build-output/resell-tracker-v1.2.4.aab
+            build-output/resell-tracker-v1.2.5.apk
+            build-output/resell-tracker-v1.2.5.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

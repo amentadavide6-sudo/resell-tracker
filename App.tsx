@@ -76,6 +76,7 @@ function MainApp() {
         )}
         {activeTab === 'settings' && (
           <SettingsScreen
+            key={`settings-${inventoryRefreshKey}`}
             onDataRestored={() => setInventoryRefreshKey((prev) => prev + 1)}
             onOpenProModal={() => setProModalVisible(true)}
             onOpenTutorial={() => setOnboardingVisible(true)}
@@ -84,7 +85,10 @@ function MainApp() {
       </View>
 
       {/* AdMob Banner for Free Users (Hidden when Pro) */}
-      <AdBanner onUpgradePress={() => setProModalVisible(true)} />
+      <AdBanner
+        key={`adbanner-${inventoryRefreshKey}`}
+        onUpgradePress={() => setProModalVisible(true)}
+      />
 
       {/* Bottom Tab Bar with exact bottom safe area inset */}
       <View

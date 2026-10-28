@@ -15,6 +15,7 @@ import { useTranslation, LanguageMode } from '../i18n';
 import { useAlert } from '../context/AlertContext';
 import { exportBackup, importBackup } from '../services/backup';
 import { addXP, XP_REWARDS } from '../services/gamification';
+import { isProUser } from '../services/proManager';
 import {
   areNotificationsEnabled,
   setNotificationsEnabled,
@@ -67,6 +68,7 @@ export const SettingsScreen: React.FC<{
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isPro, setIsPro] = useState<boolean>(() => isProUser());
   const [notificationsActive, setNotificationsActive] = useState<boolean>(() => areNotificationsEnabled());
 
   const handleToggleNotifications = async (val: boolean) => {
@@ -186,8 +188,8 @@ export const SettingsScreen: React.FC<{
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Pro Card */}
-        {onOpenProModal && (
+        {/* Pro Card for Free users */}
+        {!isPro && onOpenProModal && (
           <TouchableOpacity
             style={styles.proUpgradeCard}
             onPress={onOpenProModal}
@@ -206,6 +208,37 @@ export const SettingsScreen: React.FC<{
               {strings.settings.proCardDesc}
             </Text>
           </TouchableOpacity>
+        )}
+
+        {/* Pro Active Status Card for Pro users */}
+        {isPro && (
+          <View style={[styles.proActiveCard, { backgroundColor: isDark ? '#064E3B' : '#ECFDF5', borderColor: isDark ? '#059669' : '#A7F3D0' }]}>
+            <View style={styles.proActiveHeader}>
+              <View style={styles.proActiveTitleGroup}>
+                <Ionicons name="shield-checkmark" size={20} color="#10B981" />
+                <Text style={[styles.proActiveTitle, { color: isDark ? '#A7F3D0' : '#065F46' }]}>
+                  ResellTracker Pro Attivo
+                </Text>
+              </View>
+              <View style={styles.proActiveBadge}>
+                <Text style={styles.proActiveBadgeText}>PRO ✨</Text>
+              </View>
+            </View>
+            <Text style={[styles.proActiveDesc, { color: isDark ? '#D1FAE5' : '#047857' }]}>
+              Inventario illimitato, statistiche avanzate, esportazioni e zero annunci pubblicitari.
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.manageSubscriptionBtn, { borderColor: isDark ? 'rgba(52, 211, 153, 0.3)' : 'rgba(16, 185, 129, 0.3)' }]}
+              onPress={() => Linking.openURL('https://play.google.com/store/account/subscriptions')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.manageSubscriptionText, { color: isDark ? '#6EE7B7' : '#059669' }]}>
+                Gestisci o disdici abbonamento su Google Play
+              </Text>
+              <Ionicons name="open-outline" size={12} color={isDark ? '#6EE7B7' : '#059669'} />
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Language Selector Card */}
@@ -474,7 +507,7 @@ export const SettingsScreen: React.FC<{
 
         {/* App Info & Privacy */}
         <View style={styles.infoCard}>
-          <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>ResellTracker v1.0.0</Text>
+          <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>ResellTracker v1.2.5</Text>
           <Text style={[styles.infoSub, { color: colors.textMuted }]}>
             Progettata per venditori indipendenti su Vinted, eBay, Wallapop e Subito.
           </Text>
@@ -573,6 +606,64 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94A3B8',
     lineHeight: 16,
+  },
+  proActiveCard: {
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1.5,
+    marginBottom: 14,
+    shadowColor: '#10B981',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  proActiveHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  proActiveTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  proActiveTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  proActiveBadge: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  proActiveBadgeText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  proActiveDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  manageSubscriptionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+  },
+  manageSubscriptionText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   card: {
     borderRadius: 14,
