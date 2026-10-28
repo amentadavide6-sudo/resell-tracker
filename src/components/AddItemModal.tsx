@@ -44,7 +44,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   initialValues,
 }) => {
   const { colors, isDark } = useTheme();
-  const { strings } = useTranslation();
+  const { strings, language } = useTranslation();
   const { showAlert } = useAlert();
   const [title, setTitle] = useState(initialValues?.title || '');
   const [selectedPlatforms, setSelectedPlatforms] = useState<PlatformId[]>([
@@ -437,47 +437,49 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
               </View>
             </View>
 
-            {/* Quick Shipping Presets */}
-            <View style={styles.shippingPresetsSection}>
-              <Text style={[styles.shippingPresetsLabel, { color: colors.textSecondary }]}>
-                {strings.addItemModal.shippingPresetsLabel}
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.shippingPresetsScroll}
-              >
-                {SHIPPING_PRESETS.map((preset) => {
-                  const isSelected =
-                    parseFloat(sellerShippingCost.replace(',', '.')) === preset.cost;
-                  return (
-                    <TouchableOpacity
-                      key={preset.id}
-                      style={[
-                        styles.shippingPresetChip,
-                        { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
-                        isSelected && {
-                          backgroundColor: isDark ? '#312E81' : '#EEF2FF',
-                          borderColor: '#6366F1',
-                        },
-                      ]}
-                      onPress={() => setSellerShippingCost(preset.cost === 0 ? '0' : preset.cost.toFixed(2))}
-                      activeOpacity={0.7}
-                    >
-                      <Text
+            {/* Quick Shipping Presets (Only displayed for Italian) */}
+            {language === 'it' && (
+              <View style={styles.shippingPresetsSection}>
+                <Text style={[styles.shippingPresetsLabel, { color: colors.textSecondary }]}>
+                  {strings.addItemModal.shippingPresetsLabel}
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.shippingPresetsScroll}
+                >
+                  {SHIPPING_PRESETS.map((preset) => {
+                    const isSelected =
+                      parseFloat(sellerShippingCost.replace(',', '.')) === preset.cost;
+                    return (
+                      <TouchableOpacity
+                        key={preset.id}
                         style={[
-                          styles.shippingPresetChipText,
-                          { color: isDark ? '#94A3B8' : '#475569' },
-                          isSelected && { color: '#6366F1', fontWeight: '800' },
+                          styles.shippingPresetChip,
+                          { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
+                          isSelected && {
+                            backgroundColor: isDark ? '#312E81' : '#EEF2FF',
+                            borderColor: '#6366F1',
+                          },
                         ]}
+                        onPress={() => setSellerShippingCost(preset.cost === 0 ? '0' : preset.cost.toFixed(2))}
+                        activeOpacity={0.7}
                       >
-                        {preset.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
+                        <Text
+                          style={[
+                            styles.shippingPresetChipText,
+                            { color: isDark ? '#94A3B8' : '#475569' },
+                            isSelected && { color: '#6366F1', fontWeight: '800' },
+                          ]}
+                        >
+                          {preset.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
           </View>
 
           {/* Live Preview Profit Card */}

@@ -31,6 +31,35 @@ export function getDeviceLanguage(): SupportedLanguage {
   return 'it';
 }
 
+export function getSavedLanguage(): SupportedLanguage {
+  try {
+    const db = getDatabase();
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS user_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+    `);
+    const row = db.getFirstSync<{ value: string }>(
+      'SELECT value FROM user_settings WHERE key = ?',
+      ['language_mode']
+    );
+    if (
+      row &&
+      (row.value === 'it' ||
+        row.value === 'en' ||
+        row.value === 'fr' ||
+        row.value === 'es' ||
+        row.value === 'de')
+    ) {
+      return row.value as SupportedLanguage;
+    }
+  } catch (e) {
+    // Ignore and fallback
+  }
+  return getDeviceLanguage();
+}
+
 interface LanguageContextType {
   language: SupportedLanguage;
   languageMode: LanguageMode;

@@ -26,7 +26,7 @@ export const StatsScreen: React.FC<{
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
-  const { strings } = useTranslation();
+  const { strings, t } = useTranslation();
   const { showAlert } = useAlert();
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -146,17 +146,17 @@ export const StatsScreen: React.FC<{
         <View style={[styles.capitalCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.capitalRow}>
             <View style={styles.capitalCol}>
-              <Text style={[styles.capitalLab, { color: colors.textSecondary }]}>Capitale in Giacenza</Text>
+              <Text style={[styles.capitalLab, { color: colors.textSecondary }]}>{strings.stats.capitalInStock}</Text>
               <Text style={[styles.capitalVal, { color: colors.textPrimary }]}>{formatEuro(stats.unsoldCapital)}</Text>
-              <Text style={[styles.capitalSub, { color: colors.textMuted }]}>{stats.totalActiveItems} capi ancora in vendita</Text>
+              <Text style={[styles.capitalSub, { color: colors.textMuted }]}>{t('stats.itemsStillListed', { count: stats.totalActiveItems })}</Text>
             </View>
             <View style={[styles.capitalDivider, { backgroundColor: colors.cardBorder }]} />
             <View style={styles.capitalCol}>
-              <Text style={[styles.capitalLab, { color: colors.textSecondary }]}>Profitto Potenziale</Text>
+              <Text style={[styles.capitalLab, { color: colors.textSecondary }]}>{strings.stats.potentialProfit}</Text>
               <Text style={[styles.capitalVal, { color: '#059669' }]}>
                 {formatEuro(stats.potentialProfitUnsold)}
               </Text>
-              <Text style={[styles.capitalSub, { color: colors.textMuted }]}>Se venduti al prezzo fissato</Text>
+              <Text style={[styles.capitalSub, { color: colors.textMuted }]}>{strings.stats.ifSoldAtListingPrice}</Text>
             </View>
           </View>
         </View>
@@ -205,14 +205,14 @@ export const StatsScreen: React.FC<{
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.dac7BadgeTitle, { color: colors.textSecondary }]}>
-                  DIRETTIVA FISCALE UE (DAC7) • {stats.dac7.year}
+                  {t('stats.dac7DirectiveHeader', { year: stats.dac7.year })}
                 </Text>
                 <Text style={[styles.dac7MainTitle, { color: colors.textPrimary }]}>
                   {stats.dac7.status === 'safe'
-                    ? 'Sotto la soglia di segnalazione'
+                    ? strings.stats.dac7StatusBelow
                     : stats.dac7.status === 'warning'
-                    ? 'Attenzione: vicino alla soglia'
-                    : 'Soglia di comunicazione superata'}
+                    ? strings.stats.dac7StatusNear
+                    : strings.stats.dac7StatusOver}
                 </Text>
               </View>
             </View>
@@ -249,7 +249,7 @@ export const StatsScreen: React.FC<{
           </View>
 
           <Text style={[styles.dac7Explanation, { color: colors.textSecondary }]}>
-            Le piattaforme UE comunicano al fisco i venditori che superano 30 vendite o 2.000 € di incasso annuo.
+            {strings.stats.dac7ExplanationText}
           </Text>
 
           {/* Progress Indicators */}
@@ -258,10 +258,10 @@ export const StatsScreen: React.FC<{
             <View style={styles.dac7MetricItem}>
               <View style={styles.dac7MetricHeader}>
                 <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
-                  Vendite: <Text style={{ fontWeight: '800' }}>{stats.dac7.soldCount} / {stats.dac7.maxSales}</Text>
+                  {strings.stats.dac7SalesLabel} <Text style={{ fontWeight: '800' }}>{stats.dac7.soldCount} / {stats.dac7.maxSales}</Text>
                 </Text>
                 <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
-                  {stats.dac7.remainingSales > 0 ? `Mancano ${stats.dac7.remainingSales}` : 'Soglia raggiunta'}
+                  {stats.dac7.remainingSales > 0 ? t('stats.dac7RemainingSales', { n: stats.dac7.remainingSales }) : strings.stats.dac7ThresholdReached}
                 </Text>
               </View>
               <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
@@ -286,10 +286,10 @@ export const StatsScreen: React.FC<{
             <View style={styles.dac7MetricItem}>
               <View style={styles.dac7MetricHeader}>
                 <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
-                  Incasso Lordo: <Text style={{ fontWeight: '800' }}>{formatEuro(stats.dac7.grossRevenue)} / {formatEuro(stats.dac7.maxRevenue)}</Text>
+                  {strings.stats.dac7RevenueLabel} <Text style={{ fontWeight: '800' }}>{formatEuro(stats.dac7.grossRevenue)} / {formatEuro(stats.dac7.maxRevenue)}</Text>
                 </Text>
                 <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
-                  {stats.dac7.remainingRevenue > 0 ? `Mancano ${formatEuro(stats.dac7.remainingRevenue)}` : 'Soglia raggiunta'}
+                  {stats.dac7.remainingRevenue > 0 ? t('stats.dac7RemainingRevenue', { amount: formatEuro(stats.dac7.remainingRevenue) }) : strings.stats.dac7ThresholdReached}
                 </Text>
               </View>
               <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
@@ -320,10 +320,14 @@ export const StatsScreen: React.FC<{
             </View>
             <View style={styles.bestPlatformTextWrap}>
               <Text style={styles.bestPlatformTitle}>
-                {stats.bestPlatform.name} è la tua piattaforma n° 1
+                {t('stats.bestPlatformBannerTitle', { name: stats.bestPlatform.name })}
               </Text>
               <Text style={styles.bestPlatformSub}>
-                Ha generato il {stats.bestPlatform.percentageOfProfit}% dei tuoi profitti ({formatEuro(stats.bestPlatform.totalProfit)}) con {stats.bestPlatform.soldCount} vendite.
+                {t('stats.bestPlatformBannerDesc', {
+                  percent: stats.bestPlatform.percentageOfProfit,
+                  amount: formatEuro(stats.bestPlatform.totalProfit),
+                  count: stats.bestPlatform.soldCount,
+                })}
               </Text>
             </View>
           </View>
@@ -334,7 +338,7 @@ export const StatsScreen: React.FC<{
           <View style={styles.exportTextWrap}>
             <View style={styles.exportTitleRow}>
               <Ionicons name="document-text-outline" size={20} color="#059669" />
-              <Text style={styles.exportTitle}>Registro Vendite (Excel / CSV)</Text>
+              <Text style={styles.exportTitle}>{strings.stats.salesRegisterHeader}</Text>
               {!isPro ? (
                 <View style={[styles.exportBadge, exportCount === 0 ? styles.exportBadgeFree : styles.exportBadgePro]}>
                   <Text style={[styles.exportBadgeText, exportCount === 0 ? styles.exportBadgeTextFree : styles.exportBadgeTextPro]}>
@@ -422,9 +426,9 @@ export const StatsScreen: React.FC<{
         {!hasSales && (
           <View style={[styles.emptyStateCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <Ionicons name="analytics-outline" size={48} color={colors.textMuted} />
-            <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>Nessuna vendita registrata finora</Text>
+            <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>{strings.stats.noSalesYet}</Text>
             <Text style={[styles.emptyStateSub, { color: colors.textSecondary }]}>
-              Vai nell'Inventario e tocca il tasto verde "Venduto" su uno dei tuoi articoli: le tue statistiche, margini e cronologia mensile prenderanno vita all'istante!
+              {strings.stats.noSalesSubtitle}
             </Text>
             {onNavigateToInventory && (
               <TouchableOpacity
@@ -432,7 +436,7 @@ export const StatsScreen: React.FC<{
                 onPress={onNavigateToInventory}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.emptyStateBtnText, { color: colors.primary }]}>Vai all'Inventario</Text>
+                <Text style={[styles.emptyStateBtnText, { color: colors.primary }]}>{strings.calculator.goToInventory}</Text>
               </TouchableOpacity>
             )}
           </View>

@@ -24,6 +24,15 @@ export interface TranslationDictionary {
     pieces: string;
     understood: string;
   };
+  platforms: {
+    vintedTag: string;
+    ebayTag: string;
+    wallapopTag: string;
+    subitoTag: string;
+    depopTag: string;
+    customName: string;
+    customTag: string;
+  };
   calculator: {
     headerSubtitle: string;
     headerTitle: string;
@@ -94,6 +103,25 @@ export interface TranslationDictionary {
     upgradePro: string;
     proPassActive: string;
     proPassRemaining: string;
+    proPassActiveTitle: string;
+    proPassRemainingText: string;
+    vipBadge: string;
+    vipProBadge: string;
+    vipProDesc: string;
+    unlimitedItems: string;
+    unlimitedBadge: string;
+    freeLimitReached: string;
+    freeLimitAlmost: string;
+    freeLimitStandard: string;
+    passToPro: string;
+    unlockProBtn: string;
+    maxLevelReached: string;
+    missingXpTo: string;
+    totalProfitLabel: string;
+    netProfitLabel: string;
+    deleteCustomPlatformTitle: string;
+    deleteCustomPlatformMsg: string;
+    longPressDeleteHint: string;
     itemFrozenTitle: string;
     itemFrozenDesc: string;
     unlockPro: string;
@@ -118,8 +146,25 @@ export interface TranslationDictionary {
     itemsSold: string;
     avgMargin: string;
     activeStockValue: string;
+    capitalInStock: string;
+    itemsStillListed: string;
+    potentialProfit: string;
+    ifSoldAtListingPrice: string;
     dac7Title: string;
     dac7Subtitle: string;
+    dac7DirectiveHeader: string;
+    dac7StatusBelow: string;
+    dac7StatusNear: string;
+    dac7StatusOver: string;
+    dac7ExplanationText: string;
+    dac7SalesLabel: string;
+    dac7RevenueLabel: string;
+    dac7RemainingSales: string;
+    dac7RemainingRevenue: string;
+    dac7ThresholdReached: string;
+    bestPlatformBannerTitle: string;
+    bestPlatformBannerDesc: string;
+    salesRegisterHeader: string;
     dac7Safe: string;
     dac7Warning: string;
     dac7Report: string;
@@ -162,6 +207,13 @@ export interface TranslationDictionary {
     supportTitle: string;
     contactSupport: string;
     version: string;
+    needHelpTitle: string;
+    needHelpSub: string;
+    contactSupportBtn: string;
+    tutorialCardTitle: string;
+    tutorialCardSub: string;
+    faqHeading: string;
+    faqs: Array<{ question: string; answer: string }>;
   };
   gamification: {
     resellerClub: string;
@@ -182,6 +234,7 @@ export interface TranslationDictionary {
     allLevels: string;
     youAreHere: string;
     levelPrefix: string;
+    levels: Array<{ title: string; desc: string }>;
   };
   socialProof: {
     dealClosed: string;

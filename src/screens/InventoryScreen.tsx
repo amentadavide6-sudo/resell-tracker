@@ -28,6 +28,7 @@ import { PLATFORMS } from '../constants/platforms';
 import { canAddMoreItems, isProUser, getProPassInfo, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
 import { getUserXP, getLevelInfo, deductXP, XP_REWARDS } from '../services/gamification';
 import { shareSoldProfit } from '../services/socialProof';
+import { getAllAvailablePlatforms } from '../services/customPlatformManager';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
 import { InventoryItem, ItemStatus, PlatformId } from '../types';
@@ -35,7 +36,7 @@ import { InventoryItem, ItemStatus, PlatformId } from '../types';
 export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onOpenProModal }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
-  const { strings } = useTranslation();
+  const { strings, language, t } = useTranslation();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalDbCount, setTotalDbCount] = useState<number>(0);
   const [activeFilter, setActiveFilter] = useState<ItemStatus | 'all'>('listed');
@@ -56,7 +57,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const [allItemsList, setAllItemsList] = useState<InventoryItem[]>([]);
 
   const isPro = isProUser();
-  const levelInfo = useMemo(() => getLevelInfo(userXP), [userXP]);
+  const levelInfo = useMemo(() => getLevelInfo(userXP, language), [userXP, language]);
 
   const loadData = useCallback(() => {
     try {
@@ -349,7 +350,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                     isSold ? { color: isDark ? '#34D399' : '#059669' } : { color: isDark ? '#93C5FD' : '#2563EB' },
                   ]}
                 >
-                  {isSold ? 'Venduto' : item.status === 'draft' ? 'Bozza' : 'In Vendita'}
+                  {isSold ? strings.inventory.filterSold : item.status === 'draft' ? strings.inventory.filterDraft : strings.inventory.filterListed}
                 </Text>
               </View>
             </View>
@@ -357,14 +358,14 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             {/* Financial comparison */}
             <View style={styles.pricesRow}>
               <Text style={[styles.priceAcquired, { color: colors.textSecondary }]}>
-                Acquisto: {formatEuro(item.purchaseCost)} {qty > 1 ? '/pz' : ''}
+                {strings.socialProof.purchase}: {formatEuro(item.purchaseCost)} {qty > 1 ? `/${strings.common.pieces}` : ''}
               </Text>
               <Text style={styles.priceArrow}>➔</Text>
               <Text style={[styles.priceTarget, { color: colors.textPrimary }]}>
                 {isSold
-                  ? `Venduto: ${formatEuro(item.actualSellingPrice || item.targetSellingPrice)}`
-                  : `Prezzo: ${formatEuro(item.targetSellingPrice)}`}
-                {qty > 1 ? '/pz' : ''}
+                  ? `${strings.inventory.soldOn}: ${formatEuro(item.actualSellingPrice || item.targetSellingPrice)}`
+                  : `${strings.socialProof.sale}: ${formatEuro(item.targetSellingPrice)}`}
+                {qty > 1 ? `/${strings.common.pieces}` : ''}
               </Text>
             </View>
           </View>
@@ -374,7 +375,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         <View style={[styles.cardFooter, { borderTopColor: colors.cardBorder }]}>
           <View style={styles.profitBadge}>
             <Text style={[styles.profitBadgeLabel, { color: colors.textSecondary }]}>
-              {qty > 1 ? 'Guadagno Totale:' : 'Guadagno Netto:'}
+              {qty > 1 ? strings.inventory.totalProfitLabel : strings.inventory.netProfitLabel}
             </Text>
             <Text
               style={[
@@ -386,7 +387,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             </Text>
             {qty > 1 && (
               <Text style={[styles.profitUnitText, { color: colors.textMuted }]}>
-                ({formatEuro(unitCalc.netProfit)}/pz)
+                ({formatEuro(unitCalc.netProfit)}/{strings.common.pieces})
               </Text>
             )}
           </View>
@@ -507,16 +508,16 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                 ]}
               >
                 {totalDbCount >= 15
-                  ? `${totalDbCount} / ${FREE_TIER_ITEM_LIMIT} Capi • Limite Raggiunto!`
+                  ? t('inventory.freeLimitReached', { count: totalDbCount, limit: FREE_TIER_ITEM_LIMIT })
                   : totalDbCount >= 13
-                  ? `${totalDbCount} / ${FREE_TIER_ITEM_LIMIT} Capi • Spazio quasi esaurito`
-                  : `${totalDbCount} / ${FREE_TIER_ITEM_LIMIT} Capi (Piano Free)`}
+                  ? t('inventory.freeLimitAlmost', { count: totalDbCount, limit: FREE_TIER_ITEM_LIMIT })
+                  : t('inventory.freeLimitStandard', { count: totalDbCount, limit: FREE_TIER_ITEM_LIMIT })}
               </Text>
             </View>
 
             <View style={styles.slotUpgradeBtn}>
               <Text style={styles.slotUpgradeText}>
-                {totalDbCount >= 13 ? 'Passa a Pro ⚡' : 'Sblocca Pro'}
+                {totalDbCount >= 13 ? strings.inventory.passToPro : strings.inventory.unlockProBtn}
               </Text>
               <Ionicons name="chevron-forward" size={12} color="#6366F1" />
             </View>
@@ -546,20 +547,20 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
           onPress={() => {
             setAlertConfig({
               visible: true,
-              title: '⚡ Pro Pass Attivo!',
-              message: `Hai sbloccato ${proPassInfo.remainingFormatted} di accesso Pro completo per essere salito di livello!\n\nGoditi stock illimitato, export CSV senza limiti e tutte le funzioni esclusive.`,
+              title: strings.inventory.proPassActiveTitle,
+              message: `${strings.inventory.proPassActive}! (${proPassInfo.remainingFormatted})`,
               icon: 'flash',
               iconColor: '#F59E0B',
               iconBgColor: isDark ? '#451A03' : '#FEF3C7',
               buttons: [
                 {
-                  text: 'Passa a Pro per Sempre (5,99€)',
+                  text: strings.settings.proCardBtn,
                   style: 'primary',
                   onPress: () => {
                     if (onOpenProModal) onOpenProModal();
                   },
                 },
-                { text: 'Continua a usare il Pass', style: 'cancel' },
+                { text: strings.common.close, style: 'cancel' },
               ],
             });
           }}
@@ -569,11 +570,11 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             <View style={styles.slotLeft}>
               <Ionicons name="flash" size={16} color="#D97706" />
               <Text style={styles.slotProPassText}>
-                Pro Pass Attivo • <Text style={{ fontWeight: '800' }}>{proPassInfo.remainingFormatted} rimasti</Text>
+                {strings.inventory.proPassActive} • <Text style={{ fontWeight: '800' }}>{proPassInfo.remainingFormatted} {strings.inventory.proPassRemainingText}</Text>
               </Text>
             </View>
             <View style={styles.slotProPassBadge}>
-              <Text style={styles.slotProPassBadgeText}>VIP ⚡</Text>
+              <Text style={styles.slotProPassBadgeText}>{strings.inventory.vipBadge}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -583,11 +584,11 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             <View style={styles.slotLeft}>
               <Ionicons name="sparkles" size={16} color="#F59E0B" />
               <Text style={styles.slotProText}>
-                ResellTracker VIP Pro • Capi Illimitati ✨
+                {strings.inventory.vipProDesc}
               </Text>
             </View>
             <View style={styles.slotProBadge}>
-              <Text style={styles.slotProBadgeText}>ILLIMITATO</Text>
+              <Text style={styles.slotProBadgeText}>{strings.inventory.vipProBadge}</Text>
             </View>
           </View>
         </View>
@@ -615,8 +616,8 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               </View>
               <Text style={[styles.levelSubText, { color: colors.textMuted }]}>
                 {levelInfo.nextLevelTitle
-                  ? `Mancano ${levelInfo.xpToNextLevel} XP a "${levelInfo.nextLevelTitle}"`
-                  : 'Livello massimo raggiunto!'}
+                  ? t('inventory.missingXpTo', { xp: levelInfo.xpToNextLevel, next: levelInfo.nextLevelTitle })
+                  : strings.inventory.maxLevelReached}
               </Text>
             </View>
           </View>
@@ -647,21 +648,21 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       <View style={[styles.kpiContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
         <View style={styles.kpiBox}>
           <Text style={[styles.kpiValue, { color: colors.textPrimary }]}>
-            {inventoryStats.activeCount} <Text style={{ fontSize: 11, fontWeight: '600' }}>({inventoryStats.totalPieces} pz)</Text>
+            {inventoryStats.activeCount} <Text style={{ fontSize: 11, fontWeight: '600' }}>({inventoryStats.totalPieces} {strings.common.pieces})</Text>
           </Text>
-          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Capi Attivi</Text>
+          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>{strings.inventory.itemsActive}</Text>
         </View>
         <View style={[styles.kpiDivider, { backgroundColor: colors.cardBorder }]} />
         <View style={styles.kpiBox}>
           <Text style={[styles.kpiValue, { color: colors.textPrimary }]}>{formatEuro(inventoryStats.totalInvested)}</Text>
-          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Capitale Fermo</Text>
+          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>{strings.inventory.idleCapital}</Text>
         </View>
         <View style={[styles.kpiDivider, { backgroundColor: colors.cardBorder }]} />
         <View style={styles.kpiBox}>
           <Text style={[styles.kpiValue, { color: '#10B981' }]}>
             {formatEuro(inventoryStats.potentialProfit)}
           </Text>
-          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Profitto Previsto</Text>
+          <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>{strings.inventory.expectedProfit}</Text>
         </View>
       </View>
 
@@ -740,7 +741,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             </Text>
           </TouchableOpacity>
 
-          {PLATFORMS.map((p) => {
+          {getAllAvailablePlatforms().map((p) => {
             const isSelected = platformFilter === p.id;
             return (
               <TouchableOpacity
@@ -782,18 +783,18 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="shirt-outline" size={60} color="#CBD5E1" />
-            <Text style={styles.emptyTitle}>Nessun articolo trovato</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{strings.inventory.emptyTitle}</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               {searchQuery || platformFilter !== 'all'
-                ? 'Nessun risultato corrisponde ai filtri selezionati.'
-                : 'Inizia a catalogare i tuoi capi per tenere traccia delle tue vendite.'}
+                ? strings.inventory.emptyFilterSubtitle
+                : strings.inventory.emptySubtitle}
             </Text>
             {!searchQuery && platformFilter === 'all' && (
               <TouchableOpacity
                 style={styles.emptyAddBtn}
                 onPress={handleOpenAddModal}
               >
-                <Text style={styles.emptyAddBtnText}>+ Aggiungi il primo articolo</Text>
+                <Text style={styles.emptyAddBtnText}>{strings.inventory.emptyAddBtn}</Text>
               </TouchableOpacity>
             )}
           </View>

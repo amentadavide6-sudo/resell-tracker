@@ -1,5 +1,13 @@
 import { getDatabase } from './db';
 import { isProUser, activateProPass } from './proManager';
+import { SupportedLanguage } from '../i18n/types';
+import { it } from '../i18n/it';
+import { en } from '../i18n/en';
+import { fr } from '../i18n/fr';
+import { es } from '../i18n/es';
+import { de } from '../i18n/de';
+
+const DICTIONARIES = { it, en, fr, es, de };
 
 export interface LevelDefinition {
   levelNumber: number;
@@ -18,98 +26,30 @@ export interface LevelInfo extends LevelDefinition {
   xpToNextLevel: number;
 }
 
-export const LEVELS: LevelDefinition[] = [
-  {
-    levelNumber: 1,
-    title: 'Principiante (Legno)',
-    badge: '🪵',
-    badgeColor: '#A16207',
-    minXP: 0,
-    maxXP: 75,
-    description: 'Primi passi per fare ordine nell\'armadio e catalogare i primi capi.',
-  },
-  {
-    levelNumber: 2,
-    title: 'Venditore Novizio (Bronzo)',
-    badge: '🥉',
-    badgeColor: '#CD7F32',
-    minXP: 75,
-    maxXP: 200,
-    description: 'Prime vendite concluse con successo e prime spedizioni andate a buon fine.',
-  },
-  {
-    levelNumber: 3,
-    title: 'Cacciatore d\'Affari (Argento)',
-    badge: '🥈',
-    badgeColor: '#94A3B8',
-    minXP: 200,
-    maxXP: 450,
-    description: 'Inizi a dominare le negoziazioni e a riconoscere al volo i veri margini.',
-  },
-  {
-    levelNumber: 4,
-    title: 'Reseller Attivo (Oro I)',
-    badge: '🥇',
-    badgeColor: '#F59E0B',
-    minXP: 450,
-    maxXP: 800,
-    description: 'Inventario costante e vendite settimanali regolari su Vinted ed eBay.',
-  },
-  {
-    levelNumber: 5,
-    title: 'Commerciante Esperto (Oro II)',
-    badge: '🏆',
-    badgeColor: '#D97706',
-    minXP: 800,
-    maxXP: 1300,
-    description: 'Rotazione rapida dei capi e profitti netti costantemente in crescita.',
-  },
-  {
-    levelNumber: 6,
-    title: 'Top Seller (Platino)',
-    badge: '⚔️',
-    badgeColor: '#38BDF8',
-    minXP: 1300,
-    maxXP: 2000,
-    description: 'Punto di riferimento per gli acquirenti, con feedback eccellenti.',
-  },
-  {
-    levelNumber: 7,
-    title: 'Maestro del Vintage (Cristallo I)',
-    badge: '💎',
-    badgeColor: '#06B6D4',
-    minXP: 2000,
-    maxXP: 3200,
-    description: 'Fiuto infallibile per i pezzi rari, streetwear introvabile e brand ricercati.',
-  },
-  {
-    levelNumber: 8,
-    title: 'Elite Reseller (Cristallo II)',
-    badge: '🔮',
-    badgeColor: '#8B5CF6',
-    minXP: 3200,
-    maxXP: 5000,
-    description: 'Volumi da vero professionista dell\'usato, con vendite quotidiane.',
-  },
-  {
-    levelNumber: 9,
-    title: 'Mogul del Mercato (Diamante)',
-    badge: '💠',
-    badgeColor: '#EC4899',
-    minXP: 5000,
-    maxXP: 8000,
-    description: 'Gestione impeccabile di inventory massicci con ROI medio straordinario.',
-  },
-  {
-    levelNumber: 10,
-    title: 'Imperatore del Reselling (Leggenda)',
-    badge: '👑',
-    badgeColor: '#EAB308',
-    minXP: 8000,
-    maxXP: 999999,
-    description: 'Il vertice supremo della community. Un vero impero del second-hand!',
-  },
+const BASE_LEVEL_METADATA = [
+  { levelNumber: 1, badge: '🪵', badgeColor: '#A16207', minXP: 0, maxXP: 75 },
+  { levelNumber: 2, badge: '🥉', badgeColor: '#CD7F32', minXP: 75, maxXP: 200 },
+  { levelNumber: 3, badge: '🥈', badgeColor: '#94A3B8', minXP: 200, maxXP: 450 },
+  { levelNumber: 4, badge: '🥇', badgeColor: '#F59E0B', minXP: 450, maxXP: 800 },
+  { levelNumber: 5, badge: '🏆', badgeColor: '#D97706', minXP: 800, maxXP: 1300 },
+  { levelNumber: 6, badge: '⚔️', badgeColor: '#38BDF8', minXP: 1300, maxXP: 2000 },
+  { levelNumber: 7, badge: '💎', badgeColor: '#06B6D4', minXP: 2000, maxXP: 3200 },
+  { levelNumber: 8, badge: '🔮', badgeColor: '#8B5CF6', minXP: 3200, maxXP: 5000 },
+  { levelNumber: 9, badge: '💠', badgeColor: '#EC4899', minXP: 5000, maxXP: 8000 },
+  { levelNumber: 10, badge: '👑', badgeColor: '#EAB308', minXP: 8000, maxXP: 999999 },
 ];
+
+export function getLevels(lang: SupportedLanguage = 'it'): LevelDefinition[] {
+  const dict = DICTIONARIES[lang] || DICTIONARIES.it;
+  const transLevels = dict.gamification?.levels || DICTIONARIES.it.gamification.levels;
+  return BASE_LEVEL_METADATA.map((base, idx) => ({
+    ...base,
+    title: transLevels[idx]?.title || `Level ${base.levelNumber}`,
+    description: transLevels[idx]?.desc || '',
+  }));
+}
+
+export const LEVELS: LevelDefinition[] = getLevels('it');
 
 export const XP_REWARDS = {
   ITEM_ADDED: 25,
@@ -138,11 +78,12 @@ export function getUserXP(): number {
   }
 }
 
-export function getLevelInfo(xp: number): LevelInfo {
+export function getLevelInfo(xp: number, lang: SupportedLanguage = 'it'): LevelInfo {
+  const levels = getLevels(lang);
   const currentLvl =
-    LEVELS.slice().reverse().find((lvl) => xp >= lvl.minXP) || LEVELS[0];
+    levels.slice().reverse().find((lvl) => xp >= lvl.minXP) || levels[0];
 
-  const nextLvl = LEVELS.find((lvl) => lvl.levelNumber === currentLvl.levelNumber + 1);
+  const nextLvl = levels.find((lvl) => lvl.levelNumber === currentLvl.levelNumber + 1);
 
   const range = currentLvl.maxXP - currentLvl.minXP;
   const progressInLevel = xp - currentLvl.minXP;

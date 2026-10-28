@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { PlatformConfig, PlatformId } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
-import { getAllAvailablePlatforms } from '../services/customPlatformManager';
+import { useAlert } from '../context/AlertContext';
+import { getAllAvailablePlatforms, deleteCustomPlatform } from '../services/customPlatformManager';
 
 interface PlatformSelectorProps {
   selectedId?: PlatformId;
@@ -14,6 +15,7 @@ interface PlatformSelectorProps {
   onToggle?: (id: PlatformId) => void;
   title?: string;
   platforms?: PlatformConfig[];
+  onDeleteCustom?: (id: PlatformId) => void;
 }
 
 export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
@@ -24,9 +26,11 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
   onToggle,
   title,
   platforms,
+  onDeleteCustom,
 }) => {
   const { colors, isDark } = useTheme();
   const { strings } = useTranslation();
+  const { showAlert } = useAlert();
 
   const platformList = platforms || getAllAvailablePlatforms();
 
@@ -35,6 +39,53 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
       onToggle(id);
     } else if (onSelect) {
       onSelect(id);
+    }
+  };
+
+  const confirmDeleteCustom = (platform: PlatformConfig) => {
+    showAlert({
+      title: strings.inventory.deleteCustomPlatformTitle,
+      message: `${strings.inventory.deleteCustomPlatformMsg}\n\n"${platform.name}"`,
+      type: 'warning',
+      buttons: [
+        { text: strings.common.cancel, style: 'cancel' },
+        {
+          text: strings.common.delete,
+          style: 'destructive',
+          onPress: () => {
+            deleteCustomPlatform(platform.id);
+            if (onDeleteCustom) {
+              onDeleteCustom(platform.id);
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  const getPlatformName = (platform: PlatformConfig) => {
+    if (platform.id === 'custom') {
+      return strings.platforms.customName;
+    }
+    return platform.name;
+  };
+
+  const getPlatformTagline = (platform: PlatformConfig) => {
+    switch (platform.id) {
+      case 'vinted':
+        return strings.platforms.vintedTag;
+      case 'ebay':
+        return strings.platforms.ebayTag;
+      case 'wallapop':
+        return strings.platforms.wallapopTag;
+      case 'subito':
+        return strings.platforms.subitoTag;
+      case 'depop':
+        return strings.platforms.depopTag;
+      case 'custom':
+        return strings.platforms.customTag;
+      default:
+        return platform.tagline;
     }
   };
 
@@ -72,6 +123,12 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
               key={platform.id}
               activeOpacity={0.7}
               onPress={() => handlePress(platform.id)}
+              onLongPress={() => {
+                if (platform.isCustom) {
+                  confirmDeleteCustom(platform);
+                }
+              }}
+              delayLongPress={400}
               style={[
                 styles.card,
                 {
@@ -101,15 +158,28 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
                     { color: colors.textPrimary },
                     isSelected && { color: platform.color, fontWeight: '700' },
                   ]}
+                  numberOfLines={1}
                 >
-                  {platform.name}
+                  {getPlatformName(platform)}
                 </Text>
+                {platform.isCustom && (
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      confirmDeleteCustom(platform);
+                    }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    style={styles.deleteCustomBtn}
+                  >
+                    <Ionicons name="trash-outline" size={13} color="#EF4444" />
+                  </TouchableOpacity>
+                )}
                 {multiSelect && isSelected && (
                   <Ionicons
                     name="checkmark-circle"
                     size={16}
                     color={platform.color}
-                    style={{ marginLeft: 'auto' }}
+                    style={{ marginLeft: 4 }}
                   />
                 )}
               </View>
@@ -120,8 +190,8 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
                   { backgroundColor: isDark ? '#1E293B' : platform.badgeBg },
                 ]}
               >
-                <Text style={[styles.badgeText, { color: platform.color }]}>
-                  {platform.tagline}
+                <Text style={[styles.badgeText, { color: platform.color }]} numberOfLines={1}>
+                  {getPlatformTagline(platform)}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -183,12 +253,21 @@ const styles = StyleSheet.create({
   platformName: {
     fontSize: 14,
     fontWeight: '600',
+    flexShrink: 1,
+    marginRight: 4,
+  },
+  deleteCustomBtn: {
+    marginLeft: 'auto',
+    padding: 2,
+    borderRadius: 4,
+    backgroundColor: '#FEE2E2',
   },
   badge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    maxWidth: 160,
   },
   badgeText: {
     fontSize: 11,

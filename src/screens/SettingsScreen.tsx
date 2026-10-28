@@ -347,9 +347,9 @@ export const SettingsScreen: React.FC<{
               <Ionicons name="chatbubbles" size={24} color={isDark ? '#A5B4FC' : '#6366F1'} />
             </View>
             <View style={styles.supportTitleWrap}>
-              <Text style={[styles.supportTitle, isDark && { color: '#E0E7FF' }]}>Hai bisogno di aiuto?</Text>
+              <Text style={[styles.supportTitle, isDark && { color: '#E0E7FF' }]}>{strings.settings.needHelpTitle}</Text>
               <Text style={[styles.supportSubtitle, isDark && { color: '#C7D2FE' }]}>
-                Hai dubbi sui calcoli o suggerimenti su nuove funzioni?
+                {strings.settings.needHelpSub}
               </Text>
             </View>
           </View>
@@ -360,7 +360,7 @@ export const SettingsScreen: React.FC<{
             activeOpacity={0.8}
           >
             <Ionicons name="mail-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.supportBtnText}>Scrivi all'Assistenza</Text>
+            <Text style={styles.supportBtnText}>{strings.settings.contactSupportBtn}</Text>
           </TouchableOpacity>
 
           <Text style={[styles.supportEmailText, isDark && { color: '#A5B4FC' }]}>
@@ -381,10 +381,10 @@ export const SettingsScreen: React.FC<{
               </View>
               <View style={styles.tutorialTextGroup}>
                 <Text style={[styles.tutorialTitle, { color: colors.textPrimary }]}>
-                  Guida & Tutorial Introduttivo
+                  {strings.settings.tutorialCardTitle}
                 </Text>
                 <Text style={[styles.tutorialSubtitle, { color: colors.textSecondary }]}>
-                  Rivedi come funzionano il calcolatore fee, l'inventario e i punti XP
+                  {strings.settings.tutorialCardSub}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -431,11 +431,11 @@ export const SettingsScreen: React.FC<{
 
         {/* FAQs Accordion */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>DOMANDE FREQUENTI (FAQ)</Text>
+          <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>{strings.settings.faqHeading}</Text>
         </View>
 
         <View style={styles.faqsContainer}>
-          {FAQS.map((faq, index) => {
+          {(strings.settings.faqs || FAQS).map((faq, index) => {
             const isExpanded = expandedFaqIndex === index;
             return (
               <View
@@ -698,40 +698,42 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   backupButtonsRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 10,
   },
   exportBtn: {
-    flex: 1,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     backgroundColor: '#ECFDF5',
     borderWidth: 1,
     borderColor: '#A7F3D0',
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
   },
   exportBtnText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#059669',
   },
   importBtn: {
-    flex: 1,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#CBD5E1',
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
   },
   importBtnText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#475569',
   },

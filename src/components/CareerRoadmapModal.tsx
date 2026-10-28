@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LEVELS, LevelInfo } from '../services/gamification';
+import { getLevels, LevelInfo } from '../services/gamification';
 import { isProUser } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
@@ -27,8 +27,9 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
   onOpenProModal,
 }) => {
   const { colors, isDark } = useTheme();
-  const { strings } = useTranslation();
+  const { strings, language, t } = useTranslation();
   const isPro = isProUser();
+  const levels = useMemo(() => getLevels(language), [language]);
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
@@ -79,7 +80,7 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
                 <Text style={[styles.heroXpVal, { color: colors.primary }]}>
                   {currentLevelInfo.currentXP}
                 </Text>
-                <Text style={[styles.heroXpLabel, { color: colors.textMuted }]}>XP TOTALI</Text>
+                <Text style={[styles.heroXpLabel, { color: colors.textMuted }]}>{strings.gamification.xpTotal.toUpperCase()}</Text>
               </View>
             </View>
 
@@ -98,8 +99,8 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
               </View>
               <Text style={[styles.heroNextText, { color: colors.textMuted }]}>
                 {currentLevelInfo.nextLevelTitle
-                  ? `Mancano ${currentLevelInfo.xpToNextLevel} XP a "${currentLevelInfo.nextLevelTitle}"`
-                  : '👑 Hai raggiunto il vertice supremo del Reselling!'}
+                  ? t('inventory.missingXpTo', { xp: currentLevelInfo.xpToNextLevel, next: currentLevelInfo.nextLevelTitle })
+                  : strings.inventory.maxLevelReached}
               </Text>
             </View>
           </View>
@@ -241,7 +242,7 @@ export const CareerRoadmapModal: React.FC<CareerRoadmapModalProps> = ({
           </Text>
 
           <View style={styles.levelsList}>
-            {LEVELS.map((lvl) => {
+            {levels.map((lvl) => {
               const isCurrent = lvl.levelNumber === currentLevelInfo.levelNumber;
               const isUnlocked = currentLevelInfo.currentXP >= lvl.minXP;
 

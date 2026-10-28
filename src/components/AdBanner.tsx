@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isProUser } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 
 interface AdBannerProps {
   onUpgradePress: () => void;
@@ -10,6 +11,7 @@ interface AdBannerProps {
 
 export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
   const { colors, isDark } = useTheme();
+  const { strings } = useTranslation();
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
     >
       <View style={styles.topBar}>
         <View style={[styles.adBadge, isDark && { backgroundColor: '#374151' }]}>
-          <Text style={[styles.adBadgeText, isDark && { color: '#9CA3AF' }]}>SPONSOR</Text>
+          <Text style={[styles.adBadgeText, isDark && { color: '#9CA3AF' }]}>{strings.banner.sponsor}</Text>
         </View>
 
         <TouchableOpacity
@@ -52,7 +54,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
           activeOpacity={0.7}
         >
           <Ionicons name="sparkles" size={12} color="#F59E0B" />
-          <Text style={[styles.removeAdsText, { color: colors.textPrimary }]}>Rimuovi Ads (Pro)</Text>
+          <Text style={[styles.removeAdsText, { color: colors.textPrimary }]}>{strings.banner.removeAds}</Text>
         </TouchableOpacity>
       </View>
 
@@ -62,10 +64,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({ onUpgradePress }) => {
         activeOpacity={0.85}
       >
         <Text style={[styles.adTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-          ⭐ ResellTracker PRO · Sblocca Stock Illimitato a 3,49 €
+          {strings.banner.proTagline}
         </Text>
         <Text style={[styles.adSub, { color: colors.textMuted }]} numberOfLines={1}>
-          Zero pubblicità, 2x XP Booster nel Reseller Club ed export Excel
+          {strings.banner.proSub}
         </Text>
       </TouchableOpacity>
     </View>
