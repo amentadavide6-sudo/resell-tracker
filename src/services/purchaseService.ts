@@ -22,7 +22,7 @@ import { setProUser, isProUser } from './proManager';
 export const REVENUECAT_GOOGLE_API_KEY = 'goog_reselltracker_prod_placeholder';
 
 export const ENTITLEMENT_ID = 'pro';
-export const SKU_PRO_LIFETIME = 'reselltracker_pro';
+export const SKU_PRO_LIFETIME = 'reselltracker_pro_lifetime';
 export const SKU_PRO_MONTHLY = 'reselltracker_pro_monthly';
 
 export type PurchasePlanId = 'lifetime' | 'monthly';
@@ -130,7 +130,8 @@ export async function purchaseProProduct(planId: PurchasePlanId = 'lifetime'): P
             offerings.current.availablePackages.find(
               (p) =>
                 p.identifier.toLowerCase().includes('lifetime') ||
-                p.product.identifier === SKU_PRO_LIFETIME
+                p.product.identifier === SKU_PRO_LIFETIME ||
+                p.product.identifier === 'reselltracker_pro'
             ) ||
             null;
         } else {
