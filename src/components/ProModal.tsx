@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,6 @@ import {
   PLAN_CONFIGS,
 } from '../services/purchaseService';
 import { useTheme } from '../context/ThemeContext';
-import { useAlert } from '../context/AlertContext';
 import { useTranslation } from '../i18n';
 
 interface ProModalProps {
@@ -32,9 +31,20 @@ export const ProModal: React.FC<ProModalProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const { strings, t } = useTranslation();
-  const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PurchasePlanId>('lifetime');
+  const [successState, setSuccessState] = useState<'none' | 'purchased' | 'restored'>('none');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setSuccessState('none');
+      setErrorMsg(null);
+      setInfoMsg(null);
+      setLoading(false);
+    }
+  }, [visible]);
 
   const lifetimeConfig = PLAN_CONFIGS.lifetime;
   const monthlyConfig = PLAN_CONFIGS.monthly;
@@ -42,32 +52,14 @@ export const ProModal: React.FC<ProModalProps> = ({
   const handlePurchase = async () => {
     try {
       setLoading(true);
+      setErrorMsg(null);
+      setInfoMsg(null);
       const success = await purchaseProProduct(selectedPlan);
       if (success) {
-        showAlert({
-          title: strings.proModal.welcomeTitle,
-          message:
-            selectedPlan === 'lifetime'
-              ? strings.proModal.welcomeLifetimeMsg
-              : strings.proModal.welcomeMonthlyMsg,
-          type: 'success',
-          buttons: [
-            {
-              text: strings.proModal.welcomeAction,
-              onPress: () => {
-                onProUnlocked();
-                onClose();
-              },
-            },
-          ],
-        });
+        setSuccessState('purchased');
       }
     } catch (err: any) {
-      showAlert({
-        title: strings.common.error,
-        message: err?.message || 'Si è verificato un errore durante la transazione con Google Play.',
-        type: 'error',
-      });
+      setErrorMsg(err?.message || 'Si è verificato un errore durante la transazione con Google Play.');
     } finally {
       setLoading(false);
     }
@@ -76,33 +68,113 @@ export const ProModal: React.FC<ProModalProps> = ({
   const handleRestore = async () => {
     try {
       setLoading(true);
+      setErrorMsg(null);
+      setInfoMsg(null);
       const restored = await restoreProPurchases();
       if (restored) {
-        showAlert({
-          title: strings.proModal.restoreSuccessTitle,
-          message: strings.proModal.restoreSuccessMsg,
-          type: 'success',
-          buttons: [
-            {
-              text: 'OK',
-              onPress: () => {
-                onProUnlocked();
-                onClose();
-              },
-            },
-          ],
-        });
+        setSuccessState('restored');
       } else {
-        showAlert({
-          title: strings.proModal.restoreNotFoundTitle,
-          message: strings.proModal.restoreNotFoundMsg,
-          type: 'info',
-        });
+        setInfoMsg(strings.proModal.restoreNotFoundMsg);
       }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Impossibile ripristinare gli acquisti.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (successState === 'purchased') {
+    return (
+      <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={onClose}>
+        <View style={[styles.root, styles.celebrationRoot, { backgroundColor: colors.background }]}>
+          <View style={[styles.celebrationCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={[styles.celebrationIconCircle, { backgroundColor: isDark ? '#064E3B' : '#ECFDF5' }]}>
+              <Ionicons name="sparkles" size={48} color="#10B981" />
+            </View>
+
+            <Text style={[styles.celebrationTitle, { color: colors.textPrimary }]}>
+              {strings.proModal.welcomeTitle}
+            </Text>
+
+            <Text style={[styles.celebrationSubtitle, { color: colors.textSecondary }]}>
+              {selectedPlan === 'lifetime'
+                ? strings.proModal.welcomeLifetimeMsg
+                : strings.proModal.welcomeMonthlyMsg}
+            </Text>
+
+            <View style={styles.celebrationHighlights}>
+              <View style={styles.highlightRow}>
+                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                <Text style={[styles.highlightText, { color: colors.textPrimary }]}>
+                  {strings.proModal.feature1Title}
+                </Text>
+              </View>
+              <View style={styles.highlightRow}>
+                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                <Text style={[styles.highlightText, { color: colors.textPrimary }]}>
+                  {strings.proModal.feature3Title}
+                </Text>
+              </View>
+              <View style={styles.highlightRow}>
+                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                <Text style={[styles.highlightText, { color: colors.textPrimary }]}>
+                  {strings.proModal.feature2Title}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.celebrationBtn}
+              onPress={() => {
+                setSuccessState('none');
+                onProUnlocked();
+                onClose();
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.celebrationBtnText}>
+                {strings.proModal.welcomeAction} 🚀
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
+  if (successState === 'restored') {
+    return (
+      <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={onClose}>
+        <View style={[styles.root, styles.celebrationRoot, { backgroundColor: colors.background }]}>
+          <View style={[styles.celebrationCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={[styles.celebrationIconCircle, { backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF' }]}>
+              <Ionicons name="checkmark-done-circle" size={48} color="#6366F1" />
+            </View>
+
+            <Text style={[styles.celebrationTitle, { color: colors.textPrimary }]}>
+              {strings.proModal.restoreSuccessTitle}
+            </Text>
+
+            <Text style={[styles.celebrationSubtitle, { color: colors.textSecondary }]}>
+              {strings.proModal.restoreSuccessMsg}
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.celebrationBtn, { backgroundColor: '#6366F1' }]}
+              onPress={() => {
+                setSuccessState('none');
+                onProUnlocked();
+                onClose();
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.celebrationBtnText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
@@ -132,6 +204,27 @@ export const ProModal: React.FC<ProModalProps> = ({
               {strings.proModal.heroSubtitle}
             </Text>
           </View>
+
+          {/* Inline Error/Info Banners */}
+          {errorMsg && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={18} color="#EF4444" />
+              <Text style={styles.errorText}>{errorMsg}</Text>
+              <TouchableOpacity onPress={() => setErrorMsg(null)}>
+                <Ionicons name="close" size={16} color="#EF4444" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {infoMsg && (
+            <View style={styles.infoBox}>
+              <Ionicons name="information-circle" size={18} color="#6366F1" />
+              <Text style={styles.infoText}>{infoMsg}</Text>
+              <TouchableOpacity onPress={() => setInfoMsg(null)}>
+                <Ionicons name="close" size={16} color="#6366F1" />
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Plan Selection Cards */}
           <View style={styles.plansContainer}>
@@ -532,5 +625,115 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
     marginTop: 4,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    gap: 10,
+  },
+  errorText: {
+    flex: 1,
+    color: '#B91C1C',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    gap: 10,
+  },
+  infoText: {
+    flex: 1,
+    color: '#4338CA',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  celebrationRoot: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  celebrationCard: {
+    width: '100%',
+    maxWidth: 380,
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  celebrationIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  celebrationTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+    letterSpacing: -0.3,
+    marginBottom: 8,
+  },
+  celebrationSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  celebrationHighlights: {
+    width: '100%',
+    backgroundColor: 'rgba(99, 102, 241, 0.06)',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 24,
+  },
+  highlightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  highlightText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  celebrationBtn: {
+    width: '100%',
+    backgroundColor: '#10B981',
+    paddingVertical: 15,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10B981',
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  celebrationBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 });

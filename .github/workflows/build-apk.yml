@@ -56,35 +56,34 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.3.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.3.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.4.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.4.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.3-binaries
+          name: resell-tracker-v1.2.4-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.3
-          name: ResellTracker v1.2.3 (APK + Google Play AAB Bundle - In-App Billing Ready)
+          tag_name: v1.2.4
+          name: ResellTracker v1.2.4 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.2.3 Release (Produzione & Google Play Ready)
+            ### 📱 ResellTracker v1.2.4 Release
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.3.aab`**: Android App Bundle per **Google Play Console** (Test Interno, Test Chiuso, Produzione) con supporto nativo agli acquisti in-app (`BILLING`).
-            - **`resell-tracker-v1.2.3.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.2.4.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.2.4.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
-            #### 🚀 Novità & Perfezionamenti:
-            - 💳 **Google Play Billing & RevenueCat integrati**: Abbonamenti mensili e acquisto a vita (Lifetime) completamente cablati con gestione acquisti, ripristino (`Restore Purchases`) e permessi `BILLING` in `AndroidManifest`.
-            - 🏷️ **Prezzi Unificati e Coerenti**: 5,99 € Lifetime (accesso a vita) e 1,99 € / mese in tutte le schermate, traduzioni e dialoghi (eliminato ogni vecchio residuo a 3,49 €).
-            - 🌍 **Pro Modal 100% Multilingua**: Traduzione completa di tutti i testi, feature, bottoni e messaggi di conferma in Italiano, Inglese, Francese, Spagnolo e Tedesco.
-            - 🛡️ **Supporto Sandbox / Offline**: Se non sono ancora configurati gli SKU reali su Play Console, l'app gestisce l'acquisto in modalità sicura di simulazione senza crash.
+            #### 🚀 Novità:
+            - 🎉 **Celebration Screen Pro Integrata**: Risolto il pop-up invisibile su Android: ora lo sblocco Pro mostra una schermata di celebrazione integrata nella modale con conferma chiara e bottone di avvio.
+            - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
+            - 📢 **Credenziali AdMob integrate**: Agganciati l'App ID e il Banner Unit ID di produzione.
           files: |
-            build-output/resell-tracker-v1.2.3.apk
-            build-output/resell-tracker-v1.2.3.aab
+            build-output/resell-tracker-v1.2.4.apk
+            build-output/resell-tracker-v1.2.4.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
