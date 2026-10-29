@@ -114,7 +114,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 
   // Overall statistics for listed inventory (taking multi-quantity into account)
   const inventoryStats = useMemo(() => {
-    const active = items.filter((i) => i.status === 'listed');
+    const active = allItemsList.filter((i) => i.status === 'listed');
     const totalInvested = active.reduce(
       (sum, i) => sum + i.purchaseCost * (i.quantity && i.quantity > 0 ? i.quantity : 1),
       0

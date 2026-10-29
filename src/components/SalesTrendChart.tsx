@@ -25,7 +25,7 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
   platforms,
 }) => {
   const { colors, isDark } = useTheme();
-  const { strings, t } = useTranslation();
+  const { strings, t, language } = useTranslation();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('profit');
 
   // Display from the first recorded sale onwards, keeping at most the last 6 months once history grows
@@ -122,12 +122,36 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
 
   if (!displayMonths || displayMonths.length === 0) return null;
 
-  const shortMonthLabels = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  const getLocale = () => {
+    switch (language) {
+      case 'en': return 'en-US';
+      case 'es': return 'es-ES';
+      case 'fr': return 'fr-FR';
+      case 'de': return 'de-DE';
+      default: return 'it-IT';
+    }
+  };
 
   const getShortMonth = (key: string) => {
-    const [, month] = key.split('-');
-    const idx = parseInt(month, 10) - 1;
-    return shortMonthLabels[idx] || key;
+    try {
+      const [year, month] = key.split('-').map(Number);
+      const d = new Date(year, month - 1, 1);
+      const str = d.toLocaleDateString(getLocale(), { month: 'short' });
+      return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '');
+    } catch {
+      return key;
+    }
+  };
+
+  const getFullMonthLabel = (m: MonthlyStat) => {
+    try {
+      const [year, month] = m.monthKey.split('-').map(Number);
+      const d = new Date(year, month - 1, 1);
+      const str = d.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' });
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    } catch {
+      return m.monthLabel;
+    }
   };
 
   const formatMetricValue = (val: number) => {
@@ -257,7 +281,7 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
               <View style={styles.tooltipTitleRow}>
                 <Ionicons name="calendar-outline" size={14} color="#6366F1" />
                 <Text style={[styles.tooltipTitle, { color: colors.textPrimary }]}>
-                  {activeMonth.monthLabel}
+                  {getFullMonthLabel(activeMonth)}
                 </Text>
               </View>
               <Text style={[styles.tooltipTotalAmount, { color: colors.textPrimary }]}>

@@ -18,6 +18,7 @@ import { InventoryItem, PlatformId } from '../types';
 import { CustomInput } from './CustomInput';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
+import { getAllAvailablePlatforms, getPlatformById } from '../services/customPlatformManager';
 import { markItemAsSold, recordPartialSale } from '../services/db';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import { isProUser } from '../services/proManager';
@@ -64,7 +65,8 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
 
   if (!item) return null;
 
-  const currentPlatformConfig = PLATFORMS.find((p) => p.id === soldPlatform) || PLATFORMS[0];
+  const allPlatforms = useMemo(() => getAllAvailablePlatforms(), []);
+  const currentPlatformConfig = allPlatforms.find((p) => p.id === soldPlatform) || allPlatforms[0];
   const numericUnitPrice = parseFloat(actualPrice.replace(',', '.')) || 0;
 
   // Real-time calculated fees and net profit per single unit
@@ -124,7 +126,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
       const otherPlatforms = activePlatforms.filter((p) => p !== soldPlatform);
       const isMulti = otherPlatforms.length > 0;
       const otherNames = otherPlatforms
-        .map((id) => PLATFORMS.find((p) => p.id === id)?.name || id)
+        .map((id) => allPlatforms.find((p) => p.id === id)?.name || id)
         .join(', ');
 
       if (crossedThreshold) {
@@ -288,7 +290,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
                 <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>DOVE HAI VENDUTO L'ARTICOLO?</Text>
                 <View style={styles.platformOptionsRow}>
                   {activePlatforms.map((pid) => {
-                    const pConfig = PLATFORMS.find((p) => p.id === pid) || PLATFORMS[0];
+                    const pConfig = allPlatforms.find((p) => p.id === pid) || allPlatforms[0];
                     const isSelected = soldPlatform === pid;
                     return (
                       <TouchableOpacity

@@ -1,7 +1,7 @@
 import { Share } from 'react-native';
 import { InventoryItem } from '../types';
 import { formatEuro } from './feeCalculator';
-import { PLATFORMS } from '../constants/platforms';
+import { getPlatformById } from './customPlatformManager';
 
 export async function shareSoldProfit(
   item: InventoryItem,
@@ -10,7 +10,7 @@ export async function shareSoldProfit(
 ): Promise<boolean> {
   try {
     const salePrice = item.actualSellingPrice || item.targetSellingPrice;
-    const platform = PLATFORMS.find((p) => p.id === item.platformId)?.name || 'Vinted/eBay';
+    const platform = getPlatformById(item.platformId)?.name || 'Vinted/eBay';
     const profitSign = netProfit >= 0 ? '+' : '';
 
     const message = `🔥 VENDITA CONCLUSA SU ${platform.toUpperCase()}! 📈

@@ -2,7 +2,7 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { getAllInventoryItems } from './db';
 import { calculateResellProfit } from './feeCalculator';
-import { PLATFORMS } from '../constants/platforms';
+import { getAllAvailablePlatforms } from './customPlatformManager';
 
 export async function exportInventoryToCSV(): Promise<{ success: boolean; message: string }> {
   try {
@@ -78,11 +78,12 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
     const formatDecimal = (num: number) => num.toFixed(2).replace('.', ',');
 
     // Populate Rows
+    const allPlatforms = getAllAvailablePlatforms();
     items.forEach((item) => {
       const activePlatforms =
         item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId];
       const platformNames = activePlatforms
-        .map((pid) => PLATFORMS.find((p) => p.id === pid)?.name || pid)
+        .map((pid) => allPlatforms.find((p) => p.id === pid)?.name || pid)
         .join(', ');
 
       const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
@@ -92,7 +93,7 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
           ? item.actualSellingPrice
           : item.targetSellingPrice;
 
-      const soldPlatformObj = PLATFORMS.find((p) => p.id === item.platformId);
+      const soldPlatformObj = allPlatforms.find((p) => p.id === item.platformId);
       const soldPlatformName = isSold ? (soldPlatformObj?.name || item.platformId) : '-';
 
       const customFee = item.customFees?.[item.platformId];

@@ -13,7 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
 import { InventoryItem } from '../types';
 import { calculateResellProfit, formatEuro } from '../services/feeCalculator';
-import { PLATFORMS } from '../constants/platforms';
+import { getPlatformById } from '../services/customPlatformManager';
 
 interface SocialProofModalProps {
   visible: boolean;
@@ -31,7 +31,7 @@ export const SocialProofModal: React.FC<SocialProofModalProps> = ({
 
   if (!item) return null;
 
-  const platform = PLATFORMS.find((p) => p.id === item.platformId) || PLATFORMS[0];
+  const platform = getPlatformById(item.platformId);
   const salePrice = item.actualSellingPrice || item.targetSellingPrice;
   const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
 

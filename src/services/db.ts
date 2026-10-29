@@ -214,11 +214,18 @@ export function recordPartialSale(
   const currentQty = originalItem.quantity || 1;
   const remainingQty = Math.max(0, currentQty - soldQuantity);
 
-  // 1. Decrement quantity on the original listed item
-  db.runSync(
-    `UPDATE inventory SET quantity = ? WHERE id = ?`,
-    [remainingQty, originalItem.id]
-  );
+  // 1. Decrement quantity on the original listed item (or mark as sold if 0 remaining)
+  if (remainingQty === 0) {
+    db.runSync(
+      `UPDATE inventory SET quantity = 0, status = 'sold' WHERE id = ?`,
+      [originalItem.id]
+    );
+  } else {
+    db.runSync(
+      `UPDATE inventory SET quantity = ? WHERE id = ?`,
+      [remainingQty, originalItem.id]
+    );
+  }
 
   // 2. Insert new record for the sold units
   const soldPlatform = soldPlatformId || originalItem.platformId;

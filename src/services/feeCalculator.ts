@@ -89,7 +89,8 @@ export function roundCurrency(val: number): number {
 }
 
 export function formatEuro(val: number): string {
-  return `${val.toLocaleString('it-IT', {
+  const safeVal = typeof val === 'number' && !isNaN(val) ? val : 0;
+  return `${safeVal.toLocaleString('it-IT', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} €`;
