@@ -159,8 +159,12 @@ export const SettingsScreen: React.FC<{
             setIsImporting(true);
             const res = await importBackup();
             setIsImporting(false);
+            if (!res.success && res.message === 'Nessun file selezionato.') {
+              // L'utente ha chiuso il picker senza selezionare file
+              return;
+            }
             showAlert({
-              title: 'Ripristino',
+              title: res.success ? 'Ripristino' : 'Attenzione',
               message: res.message,
               type: res.success ? 'success' : 'error',
             });

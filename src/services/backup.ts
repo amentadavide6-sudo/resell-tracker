@@ -2,7 +2,8 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { getAllInventoryItems, insertInventoryItem, getDatabase } from './db';
-import { InventoryItem } from '../types';
+import { getAllCustomPlatforms } from './customPlatformManager';
+import { InventoryItem, PlatformConfig } from '../types';
 
 export interface BackupPayload {
   app: string;
@@ -10,6 +11,7 @@ export interface BackupPayload {
   createdAt: string;
   itemCount: number;
   items: InventoryItem[];
+  customPlatforms?: PlatformConfig[];
 }
 
 export async function exportBackup(): Promise<{ success: boolean; message: string }> {
@@ -20,12 +22,22 @@ export async function exportBackup(): Promise<{ success: boolean; message: strin
     }
 
     const items = getAllInventoryItems('all');
+    if (items.length === 0) {
+      return {
+        success: false,
+        message: 'Il tuo inventario è vuoto: inserisci almeno un articolo prima di creare il backup.',
+      };
+    }
+
+    const customPlatforms = getAllCustomPlatforms();
+
     const payload: BackupPayload = {
       app: 'ResellTracker',
-      version: '1.0.0',
+      version: '1.2.6',
       createdAt: new Date().toISOString(),
       itemCount: items.length,
       items,
+      customPlatforms,
     };
 
     const fileName = `reselltracker_backup_${new Date().toISOString().slice(0, 10)}.json`;
@@ -67,13 +79,42 @@ export async function importBackup(): Promise<{ success: boolean; count: number;
     const parsed: BackupPayload = JSON.parse(content);
 
     if (!parsed || !Array.isArray(parsed.items)) {
-      return { success: false, count: 0, message: 'Formato file non valido. Seleziona un backup valido di ResellTracker.' };
+      return { success: false, count: 0, message: 'Formato file non valido. Seleziona un backup valido di ResellTracker (.json).' };
+    }
+
+    if (parsed.items.length === 0) {
+      return { success: true, count: 0, message: 'Il file di backup selezionato è vuoto (0 articoli).' };
     }
 
     let importedCount = 0;
     const db = getDatabase();
 
-    // Use transaction for safe batch restore
+    // 1. Restore custom platforms if present
+    if (parsed.customPlatforms && Array.isArray(parsed.customPlatforms)) {
+      try {
+        for (const cp of parsed.customPlatforms) {
+          if (cp.id && cp.name) {
+            db.runSync(
+              `INSERT OR IGNORE INTO custom_platforms (id, name, fee_percent, fixed_fee, color, badge_bg, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                cp.id,
+                cp.name,
+                cp.sellerFeePercent ?? 0,
+                cp.sellerFixedFee ?? 0,
+                cp.color || '#6366F1',
+                cp.badgeBg || '#EEF2FF',
+                new Date().toISOString(),
+              ]
+            );
+          }
+        }
+      } catch (cpErr) {
+        console.warn('Could not restore custom platforms:', cpErr);
+      }
+    }
+
+    // 2. Restore items in transaction
     db.withTransactionSync(() => {
       for (const item of parsed.items) {
         insertInventoryItem({
