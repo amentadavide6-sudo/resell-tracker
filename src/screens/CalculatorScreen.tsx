@@ -47,6 +47,10 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
   const [sellerShippingCost, setSellerShippingCost] = useState<string>('0');
   const [packagingCost, setPackagingCost] = useState<string>('0.50');
 
+  // Fee override state (editable for any chosen platform)
+  const [feePercent, setFeePercent] = useState<string>('0');
+  const [feeFixed, setFeeFixed] = useState<string>('0');
+
   // Custom platform form state
   const [customName, setCustomName] = useState<string>('');
   const [customPercent, setCustomPercent] = useState<string>('5');
@@ -59,6 +63,18 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
     const list = getAllAvailablePlatforms();
     setAvailablePlatforms(list);
   }, []);
+
+  const handleSelectPlatform = useCallback(
+    (id: PlatformId) => {
+      setPlatformId(id);
+      if (id !== 'custom') {
+        const target = availablePlatforms.find((p) => p.id === id) || PLATFORMS[0];
+        setFeePercent(target.sellerFeePercent.toString());
+        setFeeFixed(target.sellerFixedFee.toString());
+      }
+    },
+    [availablePlatforms]
+  );
 
   const customPlatformsList = useMemo(() => {
     return getAllCustomPlatforms();
@@ -80,7 +96,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
 
     const created = addCustomPlatform(trimmed, feePct, fixFee);
     refreshPlatforms();
-    setPlatformId(created.id);
+    handleSelectPlatform(created.id);
     setCustomName('');
     setCustomPercent('5');
     setCustomFixed('0');
@@ -106,7 +122,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
             deleteCustomPlatform(id);
             refreshPlatforms();
             if (platformId === id) {
-              setPlatformId('vinted');
+              handleSelectPlatform('vinted');
             }
           },
         },
@@ -118,21 +134,34 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
     return availablePlatforms.find((p) => p.id === platformId) || PLATFORMS[0];
   }, [availablePlatforms, platformId]);
 
+  const isFeeModified = useMemo(() => {
+    if (platformId === 'custom') return false;
+    const currentPct = parseFloat(feePercent.replace(',', '.')) || 0;
+    const currentFix = parseFloat(feeFixed.replace(',', '.')) || 0;
+    const defaultPct = selectedPlatform.sellerFeePercent;
+    const defaultFix = selectedPlatform.sellerFixedFee;
+    return Math.abs(currentPct - defaultPct) > 0.001 || Math.abs(currentFix - defaultFix) > 0.001;
+  }, [platformId, feePercent, feeFixed, selectedPlatform]);
+
   const calculationInput: CalculationInput = useMemo(() => {
+    const customSellerFeePercent =
+      platformId === 'custom'
+        ? parseFloat(customPercent.replace(',', '.')) || 0
+        : parseFloat(feePercent.replace(',', '.')) || 0;
+
+    const customSellerFixedFee =
+      platformId === 'custom'
+        ? parseFloat(customFixed.replace(',', '.')) || 0
+        : parseFloat(feeFixed.replace(',', '.')) || 0;
+
     return {
       sellingPrice: parseFloat(sellingPrice.replace(',', '.')) || 0,
       purchaseCost: parseFloat(purchaseCost.replace(',', '.')) || 0,
       sellerShippingCost: parseFloat(sellerShippingCost.replace(',', '.')) || 0,
       packagingCost: parseFloat(packagingCost.replace(',', '.')) || 0,
       platformId,
-      customSellerFeePercent:
-        platformId === 'custom'
-          ? parseFloat(customPercent.replace(',', '.')) || 0
-          : undefined,
-      customSellerFixedFee:
-        platformId === 'custom'
-          ? parseFloat(customFixed.replace(',', '.')) || 0
-          : undefined,
+      customSellerFeePercent,
+      customSellerFixedFee,
     };
   }, [
     sellingPrice,
@@ -140,6 +169,8 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
     sellerShippingCost,
     packagingCost,
     platformId,
+    feePercent,
+    feeFixed,
     customPercent,
     customFixed,
   ]);
@@ -153,6 +184,10 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
     setPurchaseCost('0');
     setSellerShippingCost('0');
     setPackagingCost('0');
+    if (platformId !== 'custom') {
+      setFeePercent(selectedPlatform.sellerFeePercent.toString());
+      setFeeFixed(selectedPlatform.sellerFixedFee.toString());
+    }
   };
 
   const handleSaveToInventory = () => {
@@ -198,16 +233,96 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
           {/* Horizontal Platform Selector with Custom Platforms */}
           <PlatformSelector
             selectedId={platformId}
-            onSelect={(id) => setPlatformId(id)}
+            onSelect={handleSelectPlatform}
             platforms={availablePlatforms}
             title={strings.calculator.selectPlatform}
             onDeleteCustom={(deletedId) => {
               refreshPlatforms();
               if (platformId === deletedId) {
-                setPlatformId('vinted');
+                handleSelectPlatform('vinted');
               }
             }}
           />
+
+          {/* On-the-fly Platform Fee Adjustment Card (for standard or saved platforms) */}
+          {platformId !== 'custom' && (
+            <View
+              style={[
+                styles.feeOverrideCard,
+                {
+                  backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                  borderColor: isFeeModified ? '#F59E0B' : (isDark ? '#334155' : '#E2E8F0'),
+                },
+              ]}
+            >
+              <View style={styles.feeOverrideHeader}>
+                <View style={styles.feeOverrideTitleRow}>
+                  <Ionicons
+                    name={isFeeModified ? 'flash' : 'pricetag-outline'}
+                    size={15}
+                    color={isFeeModified ? '#F59E0B' : colors.primary}
+                  />
+                  <Text style={[styles.feeOverrideTitle, { color: colors.textPrimary }]}>
+                    {strings.calculator.platformFeeTitle} ({selectedPlatform.name})
+                  </Text>
+                  {isFeeModified && (
+                    <View style={styles.feeModifiedBadge}>
+                      <Text style={styles.feeModifiedBadgeText}>
+                        {strings.calculator.feeModifiedBadge}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {isFeeModified && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setFeePercent(selectedPlatform.sellerFeePercent.toString());
+                      setFeeFixed(selectedPlatform.sellerFixedFee.toString());
+                    }}
+                    style={[
+                      styles.resetFeeBtn,
+                      { backgroundColor: isDark ? '#312E81' : '#EEF2FF' },
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="refresh" size={11} color={colors.primary} style={{ marginRight: 3 }} />
+                    <Text style={[styles.resetFeeBtnText, { color: colors.primary }]}>
+                      {strings.calculator.resetFeeToDefault}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <Text style={[styles.feeOverrideSubtitle, { color: colors.textSecondary }]}>
+                {isFeeModified
+                  ? strings.calculator.feeModifiedDesc
+                      .replace('{defaultPct}', selectedPlatform.sellerFeePercent.toString())
+                      .replace('{defaultFix}', selectedPlatform.sellerFixedFee.toFixed(2))
+                  : strings.calculator.platformFeeSubtitle}
+              </Text>
+
+              <View style={styles.row}>
+                <View style={styles.col}>
+                  <CustomInput
+                    label={strings.calculator.customFeePercent}
+                    value={feePercent}
+                    onChangeValue={setFeePercent}
+                    placeholder={selectedPlatform.sellerFeePercent.toString()}
+                    prefix="%"
+                  />
+                </View>
+                <View style={styles.col}>
+                  <CustomInput
+                    label={strings.calculator.customFixedFee}
+                    value={feeFixed}
+                    onChangeValue={setFeeFixed}
+                    placeholder={selectedPlatform.sellerFixedFee.toString()}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* If Custom "+ Personalizzata" is selected: show Add Platform Form */}
           {platformId === 'custom' && (
@@ -283,7 +398,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                       <View style={styles.savedCustomActions}>
                         <TouchableOpacity
                           style={styles.selectCustomBtn}
-                          onPress={() => setPlatformId(cp.id)}
+                          onPress={() => handleSelectPlatform(cp.id)}
                         >
                           <Text style={styles.selectCustomBtnText}>{strings.common.confirm}</Text>
                         </TouchableOpacity>
@@ -504,6 +619,62 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#6366F1',
+  },
+  feeOverrideCard: {
+    marginHorizontal: 16,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  feeOverrideHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  feeOverrideTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  feeOverrideTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  feeModifiedBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  feeModifiedBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#D97706',
+  },
+  resetFeeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  resetFeeBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  feeOverrideSubtitle: {
+    fontSize: 11,
+    marginBottom: 8,
+    lineHeight: 15,
   },
   customCard: {
     marginHorizontal: 16,

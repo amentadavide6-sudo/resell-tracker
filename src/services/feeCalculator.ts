@@ -14,14 +14,14 @@ export function calculateResellProfit(input: CalculationInput): CalculationResul
 
   const platform: PlatformConfig = getPlatformById(platformId);
 
-  // Determine seller fee percentages
+  // Determine seller fee percentages (allows overriding defaults on any platform)
   const sellerFeePercent =
-    platform.id === 'custom' && customSellerFeePercent !== undefined
+    customSellerFeePercent !== undefined
       ? customSellerFeePercent
       : platform.sellerFeePercent;
 
   const sellerFixedFee =
-    platform.id === 'custom' && customSellerFixedFee !== undefined
+    customSellerFixedFee !== undefined
       ? customSellerFixedFee
       : platform.sellerFixedFee;
 

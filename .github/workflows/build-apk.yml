@@ -56,34 +56,35 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.5.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.5.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.6.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.6.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.5-binaries
+          name: resell-tracker-v1.2.6-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.5
-          name: ResellTracker v1.2.5 (APK + Google Play AAB Bundle)
+          tag_name: v1.2.6
+          name: ResellTracker v1.2.6 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.2.5 Release
+            ### 📱 ResellTracker v1.2.6 Release
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.5.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.2.5.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.2.6.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.2.6.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità:
-            - 👑 **Card Pro Attivo & Gestione Abbonamento**: Quando l'utente è Pro, il banner promozionale e il tasto di acquisto scompaiono completamente, sostituiti da un badge di stato "Pro Attivo" con tasto discreto per gestire o disdire l'abbonamento direttamente su Google Play.
-            - 🎉 **Celebration Screen Pro Integrata**: Conclusione dell'acquisto visibile e chiara senza pop-up bloccati.
+            - ⚡ **Modifica Rapida Commissioni al Volo**: Nel Calcolatore è ora possibile personalizzare istantaneamente la percentuale di commissione (%) e la tariffa fissa (€) per qualsiasi piattaforma selezionata (eBay, Vinted, Wallapop, Depop, Subito), senza dover creare o salvare una nuova piattaforma permanente!
+            - 🏷️ **Badge e Ripristino Standard**: Se le tariffe vengono modificate per un articolo o promozione speciale, compare un badge "Modificata" e un pulsante one-tap "Ripristina standard" per tornare alle tariffe standard con un solo tocco.
+            - 🌍 **Localizzazione completa**: Supporto multilingua completo in 5 lingue (IT, EN, FR, ES, DE).
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.2.5.apk
-            build-output/resell-tracker-v1.2.5.aab
+            build-output/resell-tracker-v1.2.6.apk
+            build-output/resell-tracker-v1.2.6.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

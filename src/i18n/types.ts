@@ -69,6 +69,11 @@ export interface TranslationDictionary {
     customNamePlaceholder: string;
     customFeePercent: string;
     customFixedFee: string;
+    platformFeeTitle: string;
+    platformFeeSubtitle: string;
+    resetFeeToDefault: string;
+    feeModifiedBadge: string;
+    feeModifiedDesc: string;
     saveCustomDefaults: string;
     addPlatformBtn: string;
     customPlatformsListTitle: string;
