@@ -104,6 +104,7 @@ export interface TranslationDictionary {
     emptySubtitle: string;
     emptyFilterSubtitle: string;
     emptyAddBtn: string;
+    emptyAddAnotherBtn: string;
     freeTierItems: string;
     upgradePro: string;
     proPassActive: string;
@@ -321,6 +322,9 @@ export interface TranslationDictionary {
     cameraPermissionMsg: string;
     galleryPermissionMsg: string;
     missingTitleError: string;
+    missingTitlePopupTitle: string;
+    missingTitlePopupMessage: string;
+    missingTitlePopupBtn: string;
     platformFeesTitle: string;
     platformFeesSubtitle: string;
     customRateBadge: string;

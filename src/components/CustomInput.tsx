@@ -14,6 +14,7 @@ interface CustomInputProps {
   prefix?: string;
   keyboardType?: KeyboardTypeOptions;
   selectTextOnFocus?: boolean;
+  inputRef?: React.RefObject<TextInput> | React.MutableRefObject<TextInput | null> | any;
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({
@@ -27,6 +28,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   prefix,
   keyboardType,
   selectTextOnFocus,
+  inputRef,
 }) => {
   const { colors, isDark } = useTheme();
 
@@ -84,6 +86,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           <Text style={[styles.currencySymbol, { color: colors.textMuted }]}>{effectivePrefix}</Text>
         ) : null}
         <TextInput
+          ref={inputRef}
           style={[
             styles.input,
             { color: colors.textPrimary },

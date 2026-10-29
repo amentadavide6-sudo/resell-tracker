@@ -806,7 +806,11 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
                 style={styles.emptyAddBtn}
                 onPress={handleOpenAddModal}
               >
-                <Text style={styles.emptyAddBtnText}>{strings.inventory.emptyAddBtn}</Text>
+                <Text style={styles.emptyAddBtnText}>
+                  {totalDbCount > 0
+                    ? strings.inventory.emptyAddAnotherBtn
+                    : strings.inventory.emptyAddBtn}
+                </Text>
               </TouchableOpacity>
             )}
           </View>

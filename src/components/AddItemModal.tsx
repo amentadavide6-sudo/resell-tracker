@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,8 +50,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const { colors, isDark } = useTheme();
   const { strings, language } = useTranslation();
   const { showAlert } = useAlert();
+  const scrollViewRef = useRef<any>(null);
+  const titleInputRef = useRef<any>(null);
   const [title, setTitle] = useState(initialValues?.title || '');
   const [titleError, setTitleError] = useState<boolean>(false);
+  const [showMissingTitleModal, setShowMissingTitleModal] = useState<boolean>(false);
   const [selectedPlatforms, setSelectedPlatforms] = useState<PlatformId[]>([
     initialValues?.platformId || 'vinted',
   ]);
@@ -82,6 +86,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     if (visible) {
       setTitle(initialValues?.title || '');
       setTitleError(false);
+      setShowMissingTitleModal(false);
       const initPlatform = initialValues?.platformId || 'vinted';
       setSelectedPlatforms([initPlatform]);
       setActiveFeeTab(initPlatform);
@@ -230,9 +235,12 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const handleSave = () => {
     if (!title.trim()) {
       setTitleError(true);
+      setShowMissingTitleModal(true);
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       return;
     }
     setTitleError(false);
+    setShowMissingTitleModal(false);
 
     const priceNum = parseFloat(sellingPrice.replace(',', '.')) || 0;
     const costNum = parseFloat(purchaseCost.replace(',', '.')) || 0;
@@ -294,9 +302,18 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     }
   };
 
+  const handleDismissMissingTitleModal = () => {
+    setShowMissingTitleModal(false);
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    setTimeout(() => {
+      titleInputRef.current?.focus();
+    }, 150);
+  };
+
   const handleResetForm = () => {
     setTitle('');
     setTitleError(false);
+    setShowMissingTitleModal(false);
     setSelectedPlatforms(['vinted']);
     setActiveFeeTab('vinted');
     setCustomPlatformFees({});
@@ -327,6 +344,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
         </View>
 
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -370,6 +388,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           {/* Title Input */}
           <View style={[styles.inputCard, titleError && styles.inputCardError]}>
             <CustomInput
+              inputRef={titleInputRef}
               label={strings.addItemModal.itemTitleLabel}
               subtitle={strings.addItemModal.itemTitleSubtitle}
               value={title}
@@ -750,6 +769,45 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             </Text>
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Missing Title Alert Modal Popup */}
+        {showMissingTitleModal && (
+          <View style={styles.alertOverlay}>
+            <TouchableOpacity
+              style={styles.alertBackdrop}
+              activeOpacity={1}
+              onPress={handleDismissMissingTitleModal}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.alertDialog,
+                  { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                ]}
+                activeOpacity={1}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <View style={[styles.alertIconWrap, { backgroundColor: isDark ? '#3E2723' : '#FEF3C7' }]}>
+                  <Ionicons name="warning" size={32} color="#F59E0B" />
+                </View>
+                <Text style={[styles.alertTitle, { color: colors.textPrimary }]}>
+                  {strings.addItemModal.missingTitlePopupTitle}
+                </Text>
+                <Text style={[styles.alertMessage, { color: colors.textSecondary }]}>
+                  {strings.addItemModal.missingTitlePopupMessage}
+                </Text>
+                <TouchableOpacity
+                  style={styles.alertBtn}
+                  onPress={handleDismissMissingTitleModal}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.alertBtnText}>
+                    {strings.addItemModal.missingTitlePopupBtn}
+                  </Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -1137,5 +1195,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#6366F1',
+  },
+  alertOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
+    elevation: 20,
+  },
+  alertBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  alertDialog: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+  },
+  alertIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  alertMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  alertBtn: {
+    backgroundColor: '#6366F1',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  alertBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
