@@ -19,6 +19,7 @@ interface TrophiesShowcaseProps {
   totalCount: number;
   proInsights: ProBusinessInsights | null;
   userLevel: LevelInfo | null;
+  isPro?: boolean;
   onShareTrophy: (trophy: TrophyStatus) => void;
   onShareRank: () => void;
   onOpenProModal?: () => void;
@@ -30,8 +31,10 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
   totalCount,
   proInsights,
   userLevel,
+  isPro = false,
   onShareTrophy,
   onShareRank,
+  onOpenProModal,
 }) => {
   const { colors, isDark } = useTheme();
   const { strings } = useTranslation();
@@ -42,9 +45,9 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
 
   // Level unlock conditions for Pro business insights
   const currentLvl = userLevel ? userLevel.levelNumber : 1;
-  const hasUnlockedDayInsight = currentLvl >= 3 || unlockedCount >= 3;
-  const hasUnlockedVelocityInsight = currentLvl >= 5 || unlockedCount >= 5;
-  const hasUnlockedTurnoverInsight = currentLvl >= 8 || unlockedCount >= 8;
+  const hasUnlockedDayInsight = isPro && (currentLvl >= 3 || unlockedCount >= 3);
+  const hasUnlockedVelocityInsight = isPro && (currentLvl >= 5 || unlockedCount >= 5);
+  const hasUnlockedTurnoverInsight = isPro && (currentLvl >= 8 || unlockedCount >= 8);
 
   return (
     <View style={styles.container}>
@@ -162,7 +165,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
       </Text>
 
       <View style={styles.insightsContainer}>
-        {/* Insight 1: Giorno d'Oro (Sbloccato a Livello 3 o 3 Trofei) */}
+        {/* Insight 1: Giorno d'Oro (Sbloccato a Livello 3 o 3 Trofei per utenti Pro) */}
         <View style={[styles.insightCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.insightHeaderRow}>
             <View style={styles.insightTitleRow}>
@@ -171,14 +174,38 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
               </View>
               <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>Il Tuo Giorno d'Oro</Text>
             </View>
-            <View style={[styles.insightLevelPill, { backgroundColor: hasUnlockedDayInsight ? '#ECFDF5' : (isDark ? '#1E293B' : '#F1F5F9') }]}>
-              <Text style={[styles.insightLevelPillText, { color: hasUnlockedDayInsight ? '#059669' : colors.textMuted }]}>
-                {hasUnlockedDayInsight ? 'Sbloccato ✨' : '🔒 Livello 3'}
+            <View style={[
+              styles.insightLevelPill,
+              !isPro
+                ? { backgroundColor: isDark ? '#451A03' : '#FEF3C7' }
+                : hasUnlockedDayInsight
+                ? { backgroundColor: '#ECFDF5' }
+                : { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }
+            ]}>
+              <Text style={[
+                styles.insightLevelPillText,
+                !isPro
+                  ? { color: '#D97706', fontWeight: '800' }
+                  : hasUnlockedDayInsight
+                  ? { color: '#059669' }
+                  : { color: colors.textMuted }
+              ]}>
+                {!isPro ? '🔒 Esclusiva Pro' : hasUnlockedDayInsight ? 'Sbloccato ✨' : '🔒 Livello 3'}
               </Text>
             </View>
           </View>
 
-          {hasUnlockedDayInsight ? (
+          {!isPro ? (
+            <View>
+              <Text style={[styles.insightLockedText, { color: colors.textSecondary }]}>
+                Analizza quale giorno della settimana registra il picco di incassi e vendite per massimizzare il profitto delle tue nuove inserzioni.
+              </Text>
+              <TouchableOpacity style={styles.proUnlockBtn} onPress={onOpenProModal} activeOpacity={0.8}>
+                <Ionicons name="sparkles" size={13} color="#FFFFFF" />
+                <Text style={styles.proUnlockBtnText}>Sblocca con ResellTracker Pro 👑</Text>
+              </TouchableOpacity>
+            </View>
+          ) : hasUnlockedDayInsight ? (
             proInsights && proInsights.bestDayOfWeek ? (
               <View style={styles.insightBody}>
                 <Text style={[styles.insightHighlight, { color: '#6366F1' }]}>
@@ -195,12 +222,12 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
             )
           ) : (
             <Text style={[styles.insightLockedText, { color: colors.textMuted }]}>
-              Raggiungi il Livello 3 (o conquista 3 trofei) per sbloccare l'analisi del giorno della settimana più redditizio per le tue vendite.
+              Raggiungi il Livello 3 (o conquista 3 trofei) con i tuoi punti XP per sbloccare l'analisi del giorno della settimana più redditizio per le tue vendite.
             </Text>
           )}
         </View>
 
-        {/* Insight 2: Velocità di Vendita / Velocity (Sbloccato a Livello 5 o 5 Trofei) */}
+        {/* Insight 2: Velocità di Vendita / Velocity (Sbloccato a Livello 5 o 5 Trofei per utenti Pro) */}
         <View style={[styles.insightCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.insightHeaderRow}>
             <View style={styles.insightTitleRow}>
@@ -209,14 +236,38 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
               </View>
               <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>Velocità Media di Vendita (Velocity)</Text>
             </View>
-            <View style={[styles.insightLevelPill, { backgroundColor: hasUnlockedVelocityInsight ? '#ECFDF5' : (isDark ? '#1E293B' : '#F1F5F9') }]}>
-              <Text style={[styles.insightLevelPillText, { color: hasUnlockedVelocityInsight ? '#059669' : colors.textMuted }]}>
-                {hasUnlockedVelocityInsight ? 'Sbloccato ✨' : '🔒 Livello 5'}
+            <View style={[
+              styles.insightLevelPill,
+              !isPro
+                ? { backgroundColor: isDark ? '#451A03' : '#FEF3C7' }
+                : hasUnlockedVelocityInsight
+                ? { backgroundColor: '#ECFDF5' }
+                : { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }
+            ]}>
+              <Text style={[
+                styles.insightLevelPillText,
+                !isPro
+                  ? { color: '#D97706', fontWeight: '800' }
+                  : hasUnlockedVelocityInsight
+                  ? { color: '#059669' }
+                  : { color: colors.textMuted }
+              ]}>
+                {!isPro ? '🔒 Esclusiva Pro' : hasUnlockedVelocityInsight ? 'Sbloccato ✨' : '🔒 Livello 5'}
               </Text>
             </View>
           </View>
 
-          {hasUnlockedVelocityInsight ? (
+          {!isPro ? (
+            <View>
+              <Text style={[styles.insightLockedText, { color: colors.textSecondary }]}>
+                Traccia esattamente quanti giorni impiegano i tuoi articoli ad essere venduti e monitora i tuoi affari lampo conclusi in 48 ore.
+              </Text>
+              <TouchableOpacity style={styles.proUnlockBtn} onPress={onOpenProModal} activeOpacity={0.8}>
+                <Ionicons name="sparkles" size={13} color="#FFFFFF" />
+                <Text style={styles.proUnlockBtnText}>Sblocca con ResellTracker Pro 👑</Text>
+              </TouchableOpacity>
+            </View>
+          ) : hasUnlockedVelocityInsight ? (
             proInsights && proInsights.averageDaysToSell !== null ? (
               <View style={styles.insightBody}>
                 <Text style={[styles.insightHighlight, { color: '#F97316' }]}>
@@ -233,12 +284,12 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
             )
           ) : (
             <Text style={[styles.insightLockedText, { color: colors.textMuted }]}>
-              Raggiungi il Livello 5 (o conquista 5 trofei) per sbloccare il monitoraggio della velocità media di rotazione dei tuoi capi.
+              Raggiungi il Livello 5 (o conquista 5 trofei) con i tuoi punti XP per sbloccare il monitoraggio della velocità media di rotazione dei tuoi capi.
             </Text>
           )}
         </View>
 
-        {/* Insight 3: Tasso di Rotazione Stock (Sbloccato a Livello 8 o 8 Trofei) */}
+        {/* Insight 3: Tasso di Rotazione Stock (Sbloccato a Livello 8 o 8 Trofei per utenti Pro) */}
         <View style={[styles.insightCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.insightHeaderRow}>
             <View style={styles.insightTitleRow}>
@@ -247,14 +298,38 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
               </View>
               <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>Rotazione del Magazzino</Text>
             </View>
-            <View style={[styles.insightLevelPill, { backgroundColor: hasUnlockedTurnoverInsight ? '#ECFDF5' : (isDark ? '#1E293B' : '#F1F5F9') }]}>
-              <Text style={[styles.insightLevelPillText, { color: hasUnlockedTurnoverInsight ? '#059669' : colors.textMuted }]}>
-                {hasUnlockedTurnoverInsight ? 'Sbloccato ✨' : '🔒 Livello 8'}
+            <View style={[
+              styles.insightLevelPill,
+              !isPro
+                ? { backgroundColor: isDark ? '#451A03' : '#FEF3C7' }
+                : hasUnlockedTurnoverInsight
+                ? { backgroundColor: '#ECFDF5' }
+                : { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }
+            ]}>
+              <Text style={[
+                styles.insightLevelPillText,
+                !isPro
+                  ? { color: '#D97706', fontWeight: '800' }
+                  : hasUnlockedTurnoverInsight
+                  ? { color: '#059669' }
+                  : { color: colors.textMuted }
+              ]}>
+                {!isPro ? '🔒 Esclusiva Pro' : hasUnlockedTurnoverInsight ? 'Sbloccato ✨' : '🔒 Livello 8'}
               </Text>
             </View>
           </View>
 
-          {hasUnlockedTurnoverInsight ? (
+          {!isPro ? (
+            <View>
+              <Text style={[styles.insightLockedText, { color: colors.textSecondary }]}>
+                Scopri l'efficienza con cui trasformi i capi fermi in magazzino in pura liquidità netta per reinvestire nei tuoi affari.
+              </Text>
+              <TouchableOpacity style={styles.proUnlockBtn} onPress={onOpenProModal} activeOpacity={0.8}>
+                <Ionicons name="sparkles" size={13} color="#FFFFFF" />
+                <Text style={styles.proUnlockBtnText}>Sblocca con ResellTracker Pro 👑</Text>
+              </TouchableOpacity>
+            </View>
+          ) : hasUnlockedTurnoverInsight ? (
             proInsights ? (
               <View style={styles.insightBody}>
                 <Text style={[styles.insightHighlight, { color: '#10B981' }]}>
@@ -267,7 +342,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
             ) : null
           ) : (
             <Text style={[styles.insightLockedText, { color: colors.textMuted }]}>
-              Raggiungi il Livello 8 per monitorare la liquidità e il tasso di rotazione del magazzino.
+              Raggiungi il Livello 8 con i tuoi punti XP per monitorare la liquidità e il tasso di rotazione del magazzino.
             </Text>
           )}
         </View>
@@ -509,6 +584,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     marginTop: 2,
+  },
+  proUnlockBtn: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#D97706',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  proUnlockBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   detailModalOverlay: {
     flex: 1,

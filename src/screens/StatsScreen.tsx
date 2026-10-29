@@ -427,6 +427,7 @@ export const StatsScreen: React.FC<{
             totalCount={trophiesData.totalCount}
             proInsights={proInsights}
             userLevel={userLevel}
+            isPro={isPro}
             onShareTrophy={(t) => {
               setStoryModal({
                 visible: true,

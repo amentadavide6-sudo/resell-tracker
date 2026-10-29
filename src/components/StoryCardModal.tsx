@@ -19,6 +19,7 @@ import { formatEuro } from '../services/feeCalculator';
 import { TrophyStatus } from '../services/achievements';
 import { LevelInfo } from '../services/gamification';
 import { InventoryItem } from '../types';
+import { isProUser } from '../services/proManager';
 
 interface StoryCardModalProps {
   visible: boolean;
@@ -54,6 +55,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
   const { showAlert } = useAlert();
   const cardRef = useRef<any>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const isPro = isProUser();
 
   if (!visible) return null;
 
@@ -139,10 +141,17 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                     <Ionicons name="stats-chart" size={16} color="#6366F1" />
                     <Text style={styles.brandName}>ResellTracker</Text>
                   </View>
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={13} color="#10B981" />
-                    <Text style={styles.verifiedText}>Verified Reseller</Text>
-                  </View>
+                  {isPro ? (
+                    <View style={[styles.verifiedBadge, styles.verifiedBadgePro]}>
+                      <Ionicons name="shield-checkmark" size={13} color="#F59E0B" />
+                      <Text style={[styles.verifiedText, styles.verifiedTextPro]}>👑 Verified Pro Reseller</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.verifiedBadge}>
+                      <Ionicons name="checkmark-circle" size={13} color="#10B981" />
+                      <Text style={styles.verifiedText}>Reseller Club</Text>
+                    </View>
+                  )}
                 </View>
 
                 {/* Center Content based on mode */}
@@ -377,10 +386,19 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 10,
   },
+  verifiedBadgePro: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
   verifiedText: {
     color: '#34D399',
     fontSize: 10,
     fontWeight: '700',
+  },
+  verifiedTextPro: {
+    color: '#FCD34D',
+    fontWeight: '800',
   },
   contentCenter: {
     alignItems: 'center',

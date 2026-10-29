@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme, ThemeMode } from '../context/ThemeContext';
+import { useTheme, ThemeMode, AccentTheme } from '../context/ThemeContext';
 import { useTranslation, LanguageMode } from '../i18n';
 import { useAlert } from '../context/AlertContext';
 import { exportBackup, importBackup } from '../services/backup';
-import { addXP, XP_REWARDS } from '../services/gamification';
+import { addXP, XP_REWARDS, getUserXP, getLevelInfo } from '../services/gamification';
 import { isProUser } from '../services/proManager';
 import {
   areNotificationsEnabled,
@@ -56,13 +56,48 @@ const FAQS: FAQItem[] = [
   },
 ];
 
+const VIP_ACCENT_THEMES = [
+  {
+    id: 'classic' as const,
+    name: 'Classico Indigo',
+    primary: '#6366F1',
+    requiredLevel: 1,
+    isProOnly: false,
+    badge: '🔷',
+  },
+  {
+    id: 'gold' as const,
+    name: 'Oro Onyx Prestige',
+    primary: '#F59E0B',
+    requiredLevel: 4,
+    isProOnly: true,
+    badge: '👑',
+  },
+  {
+    id: 'emerald' as const,
+    name: 'Smeraldo Luxury',
+    primary: '#10B981',
+    requiredLevel: 6,
+    isProOnly: true,
+    badge: '💎',
+  },
+  {
+    id: 'cyberpunk' as const,
+    name: 'Viola Cyberpunk',
+    primary: '#A855F7',
+    requiredLevel: 8,
+    isProOnly: true,
+    badge: '⚡',
+  },
+];
+
 export const SettingsScreen: React.FC<{
   onDataRestored?: () => void;
   onOpenProModal?: () => void;
   onOpenTutorial?: () => void;
 }> = ({ onDataRestored, onOpenProModal, onOpenTutorial }) => {
   const insets = useSafeAreaInsets();
-  const { themeMode, setThemeMode, colors, isDark } = useTheme();
+  const { themeMode, setThemeMode, accentTheme, setAccentTheme, colors, isDark } = useTheme();
   const { strings, languageMode, setLanguageMode } = useTranslation();
   const { showAlert } = useAlert();
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
@@ -70,6 +105,52 @@ export const SettingsScreen: React.FC<{
   const [isImporting, setIsImporting] = useState(false);
   const [isPro, setIsPro] = useState<boolean>(() => isProUser());
   const [notificationsActive, setNotificationsActive] = useState<boolean>(() => areNotificationsEnabled());
+
+  const userLevel = useMemo(() => getLevelInfo(getUserXP()), []);
+  const currentLevel = userLevel.levelNumber;
+
+  const handleSelectAccent = (theme: typeof VIP_ACCENT_THEMES[number]) => {
+    if (theme.id === 'classic') {
+      setAccentTheme('classic');
+      return;
+    }
+
+    if (!isPro) {
+      showAlert({
+        title: '👑 TEMA RISERVATO AI MEMBRI PRO',
+        message: `Il tema estetico "${theme.name}" è un'esclusiva per i membri ResellTracker Pro.\n\nSblocca il Pro per personalizzare l'aspetto dell'app e distinguerti!`,
+        type: 'warning',
+        buttons: [
+          { text: 'Annulla', style: 'cancel' },
+          {
+            text: 'Sblocca con Pro 👑',
+            onPress: () => {
+              if (onOpenProModal) onOpenProModal();
+            },
+          },
+        ],
+      });
+      return;
+    }
+
+    if (currentLevel < theme.requiredLevel) {
+      showAlert({
+        title: '🔒 LIVELLO NON ANCORA RAGGIUNTO',
+        message: `Questo tema VIP richiede il Livello ${theme.requiredLevel}!\n\nAttualmente sei al Livello ${currentLevel}. Continua a vendere per guadagnare XP e sbloccarlo!`,
+        type: 'info',
+        buttons: [{ text: 'Ho Capito', style: 'cancel' }],
+      });
+      return;
+    }
+
+    setAccentTheme(theme.id);
+    showAlert({
+      title: '✨ TEMA VIP ATTIVATO!',
+      message: `Hai attivato con successo il tema "${theme.name}"! L'interfaccia dell'app si è trasformata con il tuo nuovo stile.`,
+      type: 'success',
+      buttons: [{ text: 'Ottimo!', style: 'cancel' }],
+    });
+  };
 
   const handleToggleNotifications = async (val: boolean) => {
     setNotificationsActive(val);
@@ -342,6 +423,76 @@ export const SettingsScreen: React.FC<{
                     ]}
                   >
                     {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* VIP Themes Card (Pro Level Perks) */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={styles.cardHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <Ionicons name="color-palette" size={20} color="#F59E0B" />
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Temi VIP & Stile (Pro)</Text>
+            </View>
+            <View style={[styles.proBadgeMini, { backgroundColor: isPro ? (isDark ? '#064E3B' : '#D1FAE5') : (isDark ? '#451A03' : '#FEF3C7') }]}>
+              <Text style={[styles.proBadgeMiniText, { color: isPro ? '#059669' : '#D97706' }]}>
+                {isPro ? '👑 VIP Sbloccato' : '👑 Solo Pro'}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            {isPro
+              ? 'Guadagna XP vendendo capi e passa di livello per sbloccare stili estetici esclusivi per tutta l\'interfaccia.'
+              : 'I membri Pro possono personalizzare l\'interfaccia con stili estetici esclusivi sbloccabili salendo di livello.'}
+          </Text>
+
+          <View style={styles.accentGrid}>
+            {VIP_ACCENT_THEMES.map((theme) => {
+              const isSelected = accentTheme === theme.id;
+              const isLockedForLevel = isPro && currentLevel < theme.requiredLevel;
+              const isLockedForPro = !isPro && theme.isProOnly;
+              const isLocked = isLockedForPro || isLockedForLevel;
+
+              return (
+                <TouchableOpacity
+                  key={theme.id}
+                  style={[
+                    styles.accentCard,
+                    {
+                      backgroundColor: isDark ? '#111827' : '#F8FAFC',
+                      borderColor: isSelected ? theme.primary : colors.cardBorder,
+                      borderWidth: isSelected ? 2 : 1,
+                    },
+                  ]}
+                  onPress={() => handleSelectAccent(theme)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.accentCardHeader}>
+                    <View style={[styles.accentColorCircle, { backgroundColor: theme.primary }]} />
+                    {isLocked ? (
+                      <Ionicons
+                        name="lock-closed"
+                        size={14}
+                        color={isLockedForPro ? '#F59E0B' : colors.textMuted}
+                      />
+                    ) : isSelected ? (
+                      <Ionicons name="checkmark-circle" size={16} color={theme.primary} />
+                    ) : null}
+                  </View>
+                  <Text style={[styles.accentName, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {theme.badge} {theme.name}
+                  </Text>
+                  <Text style={[styles.accentRequirement, { color: isLocked ? colors.textMuted : '#10B981' }]}>
+                    {theme.id === 'classic'
+                      ? 'Predefinito'
+                      : isLockedForPro
+                      ? 'Richiede Pro'
+                      : isLockedForLevel
+                      ? `Livello ${theme.requiredLevel} XP`
+                      : 'Sbloccato ✨'}
                   </Text>
                 </TouchableOpacity>
               );
@@ -956,6 +1107,46 @@ const styles = StyleSheet.create({
   },
   langText: {
     fontSize: 13,
+    fontWeight: '600',
+  },
+  proBadgeMini: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  proBadgeMiniText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  accentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  accentCard: {
+    width: '48%',
+    borderRadius: 12,
+    padding: 12,
+  },
+  accentCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  accentColorCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+  accentName: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  accentRequirement: {
+    fontSize: 10,
     fontWeight: '600',
   },
 });

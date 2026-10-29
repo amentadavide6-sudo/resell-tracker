@@ -56,36 +56,36 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.0.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.0.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.1.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.1.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.0-binaries
+          name: resell-tracker-v1.3.1-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.0
-          name: ResellTracker v1.3.0 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.1
+          name: ResellTracker v1.3.1 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.3.0 Release - Trofei, Storie Instagram & Pro Prestige
+            ### 📱 ResellTracker v1.3.1 Release - Temi VIP Pro, Insight Aziendali & Badge Esclusivi
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.0.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.0.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.1.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.1.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 🏆 **Bacheca Trofei & Prestigio Reseller**: 10 trofei ufficiali sbloccabili (Battesimo del Resell, Power Seller, Il Colpo Grosso con ROI > 150%, Pezzo Pregiato > 100€, Club dei 1.000€, Vendita Lampo in 48h, Cittadino dei Marketplace, Boutique Piena, ecc.) con progresso in tempo reale e ricompense XP.
-            - 📸 **Generatore Storie Instagram HD (9:16)**: Condividi con un tocco nelle storie Instagram e TikTok grafiche spettacolari a tema scuro luxury con il tuo livello, i trofei sbloccati o i profitti degli affari conclusi (pubblicità virale garantita!).
-            - 📊 **Insight Aziendali Avanzati Pro**: Sblocco di statistiche strategiche esclusive per livello (Il tuo Giorno d'Oro più redditizio, Velocità media di rotazione capi in giorni, Tasso di liquidazione stock).
-            - 🎉 **Esperienza Pro XP Ottimizzata**: Gli utenti Pro ricevono congratulazioni e sblocchi di rango e trofei di prestigio anziché avvisi superflui di prova pass.
+            - 👑 **Gamification Pro Ottimizzata (Opzione A)**: Per gli utenti Pro l'esperienza XP diventa il motore fondamentale per sbloccare strumenti di business esclusivi e personalizzazione estetica.
+            - 📊 **Insight Aziendali Riservati ai Pro**: Le analisi statistiche ad alto valore strategico (Il tuo Giorno d'Oro più redditizio, Velocità di rotazione capi in giorni con Fast Flips 48h, Tasso di liquidazione magazzino) sono riservate agli utenti Pro e si sbloccano salendo di livello (Livello 3, 5, 8). Per gli utenti gratuiti compare il lucchetto dorato con invito a passare a Pro.
+            - 🎨 **Temi VIP & Personalizzazione Interfaccia (Passo 2)**: Nuova sezione in Impostazioni che permette agli utenti Pro di trasformare l'aspetto dell'app sbloccando i temi Oro Onyx Prestige (Liv. 4), Smeraldo Luxury (Liv. 6) e Viola Cyberpunk (Liv. 8).
+            - ⭐ **Badge Pro Nelle Storie Instagram**: Chi ha Pro ottiene il badge scintillante "👑 Verified Pro Reseller" nelle card social per massimizzare il prestigio, mentre gli utenti free continuano a condividere storie con il badge community portando download all'app.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.0.apk
-            build-output/resell-tracker-v1.3.0.aab
+            build-output/resell-tracker-v1.3.1.apk
+            build-output/resell-tracker-v1.3.1.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
