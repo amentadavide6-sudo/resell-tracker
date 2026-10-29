@@ -344,6 +344,10 @@ export const de: TranslationDictionary = {
     cameraPermissionMsg: 'Kamerazugriff wird benötigt, um ein Foto des Artikels aufzunehmen.',
     galleryPermissionMsg: 'Galeriezugriff wird benötigt, um ein Foto auszuwählen.',
     missingTitleError: 'Bitte geben Sie einen Namen oder eine kurze Beschreibung des Artikels ein.',
+    platformFeesTitle: 'PLATTFORM-GEBÜHREN',
+    platformFeesSubtitle: 'Passen Sie die Gebühren für diesen Artikel an (Aktionen oder Sonderkategorien)',
+    customRateBadge: 'Angepasst',
+    resetPlatformFee: 'Zurücksetzen',
   },
   markSoldModal: {
     modalTitle: 'Verkauf Erfassen',

@@ -137,6 +137,7 @@ export async function importBackup(): Promise<{ success: boolean; count: number;
           title: item.title,
           platformId: item.platformId,
           platforms: item.platforms,
+          customFees: item.customFees,
           quantity: item.quantity,
           purchaseCost: item.purchaseCost,
           targetSellingPrice: item.targetSellingPrice,

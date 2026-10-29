@@ -67,12 +67,15 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
   const numericUnitPrice = parseFloat(actualPrice.replace(',', '.')) || 0;
 
   // Real-time calculated fees and net profit per single unit
+  const customFeeForPlatform = item.customFees?.[soldPlatform];
   const unitBreakdown = calculateResellProfit({
     sellingPrice: numericUnitPrice,
     purchaseCost: item.purchaseCost,
     sellerShippingCost: item.sellerShippingCost,
     packagingCost: item.packagingCost,
     platformId: soldPlatform,
+    customSellerFeePercent: customFeeForPlatform?.percent,
+    customSellerFixedFee: customFeeForPlatform?.fixed,
   });
 
   const totalNetProfit = unitBreakdown.netProfit * soldQuantity;

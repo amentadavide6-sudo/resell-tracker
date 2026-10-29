@@ -344,6 +344,10 @@ export const fr: TranslationDictionary = {
     cameraPermissionMsg: 'L\'accès à l\'appareil photo est nécessaire pour photographier l\'article.',
     galleryPermissionMsg: 'L\'accès aux photos est requis pour choisir une image.',
     missingTitleError: 'Veuillez saisir un nom ou une brève description de l\'article.',
+    platformFeesTitle: 'FRAIS DES PLATEFORMES',
+    platformFeesSubtitle: 'Personnalisez les frais pour cet article (promotions ou catégories spéciales)',
+    customRateBadge: 'Personnalisé',
+    resetPlatformFee: 'Rétablir',
   },
   markSoldModal: {
     modalTitle: 'Enregistrer la Vente',

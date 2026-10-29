@@ -344,6 +344,10 @@ export const en: TranslationDictionary = {
     cameraPermissionMsg: 'Camera permission is required to take a picture of the item.',
     galleryPermissionMsg: 'Photo library permission is required to pick an image.',
     missingTitleError: 'Please enter an item name or description.',
+    platformFeesTitle: 'PLATFORM FEES',
+    platformFeesSubtitle: 'Customize fees for this item (promotions or special categories)',
+    customRateBadge: 'Custom',
+    resetPlatformFee: 'Reset',
   },
   markSoldModal: {
     modalTitle: 'Record Sale',

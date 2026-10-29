@@ -50,11 +50,14 @@ export interface CalculationResult {
   roiPercent: number;
 }
 
+export type PlatformFeeOverrides = Record<string, { percent: number; fixed: number }>;
+
 export interface InventoryItem {
   id?: number;
   title: string;
   platformId: PlatformId;
   platforms?: PlatformId[];
+  customFees?: PlatformFeeOverrides;
   quantity?: number;
   purchaseCost: number;
   targetSellingPrice: number;

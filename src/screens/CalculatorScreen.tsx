@@ -544,6 +544,8 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
           sellingPrice: result.sellingPrice,
           purchaseCost: result.purchaseCost,
           platformId,
+          customSellerFeePercent: isFeeModified ? parseFloat(feePercent.replace(',', '.')) : undefined,
+          customSellerFixedFee: isFeeModified ? parseFloat(feeFixed.replace(',', '.')) : undefined,
         }}
       />
     </View>

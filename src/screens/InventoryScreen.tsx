@@ -125,12 +125,15 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     let potentialProfit = 0;
     active.forEach((i) => {
       const qty = i.quantity && i.quantity > 0 ? i.quantity : 1;
+      const customFee = i.customFees?.[i.platformId];
       const calc = calculateResellProfit({
         sellingPrice: i.targetSellingPrice,
         purchaseCost: i.purchaseCost,
         sellerShippingCost: i.sellerShippingCost,
         packagingCost: i.packagingCost,
         platformId: i.platformId,
+        customSellerFeePercent: customFee?.percent,
+        customSellerFixedFee: customFee?.fixed,
       });
       potentialProfit += calc.netProfit * qty;
     });
@@ -148,12 +151,15 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 
     if (item.status === 'sold') {
       const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
+      const customFee = item.customFees?.[item.platformId];
       const calc = calculateResellProfit({
         sellingPrice: item.actualSellingPrice || item.targetSellingPrice,
         purchaseCost: item.purchaseCost,
         sellerShippingCost: item.sellerShippingCost,
         packagingCost: item.packagingCost,
         platformId: item.platformId,
+        customSellerFeePercent: customFee?.percent,
+        customSellerFixedFee: customFee?.fixed,
       });
       const xpDeduct = isPro ? 200 : 100;
 
@@ -263,18 +269,22 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 
   const renderItemCard = ({ item }: { item: InventoryItem }) => {
     const itemPlatforms = item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId];
-    const primaryPlatform = PLATFORMS.find((p) => p.id === item.platformId) || PLATFORMS[0];
+    const allPlatforms = getAllAvailablePlatforms();
+    const primaryPlatform = allPlatforms.find((p) => p.id === item.platformId) || PLATFORMS[0];
     const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
 
     const itemIndex = itemChronologicalMap.get(item.id || 0) ?? 0;
     const isFrozen = !isPro && itemIndex >= FREE_TIER_ITEM_LIMIT;
 
+    const customFee = item.customFees?.[item.platformId];
     const unitCalc = calculateResellProfit({
       sellingPrice: item.status === 'sold' && item.actualSellingPrice ? item.actualSellingPrice : item.targetSellingPrice,
       purchaseCost: item.purchaseCost,
       sellerShippingCost: item.sellerShippingCost,
       packagingCost: item.packagingCost,
       platformId: item.platformId,
+      customSellerFeePercent: customFee?.percent,
+      customSellerFixedFee: customFee?.fixed,
     });
 
     const isSold = item.status === 'sold';
@@ -308,11 +318,13 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
             <View style={styles.tagRow}>
               {/* Multiple Platform Badges */}
               {itemPlatforms.map((pId) => {
-                const pConfig = PLATFORMS.find((p) => p.id === pId) || PLATFORMS[0];
+                const pConfig = allPlatforms.find((p) => p.id === pId) || PLATFORMS.find((p) => p.id === pId) || PLATFORMS[0];
+                const hasCustomFee = !!item.customFees?.[pId];
                 return (
                   <View key={pId} style={[styles.platformBadge, { backgroundColor: isDark ? '#1E293B' : pConfig.badgeBg }]}>
                     <Text style={[styles.platformBadgeText, { color: pConfig.color }]}>
                       {pConfig.name}
+                      {hasCustomFee ? ' ⚡' : ''}
                     </Text>
                   </View>
                 );

@@ -313,6 +313,10 @@ export interface TranslationDictionary {
     cameraPermissionMsg: string;
     galleryPermissionMsg: string;
     missingTitleError: string;
+    platformFeesTitle: string;
+    platformFeesSubtitle: string;
+    customRateBadge: string;
+    resetPlatformFee: string;
   };
   markSoldModal: {
     modalTitle: string;

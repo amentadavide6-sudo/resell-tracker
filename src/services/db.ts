@@ -44,6 +44,12 @@ function initDatabase(db: SQLite.SQLiteDatabase) {
   } catch (_) {
     // Column already exists
   }
+
+  try {
+    db.execSync('ALTER TABLE inventory ADD COLUMN customFees TEXT;');
+  } catch (_) {
+    // Column already exists
+  }
 }
 
 export function getAllInventoryItems(statusFilter?: ItemStatus | 'all'): InventoryItem[] {
@@ -68,10 +74,19 @@ export function getAllInventoryItems(statusFilter?: ItemStatus | 'all'): Invento
         parsedPlatforms = row.platforms.split(',').filter(Boolean) as PlatformId[];
       }
     }
+    let parsedCustomFees = undefined;
+    if (row.customFees) {
+      try {
+        parsedCustomFees = JSON.parse(row.customFees);
+      } catch {
+        parsedCustomFees = undefined;
+      }
+    }
     return {
       ...row,
       quantity: typeof row.quantity === 'number' && row.quantity > 0 ? row.quantity : 1,
       platforms: parsedPlatforms && parsedPlatforms.length > 0 ? parsedPlatforms : [row.platformId as PlatformId],
+      customFees: parsedCustomFees,
     };
   });
 }
@@ -81,17 +96,19 @@ export function insertInventoryItem(item: Omit<InventoryItem, 'id'>): number {
   const platformsStr = JSON.stringify(
     item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId]
   );
+  const customFeesStr = item.customFees ? JSON.stringify(item.customFees) : null;
   const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
 
   const result = db.runSync(
     `INSERT INTO inventory (
-      title, platformId, platforms, quantity, purchaseCost, targetSellingPrice, actualSellingPrice,
+      title, platformId, platforms, customFees, quantity, purchaseCost, targetSellingPrice, actualSellingPrice,
       sellerShippingCost, packagingCost, status, photoUri, notes, createdAt, soldAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       item.title,
       item.platformId,
       platformsStr,
+      customFeesStr,
       quantity,
       item.purchaseCost,
       item.targetSellingPrice,
@@ -114,6 +131,7 @@ export function updateInventoryItem(item: InventoryItem): void {
   const platformsStr = JSON.stringify(
     item.platforms && item.platforms.length > 0 ? item.platforms : [item.platformId]
   );
+  const customFeesStr = item.customFees ? JSON.stringify(item.customFees) : null;
   const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
 
   db.runSync(
@@ -121,6 +139,7 @@ export function updateInventoryItem(item: InventoryItem): void {
       title = ?,
       platformId = ?,
       platforms = ?,
+      customFees = ?,
       quantity = ?,
       purchaseCost = ?,
       targetSellingPrice = ?,
@@ -136,6 +155,7 @@ export function updateInventoryItem(item: InventoryItem): void {
       item.title,
       item.platformId,
       platformsStr,
+      customFeesStr,
       quantity,
       item.purchaseCost,
       item.targetSellingPrice,
@@ -195,11 +215,12 @@ export function recordPartialSale(
   // 2. Insert new record for the sold units
   const soldPlatform = soldPlatformId || originalItem.platformId;
   const platformsStr = JSON.stringify([soldPlatform]);
+  const customFeesStr = originalItem.customFees ? JSON.stringify(originalItem.customFees) : null;
   const soldRow = db.runSync(
     `INSERT INTO inventory (
       title, platformId, platforms, quantity, purchaseCost, targetSellingPrice, actualSellingPrice,
-      sellerShippingCost, packagingCost, status, photoUri, notes, createdAt, soldAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sellerShippingCost, packagingCost, status, photoUri, notes, createdAt, soldAt, customFees
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       originalItem.title,
       soldPlatform,
@@ -215,6 +236,7 @@ export function recordPartialSale(
       originalItem.notes ?? null,
       originalItem.createdAt || new Date().toISOString(),
       new Date().toISOString(),
+      customFeesStr,
     ]
   );
 

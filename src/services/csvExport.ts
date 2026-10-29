@@ -57,12 +57,15 @@ export async function exportInventoryToCSV(): Promise<{ success: boolean; messag
           ? item.actualSellingPrice
           : item.targetSellingPrice;
 
+      const customFee = item.customFees?.[item.platformId];
       const calc = calculateResellProfit({
         sellingPrice,
         purchaseCost: item.purchaseCost,
         sellerShippingCost: item.sellerShippingCost,
         packagingCost: item.packagingCost,
         platformId: item.platformId,
+        customSellerFeePercent: customFee?.percent,
+        customSellerFixedFee: customFee?.fixed,
       });
 
       const sanitize = (val: any) => {

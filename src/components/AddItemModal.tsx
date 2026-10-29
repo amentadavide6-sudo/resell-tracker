@@ -23,7 +23,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
 import { useAlert } from '../context/AlertContext';
 import { getAllAvailablePlatforms } from '../services/customPlatformManager';
-import { InventoryItem, ItemStatus, PlatformId } from '../types';
+import { InventoryItem, ItemStatus, PlatformConfig, PlatformId, PlatformFeeOverrides } from '../types';
+import { PLATFORMS } from '../constants/platforms';
 
 interface AddItemModalProps {
   visible: boolean;
@@ -34,6 +35,8 @@ interface AddItemModalProps {
     sellingPrice?: number;
     purchaseCost?: number;
     platformId?: PlatformId;
+    customSellerFeePercent?: number;
+    customSellerFixedFee?: number;
   };
 }
 
@@ -47,9 +50,17 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const { strings, language } = useTranslation();
   const { showAlert } = useAlert();
   const [title, setTitle] = useState(initialValues?.title || '');
+  const [titleError, setTitleError] = useState<boolean>(false);
   const [selectedPlatforms, setSelectedPlatforms] = useState<PlatformId[]>([
     initialValues?.platformId || 'vinted',
   ]);
+  const [activeFeeTab, setActiveFeeTab] = useState<PlatformId>(
+    initialValues?.platformId || 'vinted'
+  );
+  const [customPlatformFees, setCustomPlatformFees] = useState<
+    Record<string, { percent: string; fixed: string }>
+  >({});
+
   const [quantity, setQuantity] = useState<number>(1);
   const [sellingPrice, setSellingPrice] = useState(
     initialValues?.sellingPrice ? initialValues.sellingPrice.toString() : '20'
@@ -62,10 +73,18 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const [status, setStatus] = useState<ItemStatus>('listed');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
+  const allAvailablePlatforms: PlatformConfig[] = useMemo(
+    () => getAllAvailablePlatforms(),
+    [visible]
+  );
+
   useEffect(() => {
     if (visible) {
       setTitle(initialValues?.title || '');
-      setSelectedPlatforms([initialValues?.platformId || 'vinted']);
+      setTitleError(false);
+      const initPlatform = initialValues?.platformId || 'vinted';
+      setSelectedPlatforms([initPlatform]);
+      setActiveFeeTab(initPlatform);
       setQuantity(1);
       setSellingPrice(
         initialValues?.sellingPrice !== undefined ? initialValues.sellingPrice.toString() : '20'
@@ -77,6 +96,17 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       setPackagingCost('0.50');
       setStatus('listed');
       setPhotoUri(null);
+
+      if (initialValues?.customSellerFeePercent !== undefined && initialValues?.platformId) {
+        setCustomPlatformFees({
+          [initialValues.platformId]: {
+            percent: initialValues.customSellerFeePercent.toString(),
+            fixed: (initialValues.customSellerFixedFee ?? 0).toString(),
+          },
+        });
+      } else {
+        setCustomPlatformFees({});
+      }
     }
   }, [visible, initialValues]);
 
@@ -89,16 +119,45 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
   const handleTogglePlatform = (id: PlatformId) => {
     setSelectedPlatforms((prev) => {
+      let updated: PlatformId[];
       if (prev.includes(id)) {
         if (prev.length <= 1) return prev; // Keep at least one platform selected
-        return prev.filter((p) => p !== id);
+        updated = prev.filter((p) => p !== id);
       } else {
-        return [...prev, id];
+        updated = [...prev, id];
       }
+      if (!updated.includes(activeFeeTab)) {
+        setActiveFeeTab(updated[0] || 'vinted');
+      }
+      return updated;
     });
   };
 
-  // Live calculation of unit profit before saving
+  const handleUpdatePlatformFee = (pId: string, field: 'percent' | 'fixed', val: string) => {
+    const p = allAvailablePlatforms.find((item) => item.id === pId) || PLATFORMS[0];
+    const current = customPlatformFees[pId] || {
+      percent: p.sellerFeePercent.toString(),
+      fixed: p.sellerFixedFee.toString(),
+    };
+    setCustomPlatformFees((prev) => ({
+      ...prev,
+      [pId]: {
+        ...current,
+        [field]: val,
+      },
+    }));
+  };
+
+  const handleResetPlatformFee = (pId: string) => {
+    setCustomPlatformFees((prev) => {
+      const next = { ...prev };
+      delete next[pId];
+      return next;
+    });
+  };
+
+  // Live calculation of unit profit before saving (reflecting custom fees of primary platform)
+  const primaryCustomFee = customPlatformFees[primaryPlatform];
   const liveResult = useMemo(() => {
     return calculateResellProfit({
       sellingPrice: parseFloat(sellingPrice.replace(',', '.')) || 0,
@@ -106,8 +165,10 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       sellerShippingCost: parseFloat(sellerShippingCost.replace(',', '.')) || 0,
       packagingCost: parseFloat(packagingCost.replace(',', '.')) || 0,
       platformId: primaryPlatform,
+      customSellerFeePercent: primaryCustomFee ? parseFloat(primaryCustomFee.percent.replace(',', '.')) : undefined,
+      customSellerFixedFee: primaryCustomFee ? parseFloat(primaryCustomFee.fixed.replace(',', '.')) : undefined,
     });
-  }, [sellingPrice, purchaseCost, sellerShippingCost, packagingCost, primaryPlatform]);
+  }, [sellingPrice, purchaseCost, sellerShippingCost, packagingCost, primaryPlatform, primaryCustomFee]);
 
   const totalPurchaseInvested = useMemo(() => {
     const cost = parseFloat(purchaseCost.replace(',', '.')) || 0;
@@ -168,23 +229,38 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
   const handleSave = () => {
     if (!title.trim()) {
-      showAlert({
-        title: strings.common.attention,
-        message: strings.addItemModal.missingTitleError,
-        type: 'warning',
-      });
+      setTitleError(true);
       return;
     }
+    setTitleError(false);
 
     const priceNum = parseFloat(sellingPrice.replace(',', '.')) || 0;
     const costNum = parseFloat(purchaseCost.replace(',', '.')) || 0;
     const shippingNum = parseFloat(sellerShippingCost.replace(',', '.')) || 0;
     const pkgNum = parseFloat(packagingCost.replace(',', '.')) || 0;
 
+    // Collect custom fees for platforms that differ from standard defaults
+    const customFeesToSave: PlatformFeeOverrides = {};
+    selectedPlatforms.forEach((pId) => {
+      const pConfig = allAvailablePlatforms.find((p) => p.id === pId) || PLATFORMS[0];
+      const fee = customPlatformFees[pId];
+      if (fee) {
+        const pct = parseFloat(fee.percent.replace(',', '.')) || 0;
+        const fix = parseFloat(fee.fixed.replace(',', '.')) || 0;
+        if (
+          Math.abs(pct - pConfig.sellerFeePercent) > 0.001 ||
+          Math.abs(fix - pConfig.sellerFixedFee) > 0.001
+        ) {
+          customFeesToSave[pId] = { percent: pct, fixed: fix };
+        }
+      }
+    });
+
     const newItem: Omit<InventoryItem, 'id'> = {
       title: title.trim(),
       platformId: primaryPlatform,
       platforms: selectedPlatforms,
+      customFees: Object.keys(customFeesToSave).length > 0 ? customFeesToSave : undefined,
       quantity: Math.max(1, quantity),
       purchaseCost: costNum,
       targetSellingPrice: priceNum,
@@ -220,7 +296,10 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
   const handleResetForm = () => {
     setTitle('');
+    setTitleError(false);
     setSelectedPlatforms(['vinted']);
+    setActiveFeeTab('vinted');
+    setCustomPlatformFees({});
     setQuantity(1);
     setSellingPrice('20');
     setPurchaseCost('5');
@@ -289,15 +368,26 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           </View>
 
           {/* Title Input */}
-          <View style={styles.inputCard}>
+          <View style={[styles.inputCard, titleError && styles.inputCardError]}>
             <CustomInput
               label={strings.addItemModal.itemTitleLabel}
               subtitle={strings.addItemModal.itemTitleSubtitle}
               value={title}
-              onChangeValue={setTitle}
+              onChangeValue={(text) => {
+                setTitle(text);
+                if (titleError && text.trim().length > 0) {
+                  setTitleError(false);
+                }
+              }}
               placeholder={strings.addItemModal.itemTitlePlaceholder}
               isCurrency={false}
             />
+            {titleError && (
+              <View style={styles.inlineErrorRow}>
+                <Ionicons name="alert-circle" size={15} color="#EF4444" />
+                <Text style={styles.inlineErrorText}>{strings.addItemModal.missingTitleError}</Text>
+              </View>
+            )}
           </View>
 
           {/* Multi-Platform Selector */}
@@ -306,7 +396,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             selectedIds={selectedPlatforms}
             onToggle={handleTogglePlatform}
             title={strings.addItemModal.activePlatformsTitle}
-            platforms={getAllAvailablePlatforms()}
+            platforms={allAvailablePlatforms}
             onDeleteCustom={(deletedId) => {
               setSelectedPlatforms((prev) => {
                 const filtered = prev.filter((id) => id !== deletedId);
@@ -314,6 +404,109 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
               });
             }}
           />
+
+          {/* Platform Specific Fees Box */}
+          <View style={[styles.platformFeeCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={styles.platformFeeHeader}>
+              <View style={styles.platformFeeTitleRow}>
+                <Ionicons name="pricetag" size={16} color="#6366F1" />
+                <Text style={[styles.platformFeeTitle, { color: colors.textPrimary }]}>
+                  {strings.addItemModal.platformFeesTitle}
+                </Text>
+              </View>
+              <Text style={[styles.platformFeeSubtitle, { color: colors.textSecondary }]}>
+                {strings.addItemModal.platformFeesSubtitle}
+              </Text>
+            </View>
+
+            {/* Platform tabs if multiple or single */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.feeTabsScroll}>
+              {selectedPlatforms.map((pId) => {
+                const pConfig = allAvailablePlatforms.find((p) => p.id === pId) || PLATFORMS[0];
+                const isActive = activeFeeTab === pId;
+                const isCustomized = !!customPlatformFees[pId];
+                return (
+                  <TouchableOpacity
+                    key={pId}
+                    style={[
+                      styles.feeTabPill,
+                      { backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor: 'transparent' },
+                      isActive && {
+                        backgroundColor: isDark ? '#312E81' : '#EEF2FF',
+                        borderColor: '#6366F1',
+                      },
+                    ]}
+                    onPress={() => setActiveFeeTab(pId)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.feeTabDot, { backgroundColor: pConfig.badgeBg }]} />
+                    <Text
+                      style={[
+                        styles.feeTabText,
+                        { color: colors.textSecondary },
+                        isActive && { color: '#6366F1', fontWeight: '700' },
+                      ]}
+                    >
+                      {pConfig.name}
+                    </Text>
+                    {isCustomized && (
+                      <View style={styles.feeModDot} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Active Fee Tab Inputs */}
+            {(() => {
+              const activePlatformConfig = allAvailablePlatforms.find((p) => p.id === activeFeeTab) || PLATFORMS[0];
+              const curCustom = customPlatformFees[activeFeeTab];
+              const curPercent = curCustom !== undefined ? curCustom.percent : activePlatformConfig.sellerFeePercent.toString();
+              const curFixed = curCustom !== undefined ? curCustom.fixed : activePlatformConfig.sellerFixedFee.toString();
+              const isModified = curCustom !== undefined;
+
+              return (
+                <View style={styles.activeFeeInputsContainer}>
+                  <View style={styles.row}>
+                    <View style={styles.col}>
+                      <CustomInput
+                        label={`% Commissione (${activePlatformConfig.name})`}
+                        value={curPercent}
+                        onChangeValue={(v) => handleUpdatePlatformFee(activeFeeTab, 'percent', v)}
+                        placeholder={activePlatformConfig.sellerFeePercent.toString()}
+                        prefix="%"
+                        isCurrency={false}
+                      />
+                    </View>
+                    <View style={styles.col}>
+                      <CustomInput
+                        label={`€ Fissa (${activePlatformConfig.name})`}
+                        value={curFixed}
+                        onChangeValue={(v) => handleUpdatePlatformFee(activeFeeTab, 'fixed', v)}
+                        placeholder={activePlatformConfig.sellerFixedFee.toString()}
+                        isCurrency={true}
+                      />
+                    </View>
+                  </View>
+
+                  {isModified && (
+                    <View style={styles.feeModNoticeRow}>
+                      <View style={styles.feeModBadge}>
+                        <Ionicons name="sparkles" size={12} color="#D97706" />
+                        <Text style={styles.feeModBadgeText}>{strings.addItemModal.customRateBadge}</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => handleResetPlatformFee(activeFeeTab)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Text style={styles.resetPlatformFeeText}>{strings.addItemModal.resetPlatformFee}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
+          </View>
 
           {/* Quantity & Stock Stepper */}
           <View style={styles.quantitySection}>
@@ -847,5 +1040,102 @@ const styles = StyleSheet.create({
   proPassNoticeText: {
     fontSize: 11,
     lineHeight: 15,
+  },
+  inputCardError: {
+    borderColor: '#EF4444',
+    borderWidth: 1.5,
+  },
+  inlineErrorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+    paddingHorizontal: 2,
+  },
+  inlineErrorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  platformFeeCard: {
+    marginHorizontal: 16,
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  platformFeeHeader: {
+    marginBottom: 10,
+  },
+  platformFeeTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  platformFeeTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  platformFeeSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  feeTabsScroll: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  feeTabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 6,
+  },
+  feeTabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  feeTabText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  feeModDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#F59E0B',
+  },
+  activeFeeInputsContainer: {
+    marginTop: 2,
+  },
+  feeModNoticeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingHorizontal: 2,
+  },
+  feeModBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    gap: 4,
+  },
+  feeModBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#B45309',
+  },
+  resetPlatformFeeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6366F1',
   },
 });

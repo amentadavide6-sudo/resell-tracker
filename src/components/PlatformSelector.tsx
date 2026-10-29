@@ -77,25 +77,6 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
     return platform.name;
   };
 
-  const getPlatformTagline = (platform: PlatformConfig) => {
-    switch (platform.id) {
-      case 'vinted':
-        return strings.platforms.vintedTag;
-      case 'ebay':
-        return strings.platforms.ebayTag;
-      case 'wallapop':
-        return strings.platforms.wallapopTag;
-      case 'subito':
-        return strings.platforms.subitoTag;
-      case 'depop':
-        return strings.platforms.depopTag;
-      case 'custom':
-        return strings.platforms.customTag;
-      default:
-        return platform.tagline;
-    }
-  };
-
   const defaultTitle = multiSelect
     ? strings.inventory.allPlatforms
     : strings.calculator.selectPlatform;
@@ -136,11 +117,11 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
                 },
                 isSelected && {
                   borderColor: platform.color,
-                  backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                  backgroundColor: isDark ? '#1E293B' : platform.badgeBg,
                   shadowColor: platform.color,
                   shadowOpacity: 0.18,
-                  shadowRadius: 8,
-                  elevation: 4,
+                  shadowRadius: 6,
+                  elevation: 3,
                 },
               ]}
             >
@@ -155,7 +136,7 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="trash" size={12} color="#EF4444" />
+                  <Ionicons name="trash" size={11} color="#EF4444" />
                 </TouchableOpacity>
               )}
 
@@ -191,22 +172,11 @@ export const PlatformSelector: React.FC<PlatformSelectorProps> = ({
                   {multiSelect && isSelected && (
                     <Ionicons
                       name="checkmark-circle"
-                      size={16}
+                      size={15}
                       color={platform.color}
-                      style={{ marginLeft: 4 }}
+                      style={{ marginLeft: 5 }}
                     />
                   )}
-                </View>
-
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: isDark ? '#1E293B' : platform.badgeBg },
-                  ]}
-                >
-                  <Text style={[styles.badgeText, { color: platform.color }]} numberOfLines={1}>
-                    {getPlatformTagline(platform)}
-                  </Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -249,20 +219,19 @@ const styles = StyleSheet.create({
   card: {
     position: 'relative',
     borderWidth: 1.5,
-    borderRadius: 14,
-    minWidth: 135,
+    borderRadius: 20,
     overflow: 'visible',
   },
   cardContent: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
-    paddingRight: 16,
   },
   dot: {
     width: 8,
@@ -271,34 +240,21 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   platformName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    flexShrink: 1,
-    marginRight: 4,
   },
   deleteCustomBtn: {
     position: 'absolute',
-    top: -6,
-    right: -6,
+    top: -5,
+    right: -5,
     zIndex: 20,
-    padding: 5,
-    borderRadius: 12,
+    padding: 4,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#FECACA',
     elevation: 5,
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 3,
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    maxWidth: 160,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
   },
 });

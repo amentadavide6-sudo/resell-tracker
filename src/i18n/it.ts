@@ -344,6 +344,10 @@ export const it: TranslationDictionary = {
     cameraPermissionMsg: 'Serve il permesso fotocamera per scattare una foto al capo.',
     galleryPermissionMsg: 'Serve il permesso galleria per selezionare una foto.',
     missingTitleError: 'Inserisci un nome o una descrizione breve dell\'articolo.',
+    platformFeesTitle: 'COMMISSIONI PIATTAFORME',
+    platformFeesSubtitle: 'Modifica le commissioni per questo capo (promozioni o categorie speciali)',
+    customRateBadge: 'Personalizzata',
+    resetPlatformFee: 'Ripristina',
   },
   markSoldModal: {
     modalTitle: 'Registra Vendita',
