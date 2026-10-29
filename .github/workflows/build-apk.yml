@@ -56,34 +56,35 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.2.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.2.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.3.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.3.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.2-binaries
+          name: resell-tracker-v1.3.3-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.2
-          name: ResellTracker v1.3.2 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.3
+          name: ResellTracker v1.3.3 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.3.2 Release - Header Pulito & Direttiva DAC7 Riformulata
+            ### 📱 ResellTracker v1.3.3 Release - Registro Contabile CSV Enterprise
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.2.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.2.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.3.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.3.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 📈 **Header Schermata Statistiche Pulito & Essenziale**: Titolo semplificato in "Statistiche" ed eliminazione dei pulsanti ridondanti di ricaricamento in alto a destra per un design moderno e minimale.
-            - 📋 **Comunicazione Direttiva DAC7 Positiva & Non Ansiogena**: Eliminati gli allarmi rossi "SEGNALAZIONE" e le formule difensive. Il superamento della soglia dei 2.000€ viene trattato come un traguardo positivo di vendita con congratulazioni all'utente e un promemoria oggettivo della normativa europea.
+            - 📑 **Esportazione CSV di Livello Aziendale**: Aggiunto supporto UTF-8 BOM per compatibilità al 100% con Microsoft Excel (niente più caratteri accentati o simboli € corrotti).
+            - 📊 **Metadati Ufficiali & Colonne Avanzate**: Data/ora di generazione, calcolo del tempo di giacenza in giorni per articolo, totale costi acquisto, piattaforma di vendita effettiva e tracciamento percorso foto salvata.
+            - 💰 **Riga Finale Totali Generali**: Bilancio di chiusura contabile automatico in fondo alla tabella con la somma di fatturato, costi merce, commissioni, spedizioni, utile netto e ROI medio complessivo.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.2.apk
-            build-output/resell-tracker-v1.3.2.aab
+            build-output/resell-tracker-v1.3.3.apk
+            build-output/resell-tracker-v1.3.3.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
