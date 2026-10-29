@@ -18,6 +18,17 @@ import { addXP, XP_REWARDS } from '../services/gamification';
 import { isProUser, getCSVExportCount, incrementCSVExportCount } from '../services/proManager';
 import { SalesTrendChart } from '../components/SalesTrendChart';
 import { getAllAvailablePlatforms } from '../services/customPlatformManager';
+import {
+  getAllTrophiesStatus,
+  checkAndUnlockAchievements,
+  computeProInsights,
+  TrophyStatus,
+  ProBusinessInsights,
+} from '../services/achievements';
+import { getUserXP, getLevelInfo, LevelInfo } from '../services/gamification';
+import { TrophiesShowcase } from '../components/TrophiesShowcase';
+import { StoryCardModal } from '../components/StoryCardModal';
+import { TrophyUnlockModal } from '../components/TrophyUnlockModal';
 
 export const StatsScreen: React.FC<{
   onNavigateToInventory?: () => void;
@@ -37,10 +48,38 @@ export const StatsScreen: React.FC<{
   const exportCount = getCSVExportCount();
   const allPlatforms = useMemo(() => getAllAvailablePlatforms(), []);
 
+  const [trophiesData, setTrophiesData] = useState<ReturnType<typeof getAllTrophiesStatus> | null>(null);
+  const [proInsights, setProInsights] = useState<ProBusinessInsights | null>(null);
+  const [userLevel, setUserLevel] = useState<LevelInfo | null>(null);
+  const [unlockedTrophyPopup, setUnlockedTrophyPopup] = useState<TrophyStatus | null>(null);
+
+  const [storyModal, setStoryModal] = useState<{
+    visible: boolean;
+    mode: 'trophy' | 'level' | 'deal';
+    trophy?: TrophyStatus | null;
+    levelInfo?: LevelInfo | null;
+  }>({
+    visible: false,
+    mode: 'level',
+  });
+
   const loadStats = useCallback(() => {
     try {
       const summary = computeAnalytics();
       setStats(summary);
+
+      const newlyUnlocked = checkAndUnlockAchievements();
+      if (newlyUnlocked.length > 0) {
+        setUnlockedTrophyPopup(newlyUnlocked[0]);
+      }
+      const tData = getAllTrophiesStatus();
+      setTrophiesData(tData);
+
+      const insights = computeProInsights();
+      setProInsights(insights);
+
+      const xp = getUserXP();
+      setUserLevel(getLevelInfo(xp));
     } catch (err) {
       console.error(err);
     }
@@ -380,6 +419,32 @@ export const StatsScreen: React.FC<{
           />
         )}
 
+        {/* Trophies Showcase & Pro Business Insights */}
+        {trophiesData && (
+          <TrophiesShowcase
+            trophies={trophiesData.trophies}
+            unlockedCount={trophiesData.unlockedCount}
+            totalCount={trophiesData.totalCount}
+            proInsights={proInsights}
+            userLevel={userLevel}
+            onShareTrophy={(t) => {
+              setStoryModal({
+                visible: true,
+                mode: 'trophy',
+                trophy: t,
+              });
+            }}
+            onShareRank={() => {
+              setStoryModal({
+                visible: true,
+                mode: 'level',
+                levelInfo: userLevel,
+              });
+            }}
+            onOpenProModal={onOpenProModal}
+          />
+        )}
+
         {/* Platform Breakdown */}
         {stats.platformStats.length > 0 && (
           <View style={styles.section}>
@@ -453,6 +518,38 @@ export const StatsScreen: React.FC<{
           </View>
         )}
       </ScrollView>
+
+      {/* Instagram Story Card Modal */}
+      <StoryCardModal
+        visible={storyModal.visible}
+        onClose={() => setStoryModal((prev) => ({ ...prev, visible: false }))}
+        mode={storyModal.mode}
+        trophy={storyModal.trophy}
+        levelInfo={storyModal.levelInfo}
+        overallStats={
+          stats
+            ? {
+                totalProfit: stats.totalNetProfit,
+                totalSold: stats.totalSoldItems,
+                avgMargin: stats.averageMarginPercent,
+              }
+            : null
+        }
+      />
+
+      {/* Trophy Unlock Celebration Modal */}
+      <TrophyUnlockModal
+        visible={!!unlockedTrophyPopup}
+        trophy={unlockedTrophyPopup}
+        onClose={() => setUnlockedTrophyPopup(null)}
+        onShare={(t) => {
+          setStoryModal({
+            visible: true,
+            mode: 'trophy',
+            trophy: t,
+          });
+        }}
+      />
     </View>
   );
 };

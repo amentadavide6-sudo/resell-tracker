@@ -50,6 +50,14 @@ function initDatabase(db: SQLite.SQLiteDatabase) {
   } catch (_) {
     // Column already exists
   }
+
+  // Achievements / Trophies table
+  db.execSync(`
+    CREATE TABLE IF NOT EXISTS user_trophies (
+      id TEXT PRIMARY KEY,
+      unlockedAt TEXT NOT NULL
+    );
+  `);
 }
 
 export function getAllInventoryItems(statusFilter?: ItemStatus | 'all'): InventoryItem[] {

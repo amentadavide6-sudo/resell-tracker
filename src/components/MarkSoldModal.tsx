@@ -24,6 +24,7 @@ import { isProUser } from '../services/proManager';
 import { shareSoldProfit } from '../services/socialProof';
 import { getAnalyticsData } from '../services/analytics';
 import { sendDac7PushNotification } from '../services/notifications';
+import { checkAndUnlockAchievements } from '../services/achievements';
 
 interface MarkSoldModalProps {
   visible: boolean;
@@ -116,6 +117,9 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
       // Award XP
       const xpResult = addXP(XP_REWARDS.ITEM_SOLD, `Vendita (${soldQuantity}x): ${item.title}`);
 
+      // Check and unlock achievements
+      checkAndUnlockAchievements();
+
       // Delist Assistant Alert or Level Up with Pro Pass or DAC7 Alert
       const otherPlatforms = activePlatforms.filter((p) => p !== soldPlatform);
       const isMulti = otherPlatforms.length > 0;
@@ -146,13 +150,18 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
           ],
         });
       } else if (xpResult.leveledUp) {
+        const isUserPro = isProUser();
+        const levelMsg = isUserPro
+          ? `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n✨ Hai sbloccato il nuovo Rango Prestigio e nuovi trofei nella tua bacheca!${
+              isMulti ? `\n\n⚠️ Promemoria Delist: Ricordati di rimuovere l'annuncio da: ${otherNames}` : ''
+            }`
+          : `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n🎁 Hai sbloccato ${xpResult.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!${
+              isMulti ? `\n\n⚠️ Promemoria Delist: Ricordati di rimuovere l'annuncio da: ${otherNames}` : ''
+            }`;
+
         showAlert({
-          title: '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
-          message: `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n🎁 Hai sbloccato ${xpResult.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!${
-            isMulti
-              ? `\n\n⚠️ Promemoria Delist: Ricordati di rimuovere l'annuncio da: ${otherNames}`
-              : ''
-          }`,
+          title: isUserPro ? '🎉 LIVELLO RESELLER SUPERATO!' : '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
+          message: levelMsg,
           type: 'success',
           buttons: [
             {

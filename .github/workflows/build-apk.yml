@@ -56,35 +56,36 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.10.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.10.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.0.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.0.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.10-binaries
+          name: resell-tracker-v1.3.0-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.10
-          name: ResellTracker v1.2.10 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.0
+          name: ResellTracker v1.3.0 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.2.10 Release
+            ### 📱 ResellTracker v1.3.0 Release - Trofei, Storie Instagram & Pro Prestige
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.10.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.2.10.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.0.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.0.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 📈 **Cronologia Grafico Dinamica dalla 1ª Vendita**: Il grafico ora parte dal mese esatto in cui l'utente effettua la prima vendita e cresce progressivamente mese dopo mese (1°, 2°, 3°, 4°, 5°, 6°...), eliminando le colonne vuote a 0 dei mesi antecedenti all'installazione dell'app.
-            - 🎨 **Layout Colonne Centrato e Bilanciato**: Quando la cronologia ha 1, 2 o 3 mesi, le colonne sono posizionate armonicamente al centro dell'area grafica con badge temporale reattivo ("Questo Mese", "2 Mesi", ecc.).
-            - 📊 **Grafico Vendite Stacked Nativo**: Colonne solide continue con scomposizione per marketplace, selettore metriche e tooltip interattivo al tocco.
+            - 🏆 **Bacheca Trofei & Prestigio Reseller**: 10 trofei ufficiali sbloccabili (Battesimo del Resell, Power Seller, Il Colpo Grosso con ROI > 150%, Pezzo Pregiato > 100€, Club dei 1.000€, Vendita Lampo in 48h, Cittadino dei Marketplace, Boutique Piena, ecc.) con progresso in tempo reale e ricompense XP.
+            - 📸 **Generatore Storie Instagram HD (9:16)**: Condividi con un tocco nelle storie Instagram e TikTok grafiche spettacolari a tema scuro luxury con il tuo livello, i trofei sbloccati o i profitti degli affari conclusi (pubblicità virale garantita!).
+            - 📊 **Insight Aziendali Avanzati Pro**: Sblocco di statistiche strategiche esclusive per livello (Il tuo Giorno d'Oro più redditizio, Velocità media di rotazione capi in giorni, Tasso di liquidazione stock).
+            - 🎉 **Esperienza Pro XP Ottimizzata**: Gli utenti Pro ricevono congratulazioni e sblocchi di rango e trofei di prestigio anziché avvisi superflui di prova pass.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.2.10.apk
-            build-output/resell-tracker-v1.2.10.aab
+            build-output/resell-tracker-v1.3.0.apk
+            build-output/resell-tracker-v1.3.0.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
