@@ -56,34 +56,35 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.4.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.4.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.5.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.5.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.4-binaries
+          name: resell-tracker-v1.3.5-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.4
-          name: ResellTracker v1.3.4 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.5
+          name: ResellTracker v1.3.5 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.3.4 Release - UX Refinements
+            ### 📱 ResellTracker v1.3.5 Release - Confetti Cannon Celebration & UX Polish
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.4.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.4.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.5.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.5.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - ⚠️ **Avviso Visibile Salva Articolo**: quando si tenta di salvare un articolo senza aver inserito il titolo/nome, compare un pop-up chiaro e centrato a schermo intero. Alla chiusura, la schermata scorre automaticamente in alto e mette a fuoco il campo testo del titolo.
-            - 🔄 **Pulsante Dinamico Inventario Vuoto**: se sono già stati registrati capi nel database (es. capi venduti o archiviati), la schermata inventario vuota mostra "+ Aggiungi un altro articolo" invece di "+ Aggiungi il primo articolo".
+            - 🎉 **Confetti Cannon su Vendita**: animazione celebrativa festosa e gratificante di esattamente 2,4 secondi con 46 coriandoli colorati a 60 FPS che esplodono all'atto della conferma di vendita, senza bloccare i tocchi a schermo.
+            - ⚠️ **Avviso Visibile Salva Articolo**: pop-up chiaro a schermo intero con auto-scroll e focus automatico sul campo titolo se vuoto.
+            - 🔄 **Pulsante Dinamico Inventario Vuoto**: mostra "+ Aggiungi un altro articolo" per reseller che hanno già capi venduti o archiviati.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.4.apk
-            build-output/resell-tracker-v1.3.4.aab
+            build-output/resell-tracker-v1.3.5.apk
+            build-output/resell-tracker-v1.3.5.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

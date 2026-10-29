@@ -16,6 +16,7 @@ import { MarkSoldModal } from '../components/MarkSoldModal';
 import { CustomAlertModal, CustomAlertConfig } from '../components/CustomAlertModal';
 import { CareerRoadmapModal } from '../components/CareerRoadmapModal';
 import { SocialProofModal } from '../components/SocialProofModal';
+import { ConfettiCannon } from '../components/ConfettiCannon';
 import {
   getAllInventoryItems,
   deleteInventoryItem,
@@ -47,6 +48,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
   const [userXP, setUserXP] = useState(0);
   const [roadmapVisible, setRoadmapVisible] = useState(false);
   const [socialProofItem, setSocialProofItem] = useState<InventoryItem | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
     visible: false,
     title: '',
@@ -846,6 +848,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         onSuccess={() => {
           setItemToSell(null);
           loadData();
+          setShowConfetti(true);
         }}
       />
 
@@ -854,6 +857,12 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
         visible={socialProofItem !== null}
         item={socialProofItem}
         onClose={() => setSocialProofItem(null)}
+      />
+
+      {/* Confetti Cannon Celebration on Sold */}
+      <ConfettiCannon
+        active={showConfetti}
+        onFinish={() => setShowConfetti(false)}
       />
     </View>
   );
