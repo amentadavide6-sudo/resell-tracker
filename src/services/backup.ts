@@ -49,10 +49,13 @@ export async function exportBackup(): Promise<{ success: boolean; message: strin
     file.create();
     await file.write(JSON.stringify(payload, null, 2));
 
-    await Sharing.shareAsync(file.uri, {
+    // Launch share sheet asynchronously without awaiting forever (Android share chooser dismissal does not resolve onActivityResult)
+    Sharing.shareAsync(file.uri, {
       mimeType: 'application/json',
       dialogTitle: 'Salva o Invia il Backup ResellTracker',
       UTI: 'public.json',
+    }).catch((shareErr) => {
+      console.log('Share sheet dismissed or error:', shareErr);
     });
 
     return { success: true, message: `Backup di ${items.length} articoli generato con successo!` };
@@ -65,7 +68,7 @@ export async function exportBackup(): Promise<{ success: boolean; message: strin
 export async function importBackup(): Promise<{ success: boolean; count: number; message: string }> {
   try {
     const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/json', 'text/json', '*/*'],
+      type: ['application/json', 'text/*', '*/*'],
       copyToCacheDirectory: true,
     });
 
@@ -74,8 +77,21 @@ export async function importBackup(): Promise<{ success: boolean; count: number;
     }
 
     const fileUri = result.assets[0].uri;
-    const file = new File(fileUri);
-    const content = await file.text();
+    let content = '';
+
+    try {
+      const file = new File(fileUri);
+      content = await file.text();
+    } catch (readErr) {
+      // Robust fallback for special Android content providers
+      try {
+        const response = await fetch(fileUri);
+        content = await response.text();
+      } catch (fallbackErr) {
+        throw new Error('Impossibile leggere il file selezionato.');
+      }
+    }
+
     const parsed: BackupPayload = JSON.parse(content);
 
     if (!parsed || !Array.isArray(parsed.items)) {

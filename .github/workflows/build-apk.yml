@@ -56,35 +56,36 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.6.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.6.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.7.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.7.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.6-binaries
+          name: resell-tracker-v1.2.7-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.6
-          name: ResellTracker v1.2.6 (APK + Google Play AAB Bundle)
+          tag_name: v1.2.7
+          name: ResellTracker v1.2.7 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.2.6 Release
+            ### 📱 ResellTracker v1.2.7 Release
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.6.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.2.6.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.2.7.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.2.7.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
-            #### 🚀 Novità:
-            - ⚡ **Modifica Rapida Commissioni al Volo**: Nel Calcolatore è ora possibile personalizzare istantaneamente la percentuale di commissione (%) e la tariffa fissa (€) per qualsiasi piattaforma selezionata (eBay, Vinted, Wallapop, Depop, Subito), senza dover creare o salvare una nuova piattaforma permanente!
-            - 🏷️ **Badge e Ripristino Standard**: Se le tariffe vengono modificate per un articolo o promozione speciale, compare un badge "Modificata" e un pulsante one-tap "Ripristina standard" per tornare alle tariffe standard con un solo tocco.
-            - 🌍 **Localizzazione completa**: Supporto multilingua completo in 5 lingue (IT, EN, FR, ES, DE).
+            #### 🚀 Novità e Risoluzioni:
+            - 🛠️ **Fix Ripristino Backup (Restore from Backup)**: Il tasto "Ripristina da Backup" ora apre direttamente il selettore documenti nativo del sistema operativo per selezionare il file `.json`, eliminando il pop-up intermediario che bloccava il tocco su Android.
+            - 🔄 **Fix Chiusura Condivisione (Share Sheet Hang)**: Risolto il blocco su Android quando l'utente chiude la finestra di condivisione senza selezionare un'app: l'applicazione rimane sempre reattiva al 100%.
+            - 🛡️ **Integrazione Piattaforme Personalizzate nel Backup**: Ora il backup include anche le piattaforme create dall'utente e le ripristina fedelmente.
+            - ⚡ **Modifica Rapida Commissioni al Volo**: Nel Calcolatore è possibile personalizzare istantaneamente la percentuale di commissione (%) e la tariffa fissa (€) per qualsiasi piattaforma selezionata con pulsante "Ripristina standard".
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.2.6.apk
-            build-output/resell-tracker-v1.2.6.aab
+            build-output/resell-tracker-v1.2.7.apk
+            build-output/resell-tracker-v1.2.7.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

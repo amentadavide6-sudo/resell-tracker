@@ -128,53 +128,55 @@ export const SettingsScreen: React.FC<{
 
   const handleExport = async () => {
     setIsExporting(true);
-    const res = await exportBackup();
-    setIsExporting(false);
-    if (res.success) {
-      addXP(XP_REWARDS.BACKUP_SAVED, 'Backup archivio');
-      showAlert({
-        title: 'Backup Salvato! 💾',
-        message: res.message,
-        type: 'success',
-      });
-    } else if (res.message !== 'Nessun file selezionato.') {
-      showAlert({
-        title: 'Backup',
-        message: res.message,
-        type: 'warning',
-      });
+    try {
+      const res = await exportBackup();
+      if (res.success) {
+        addXP(XP_REWARDS.BACKUP_SAVED, 'Backup archivio');
+        showAlert({
+          title: 'Backup Salvato! 💾',
+          message: res.message,
+          type: 'success',
+        });
+      } else {
+        showAlert({
+          title: 'Backup',
+          message: res.message,
+          type: 'warning',
+        });
+      }
+    } catch (err: any) {
+      console.error('Export error:', err);
+    } finally {
+      setIsExporting(false);
     }
   };
 
   const handleImport = async () => {
-    showAlert({
-      title: 'Ripristina Archivio',
-      message: 'Vuoi selezionare un file di backup (.json) per ripristinare i tuoi articoli nell\'inventario?',
-      type: 'info',
-      buttons: [
-        { text: 'Annulla', style: 'cancel' },
-        {
-          text: 'Seleziona File',
-          onPress: async () => {
-            setIsImporting(true);
-            const res = await importBackup();
-            setIsImporting(false);
-            if (!res.success && res.message === 'Nessun file selezionato.') {
-              // L'utente ha chiuso il picker senza selezionare file
-              return;
-            }
-            showAlert({
-              title: res.success ? 'Ripristino' : 'Attenzione',
-              message: res.message,
-              type: res.success ? 'success' : 'error',
-            });
-            if (res.success && onDataRestored) {
-              onDataRestored();
-            }
-          },
-        },
-      ],
-    });
+    setIsImporting(true);
+    try {
+      const res = await importBackup();
+      if (!res.success && res.message === 'Nessun file selezionato.') {
+        // L'utente ha chiuso il picker di sistema senza selezionare file
+        return;
+      }
+      showAlert({
+        title: res.success ? 'Ripristino Completato! ✅' : 'Attenzione',
+        message: res.message,
+        type: res.success ? 'success' : 'error',
+      });
+      if (res.success && onDataRestored) {
+        onDataRestored();
+      }
+    } catch (err: any) {
+      console.error('Import error:', err);
+      showAlert({
+        title: 'Attenzione',
+        message: err?.message || 'Errore durante il ripristino del backup.',
+        type: 'error',
+      });
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   return (
