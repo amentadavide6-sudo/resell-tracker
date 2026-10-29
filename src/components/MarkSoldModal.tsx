@@ -135,7 +135,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             .replace('{count}', newAnalytics.dac7.soldCount.toString())
             .replace('{revenue}', newAnalytics.dac7.grossRevenue.toFixed(2))
             .replace('{year}', new Date().getFullYear().toString()),
-          type: isExceeded ? 'error' : 'warning',
+          type: 'info',
           buttons: [
             {
               text: strings.dac7Alert.gotIt,

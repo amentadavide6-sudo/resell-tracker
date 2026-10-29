@@ -145,15 +145,6 @@ export const StatsScreen: React.FC<{
           <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{strings.stats.headerSubtitle}</Text>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{strings.stats.headerTitle}</Text>
         </View>
-
-        <TouchableOpacity
-          style={[styles.refreshBtn, isDark && { backgroundColor: '#1E293B' }]}
-          onPress={loadStats}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="refresh" size={14} color={colors.primary} style={{ marginRight: 4 }} />
-          <Text style={[styles.refreshBtnText, { color: colors.primary }]}>↻</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -209,7 +200,7 @@ export const StatsScreen: React.FC<{
             styles.dac7Card,
             { backgroundColor: colors.card, borderColor: colors.cardBorder },
             stats.dac7.status === 'warning' && { borderColor: '#F59E0B' },
-            stats.dac7.status === 'exceeded' && { borderColor: '#EF4444' },
+            stats.dac7.status === 'exceeded' && { borderColor: '#6366F1' },
           ]}
         >
           <View style={styles.dac7HeaderRow}>
@@ -223,7 +214,7 @@ export const StatsScreen: React.FC<{
                         ? (isDark ? '#064E3B' : '#ECFDF5')
                         : stats.dac7.status === 'warning'
                         ? (isDark ? '#451A03' : '#FFFBEB')
-                        : (isDark ? '#450A0A' : '#FEF2F2'),
+                        : (isDark ? '#312E81' : '#EEF2FF'),
                   },
                 ]}
               >
@@ -233,7 +224,7 @@ export const StatsScreen: React.FC<{
                       ? 'shield-checkmark'
                       : stats.dac7.status === 'warning'
                       ? 'alert-circle'
-                      : 'warning'
+                      : 'document-text'
                   }
                   size={20}
                   color={
@@ -241,7 +232,7 @@ export const StatsScreen: React.FC<{
                       ? '#10B981'
                       : stats.dac7.status === 'warning'
                       ? '#F59E0B'
-                      : '#EF4444'
+                      : '#6366F1'
                   }
                 />
               </View>
@@ -268,7 +259,7 @@ export const StatsScreen: React.FC<{
                       ? (isDark ? '#064E3B' : '#ECFDF5')
                       : stats.dac7.status === 'warning'
                       ? (isDark ? '#451A03' : '#FEF3C7')
-                      : (isDark ? '#450A0A' : '#FEE2E2'),
+                      : (isDark ? '#312E81' : '#EEF2FF'),
                 },
               ]}
             >
@@ -281,7 +272,7 @@ export const StatsScreen: React.FC<{
                         ? '#059669'
                         : stats.dac7.status === 'warning'
                         ? '#D97706'
-                        : '#DC2626',
+                        : '#6366F1',
                   },
                 ]}
               >
@@ -314,7 +305,7 @@ export const StatsScreen: React.FC<{
                       width: `${Math.round(stats.dac7.salesProgress * 100)}%`,
                       backgroundColor:
                         stats.dac7.salesProgress >= 1
-                          ? '#EF4444'
+                          ? '#6366F1'
                           : stats.dac7.salesProgress >= 0.8
                           ? '#F59E0B'
                           : '#10B981',
@@ -342,7 +333,7 @@ export const StatsScreen: React.FC<{
                       width: `${Math.round(stats.dac7.revenueProgress * 100)}%`,
                       backgroundColor:
                         stats.dac7.revenueProgress >= 1
-                          ? '#EF4444'
+                          ? '#6366F1'
                           : stats.dac7.revenueProgress >= 0.8
                           ? '#F59E0B'
                           : '#10B981',

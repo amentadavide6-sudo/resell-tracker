@@ -56,36 +56,34 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.1.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.1.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.2.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.2.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.1-binaries
+          name: resell-tracker-v1.3.2-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.1
-          name: ResellTracker v1.3.1 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.2
+          name: ResellTracker v1.3.2 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.3.1 Release - Temi VIP Pro, Insight Aziendali & Badge Esclusivi
+            ### 📱 ResellTracker v1.3.2 Release - Header Pulito & Direttiva DAC7 Riformulata
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.1.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.1.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.2.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.2.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 👑 **Gamification Pro Ottimizzata (Opzione A)**: Per gli utenti Pro l'esperienza XP diventa il motore fondamentale per sbloccare strumenti di business esclusivi e personalizzazione estetica.
-            - 📊 **Insight Aziendali Riservati ai Pro**: Le analisi statistiche ad alto valore strategico (Il tuo Giorno d'Oro più redditizio, Velocità di rotazione capi in giorni con Fast Flips 48h, Tasso di liquidazione magazzino) sono riservate agli utenti Pro e si sbloccano salendo di livello (Livello 3, 5, 8). Per gli utenti gratuiti compare il lucchetto dorato con invito a passare a Pro.
-            - 🎨 **Temi VIP & Personalizzazione Interfaccia (Passo 2)**: Nuova sezione in Impostazioni che permette agli utenti Pro di trasformare l'aspetto dell'app sbloccando i temi Oro Onyx Prestige (Liv. 4), Smeraldo Luxury (Liv. 6) e Viola Cyberpunk (Liv. 8).
-            - ⭐ **Badge Pro Nelle Storie Instagram**: Chi ha Pro ottiene il badge scintillante "👑 Verified Pro Reseller" nelle card social per massimizzare il prestigio, mentre gli utenti free continuano a condividere storie con il badge community portando download all'app.
+            - 📈 **Header Schermata Statistiche Pulito & Essenziale**: Titolo semplificato in "Statistiche" ed eliminazione dei pulsanti ridondanti di ricaricamento in alto a destra per un design moderno e minimale.
+            - 📋 **Comunicazione Direttiva DAC7 Positiva & Non Ansiogena**: Eliminati gli allarmi rossi "SEGNALAZIONE" e le formule difensive. Il superamento della soglia dei 2.000€ viene trattato come un traguardo positivo di vendita con congratulazioni all'utente e un promemoria oggettivo della normativa europea.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.1.apk
-            build-output/resell-tracker-v1.3.1.aab
+            build-output/resell-tracker-v1.3.2.apk
+            build-output/resell-tracker-v1.3.2.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
