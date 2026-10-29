@@ -56,36 +56,34 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.6.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.6.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.7.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.7.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.6-binaries
+          name: resell-tracker-v1.3.7-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.6
-          name: ResellTracker v1.3.6 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.7
+          name: ResellTracker v1.3.7 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.3.6 Release - Deep Code Audit & Precision Polish
+            ### 📱 ResellTracker v1.3.7 Release - Smooth Float Confetti Celebration
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.6.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.6.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.7.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.7.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
-            #### 🚀 Novità e Risoluzioni dell'Audit Approfondito:
-            - 🛠️ **Piattaforme Personalizzate a 360°**: risolto il fallback su Vinted; le piattaforme create dall'utente (con percentuali e commissioni fisse dedicate) ora vengono riconosciute con il loro nome e colore effettivo in MarkSoldModal, Delist Assistant, Registro CSV e Social Proof.
-            - 📊 **KPI Inventario Omnipresenti**: i contatori di capi attivi, capitale fermo e profitto atteso rimangono accurati e visibili anche quando si filtrano i capi per "Venduti" o "Bozze".
-            - 🌍 **Localizzazione Dinamica del Grafico Storico**: i nomi dei mesi e le date nel grafico interattivo delle vendite si traducono automaticamente nella lingua attiva (Italiano, Inglese, Spagnolo, Francese, Tedesco).
-            - 🛡️ **Defensive Math & Data Integrity**: aggiunta protezione contro valori non numerici in formatEuro e gestione di sicurezza per vendite parziali esaurite.
+            #### 🚀 Novità e Risoluzioni:
+            - ✨ **Coriandoli Più Soffici & Eleganti (3,4s)**: eliminata la comparsa improvvisa; i coriandoli sbocciano morbidamente con fade-in all'innesco, salgono con parabola dolce e scendono volteggiando con oscillazione orizzontale per 3,4 secondi rilassanti.
+            - 🔒 **Protezione Anti-Restart**: confermando più vendite in rapida successione, l'animazione attiva non scatta né ricomincia da capo bruscamente, ma scorre indisturbata e fluida.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.6.apk
-            build-output/resell-tracker-v1.3.6.aab
+            build-output/resell-tracker-v1.3.7.apk
+            build-output/resell-tracker-v1.3.7.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
