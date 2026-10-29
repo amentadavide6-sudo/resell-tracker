@@ -56,37 +56,37 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.8.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.8.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.9.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.9.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.8-binaries
+          name: resell-tracker-v1.2.9-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.8
-          name: ResellTracker v1.2.8 (APK + Google Play AAB Bundle)
+          tag_name: v1.2.9
+          name: ResellTracker v1.2.9 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.2.8 Release
+            ### 📱 ResellTracker v1.2.9 Release
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.8.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.2.8.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.2.9.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.2.9.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 🏷️ **Multi-Platform Fee Customization**: Nel form di inserimento inventario (`AddItemModal`), quando metti in vendita un capo su più piattaforme contemporaneamente, puoi specificare e personalizzare le commissioni (% e tariffa fissa €) in modo indipendente per ciascuna piattaforma selezionata (es. tariffa promozionale su eBay e standard su Vinted).
-            - 💾 **Persistenza Completa SQLite**: Le commissioni personalizzate per ciascuna piattaforma vengono salvate in modo permanente nel database SQLite dell'articolo (`customFees`) e preservate nei backup e nel calcolo del profitto netto quando l'articolo viene venduto.
-            - 🎨 **Pill Piattaforme Pulite & Moderne**: Rimossi i sottotitoli ingombranti (`0% fee venditore`, `~11.5% + 0.35€`) dai chip di selezione piattaforma, rendendoli pill orizzontali minimali ed eleganti con indicatore colorato e feedback tattile.
-            - ⚠️ **Fix Validazione Nome Articolo**: Risolto il problema per cui premendo "Salva nell'inventario" con il nome vuoto non succedeva nulla. Ora viene mostrato un bordo rosso di evidenziazione immediata con avviso testuale ("Inserisci un nome per l'articolo").
-            - ⚡ **Indicatore Commissioni Speciali in Inventario**: I badge delle piattaforme nell'inventario mostrano l'icona `⚡` se l'articolo ha commissioni personalizzate configurate.
+            - 📊 **Nuovo Grafico Andamento Vendite nel Tempo**: Aggiunto nella schermata Statistiche un moderno grafico a barre mensili impilate e continue (`SalesTrendChart`), 100% nativo React Native (Yoga Layout Engine) senza alcuna dipendenza esterna o rischio di disallineamento.
+            - 🎛️ **Selettore Rapido delle Metriche**: Puoi alternare con un tocco tra **Profitto Netto (€)**, **Fatturato Lordo (€)** e **N. Capi Venduti**.
+            - 🎯 **Tooltip Interattivo al Tocco**: Toccando qualsiasi colonna mensile si apre una scheda dettagliata con la scomposizione esatta delle vendite per ogni marketplace attivo (Vinted, eBay, Wallapop, Subito, Depop, Custom).
+            - 🏷️ **Legenda Piattaforme Dinamica**: In calce al grafico viene mostrato il riepilogo delle quote percentuali e degli importi generati da ciascun canale di vendita.
+            - 🌐 **Localizzazione Completa**: Tutte le nuove descrizioni del grafico sono tradotte in Italiano, Inglese, Francese, Spagnolo e Tedesco.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.2.8.apk
-            build-output/resell-tracker-v1.2.8.aab
+            build-output/resell-tracker-v1.2.9.apk
+            build-output/resell-tracker-v1.2.9.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -181,6 +181,14 @@ export interface TranslationDictionary {
     salesHistory: string;
     noSalesYet: string;
     noSalesSubtitle: string;
+    salesTrendTitle: string;
+    monthlyTrendSubtitle: string;
+    last6Months: string;
+    metricNetProfit: string;
+    metricGrossRevenue: string;
+    metricPiecesSold: string;
+    chartTotalPeriod: string;
+    chartTooltipHint: string;
   };
   settings: {
     headerSubtitle: string;

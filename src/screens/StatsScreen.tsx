@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import { exportInventoryToCSV } from '../services/csvExport';
 import { formatEuro } from '../services/feeCalculator';
 import { addXP, XP_REWARDS } from '../services/gamification';
 import { isProUser, getCSVExportCount, incrementCSVExportCount } from '../services/proManager';
+import { SalesTrendChart } from '../components/SalesTrendChart';
+import { getAllAvailablePlatforms } from '../services/customPlatformManager';
 
 export const StatsScreen: React.FC<{
   onNavigateToInventory?: () => void;
@@ -33,6 +35,7 @@ export const StatsScreen: React.FC<{
 
   const isPro = isProUser();
   const exportCount = getCSVExportCount();
+  const allPlatforms = useMemo(() => getAllAvailablePlatforms(), []);
 
   const loadStats = useCallback(() => {
     try {
@@ -368,6 +371,14 @@ export const StatsScreen: React.FC<{
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Sales Trend Over Time Chart */}
+        {hasSales && (
+          <SalesTrendChart
+            monthlyStats={stats.monthlyStats}
+            platforms={allPlatforms}
+          />
+        )}
 
         {/* Platform Breakdown */}
         {stats.platformStats.length > 0 && (

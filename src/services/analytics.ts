@@ -1,6 +1,7 @@
 import { getAllInventoryItems } from './db';
 import { calculateResellProfit } from './feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
+import { getAllAvailablePlatforms } from './customPlatformManager';
 import { InventoryItem, PlatformId } from '../types';
 
 export interface PlatformStat {
@@ -13,12 +14,19 @@ export interface PlatformStat {
   percentageOfProfit: number;
 }
 
+export interface MonthlyPlatformBreakdown {
+  soldCount: number;
+  totalProfit: number;
+  totalRevenue: number;
+}
+
 export interface MonthlyStat {
   monthKey: string; // e.g. "2026-10"
   monthLabel: string; // e.g. "Ottobre 2026"
   soldCount: number;
   totalRevenue: number;
   totalProfit: number;
+  platformBreakdown: Record<string, MonthlyPlatformBreakdown>;
 }
 
 export interface Dac7Stat {
@@ -60,17 +68,22 @@ export function computeAnalytics(): AnalyticsSummary {
   let totalCostOfGoodsSold = 0;
 
   // Platform grouping
-  const platformProfitMap: Record<PlatformId, { count: number; profit: number; revenue: number }> = {
-    vinted: { count: 0, profit: 0, revenue: 0 },
-    ebay: { count: 0, profit: 0, revenue: 0 },
-    wallapop: { count: 0, profit: 0, revenue: 0 },
-    subito: { count: 0, profit: 0, revenue: 0 },
-    depop: { count: 0, profit: 0, revenue: 0 },
-    custom: { count: 0, profit: 0, revenue: 0 },
-  };
+  const allAvailable = getAllAvailablePlatforms();
+  const platformProfitMap: Record<string, { count: number; profit: number; revenue: number }> = {};
+  allAvailable.forEach((p) => {
+    platformProfitMap[p.id] = { count: 0, profit: 0, revenue: 0 };
+  });
 
-  // Monthly grouping
-  const monthlyMap: Record<string, { count: number; profit: number; revenue: number }> = {};
+  // Monthly grouping with per-platform breakdowns
+  const monthlyMap: Record<
+    string,
+    {
+      count: number;
+      profit: number;
+      revenue: number;
+      platforms: Record<string, { soldCount: number; totalProfit: number; totalRevenue: number }>;
+    }
+  > = {};
 
   const currentYear = new Date().getFullYear();
   let dac7SoldCount = 0;
@@ -82,12 +95,15 @@ export function computeAnalytics(): AnalyticsSummary {
     totalSoldPieces += qty;
 
     const salePrice = item.actualSellingPrice ?? item.targetSellingPrice;
+    const customFee = item.customFees?.[item.platformId];
     const calc = calculateResellProfit({
       sellingPrice: salePrice,
       purchaseCost: item.purchaseCost,
       sellerShippingCost: item.sellerShippingCost,
       packagingCost: item.packagingCost,
       platformId: item.platformId,
+      customSellerFeePercent: customFee?.percent,
+      customSellerFixedFee: customFee?.fixed,
     });
 
     totalGrossRevenue += salePrice * qty;
@@ -95,11 +111,13 @@ export function computeAnalytics(): AnalyticsSummary {
     totalCostOfGoodsSold += item.purchaseCost * qty;
 
     // Aggregate by platform
-    if (platformProfitMap[item.platformId]) {
-      platformProfitMap[item.platformId].count += qty;
-      platformProfitMap[item.platformId].profit += calc.netProfit * qty;
-      platformProfitMap[item.platformId].revenue += salePrice * qty;
+    const pId = item.platformId || 'vinted';
+    if (!platformProfitMap[pId]) {
+      platformProfitMap[pId] = { count: 0, profit: 0, revenue: 0 };
     }
+    platformProfitMap[pId].count += qty;
+    platformProfitMap[pId].profit += calc.netProfit * qty;
+    platformProfitMap[pId].revenue += salePrice * qty;
 
     // Aggregate by month (using soldAt or createdAt)
     const dateStr = item.soldAt || item.createdAt;
@@ -108,11 +126,18 @@ export function computeAnalytics(): AnalyticsSummary {
     const monthKey = `${itemYear}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
 
     if (!monthlyMap[monthKey]) {
-      monthlyMap[monthKey] = { count: 0, profit: 0, revenue: 0 };
+      monthlyMap[monthKey] = { count: 0, profit: 0, revenue: 0, platforms: {} };
     }
     monthlyMap[monthKey].count += qty;
     monthlyMap[monthKey].profit += calc.netProfit * qty;
     monthlyMap[monthKey].revenue += salePrice * qty;
+
+    if (!monthlyMap[monthKey].platforms[pId]) {
+      monthlyMap[monthKey].platforms[pId] = { soldCount: 0, totalProfit: 0, totalRevenue: 0 };
+    }
+    monthlyMap[monthKey].platforms[pId].soldCount += qty;
+    monthlyMap[monthKey].platforms[pId].totalProfit += calc.netProfit * qty;
+    monthlyMap[monthKey].platforms[pId].totalRevenue += salePrice * qty;
 
     // DAC7 annual accumulation
     if (itemYear === currentYear) {
@@ -141,11 +166,11 @@ export function computeAnalytics(): AnalyticsSummary {
   };
 
   // Calculate platform statistics
-  const platformStats: PlatformStat[] = PLATFORMS.map((p) => {
+  const platformStats: PlatformStat[] = allAvailable.map((p) => {
     const stat = platformProfitMap[p.id] || { count: 0, profit: 0, revenue: 0 };
     const pct = totalNetProfit > 0 ? (stat.profit / totalNetProfit) * 100 : 0;
     return {
-      platformId: p.id,
+      platformId: p.id as PlatformId,
       name: p.name,
       color: p.color,
       soldCount: stat.count,
@@ -169,19 +194,28 @@ export function computeAnalytics(): AnalyticsSummary {
     'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
   ];
 
-  const monthlyStats: MonthlyStat[] = Object.keys(monthlyMap)
-    .sort()
-    .map((key) => {
-      const [year, month] = key.split('-');
-      const monthIdx = parseInt(month, 10) - 1;
-      return {
-        monthKey: key,
-        monthLabel: `${monthNames[monthIdx]} ${year}`,
-        soldCount: monthlyMap[key].count,
-        totalRevenue: Math.round(monthlyMap[key].revenue * 100) / 100,
-        totalProfit: Math.round(monthlyMap[key].profit * 100) / 100,
-      };
-    });
+  // Guarantee continuous sequence for at least the last 6 months
+  const now = new Date();
+  const recent6Keys: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    recent6Keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  const allMonthKeys = Array.from(new Set([...Object.keys(monthlyMap), ...recent6Keys])).sort();
+
+  const monthlyStats: MonthlyStat[] = allMonthKeys.map((key) => {
+    const [year, month] = key.split('-');
+    const monthIdx = parseInt(month, 10) - 1;
+    const mData = monthlyMap[key] || { count: 0, revenue: 0, profit: 0, platforms: {} };
+    return {
+      monthKey: key,
+      monthLabel: `${monthNames[monthIdx]} ${year}`,
+      soldCount: mData.count,
+      totalRevenue: Math.round(mData.revenue * 100) / 100,
+      totalProfit: Math.round(mData.profit * 100) / 100,
+      platformBreakdown: mData.platforms,
+    };
+  });
 
   // Active / unsold stats
   const totalActivePieces = activeItems.reduce(
@@ -196,12 +230,15 @@ export function computeAnalytics(): AnalyticsSummary {
   let potentialProfitUnsold = 0;
   activeItems.forEach((i) => {
     const qty = i.quantity && i.quantity > 0 ? i.quantity : 1;
+    const customFee = i.customFees?.[i.platformId];
     const calc = calculateResellProfit({
       sellingPrice: i.targetSellingPrice,
       purchaseCost: i.purchaseCost,
       sellerShippingCost: i.sellerShippingCost,
       packagingCost: i.packagingCost,
       platformId: i.platformId,
+      customSellerFeePercent: customFee?.percent,
+      customSellerFixedFee: customFee?.fixed,
     });
     potentialProfitUnsold += calc.netProfit * qty;
   });
