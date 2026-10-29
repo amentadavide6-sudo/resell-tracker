@@ -56,37 +56,35 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.9.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.9.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.2.10.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.2.10.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.2.9-binaries
+          name: resell-tracker-v1.2.10-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.9
-          name: ResellTracker v1.2.9 (APK + Google Play AAB Bundle)
+          tag_name: v1.2.10
+          name: ResellTracker v1.2.10 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.2.9 Release
+            ### 📱 ResellTracker v1.2.10 Release
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.2.9.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.2.9.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.2.10.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.2.10.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 📊 **Nuovo Grafico Andamento Vendite nel Tempo**: Aggiunto nella schermata Statistiche un moderno grafico a barre mensili impilate e continue (`SalesTrendChart`), 100% nativo React Native (Yoga Layout Engine) senza alcuna dipendenza esterna o rischio di disallineamento.
-            - 🎛️ **Selettore Rapido delle Metriche**: Puoi alternare con un tocco tra **Profitto Netto (€)**, **Fatturato Lordo (€)** e **N. Capi Venduti**.
-            - 🎯 **Tooltip Interattivo al Tocco**: Toccando qualsiasi colonna mensile si apre una scheda dettagliata con la scomposizione esatta delle vendite per ogni marketplace attivo (Vinted, eBay, Wallapop, Subito, Depop, Custom).
-            - 🏷️ **Legenda Piattaforme Dinamica**: In calce al grafico viene mostrato il riepilogo delle quote percentuali e degli importi generati da ciascun canale di vendita.
-            - 🌐 **Localizzazione Completa**: Tutte le nuove descrizioni del grafico sono tradotte in Italiano, Inglese, Francese, Spagnolo e Tedesco.
+            - 📈 **Cronologia Grafico Dinamica dalla 1ª Vendita**: Il grafico ora parte dal mese esatto in cui l'utente effettua la prima vendita e cresce progressivamente mese dopo mese (1°, 2°, 3°, 4°, 5°, 6°...), eliminando le colonne vuote a 0 dei mesi antecedenti all'installazione dell'app.
+            - 🎨 **Layout Colonne Centrato e Bilanciato**: Quando la cronologia ha 1, 2 o 3 mesi, le colonne sono posizionate armonicamente al centro dell'area grafica con badge temporale reattivo ("Questo Mese", "2 Mesi", ecc.).
+            - 📊 **Grafico Vendite Stacked Nativo**: Colonne solide continue con scomposizione per marketplace, selettore metriche e tooltip interattivo al tocco.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.2.9.apk
-            build-output/resell-tracker-v1.2.9.aab
+            build-output/resell-tracker-v1.2.10.apk
+            build-output/resell-tracker-v1.2.10.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

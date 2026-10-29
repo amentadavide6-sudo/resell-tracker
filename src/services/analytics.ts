@@ -194,28 +194,45 @@ export function computeAnalytics(): AnalyticsSummary {
     'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
   ];
 
-  // Guarantee continuous sequence for at least the last 6 months
-  const now = new Date();
-  const recent6Keys: string[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    recent6Keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  const allMonthKeys = Array.from(new Set([...Object.keys(monthlyMap), ...recent6Keys])).sort();
+  // Build month sequence starting from the FIRST recorded sale up to the current month
+  const sortedSoldKeys = Object.keys(monthlyMap).sort();
+  let monthlyStats: MonthlyStat[] = [];
 
-  const monthlyStats: MonthlyStat[] = allMonthKeys.map((key) => {
-    const [year, month] = key.split('-');
-    const monthIdx = parseInt(month, 10) - 1;
-    const mData = monthlyMap[key] || { count: 0, revenue: 0, profit: 0, platforms: {} };
-    return {
-      monthKey: key,
-      monthLabel: `${monthNames[monthIdx]} ${year}`,
-      soldCount: mData.count,
-      totalRevenue: Math.round(mData.revenue * 100) / 100,
-      totalProfit: Math.round(mData.profit * 100) / 100,
-      platformBreakdown: mData.platforms,
-    };
-  });
+  if (sortedSoldKeys.length > 0) {
+    const earliestKey = sortedSoldKeys[0]; // e.g. "2026-10"
+    const [startYear, startMonth] = earliestKey.split('-').map(Number);
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    const continuousKeys: string[] = [];
+    let y = startYear;
+    let m = startMonth;
+
+    while (y < currentYear || (y === currentYear && m <= currentMonth)) {
+      continuousKeys.push(`${y}-${String(m).padStart(2, '0')}`);
+      m++;
+      if (m > 12) {
+        m = 1;
+        y++;
+      }
+    }
+
+    monthlyStats = continuousKeys.map((key) => {
+      const [year, month] = key.split('-');
+      const monthIdx = parseInt(month, 10) - 1;
+      const mData = monthlyMap[key] || { count: 0, revenue: 0, profit: 0, platforms: {} };
+      return {
+        monthKey: key,
+        monthLabel: `${monthNames[monthIdx]} ${year}`,
+        soldCount: mData.count,
+        totalRevenue: Math.round(mData.revenue * 100) / 100,
+        totalProfit: Math.round(mData.profit * 100) / 100,
+        platformBreakdown: mData.platforms,
+      };
+    });
+  }
 
   // Active / unsold stats
   const totalActivePieces = activeItems.reduce(

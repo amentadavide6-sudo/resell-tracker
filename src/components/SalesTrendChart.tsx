@@ -28,11 +28,17 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
   const { strings, t } = useTranslation();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('profit');
 
-  // Display the last 6 months for a clean, non-cramped mobile layout
+  // Display from the first recorded sale onwards, keeping at most the last 6 months once history grows
   const displayMonths = useMemo(() => {
     if (!monthlyStats || monthlyStats.length === 0) return [];
-    return monthlyStats.slice(-6);
+    return monthlyStats.length > 6 ? monthlyStats.slice(-6) : monthlyStats;
   }, [monthlyStats]);
+
+  const timeframeBadgeText = useMemo(() => {
+    if (displayMonths.length <= 1) return 'Questo Mese';
+    if (monthlyStats.length > 6) return strings.stats.last6Months;
+    return `${displayMonths.length} Mesi`;
+  }, [displayMonths.length, monthlyStats.length, strings]);
 
   // Selected month for detailed tooltip (defaults to the most recent month if it has data)
   const defaultSelectedKey = useMemo(() => {
@@ -153,7 +159,7 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
 
           <View style={[styles.timeframeBadge, { backgroundColor: isDark ? '#1E293B' : '#EEF2FF' }]}>
             <Text style={[styles.timeframeText, { color: '#6366F1' }]}>
-              {strings.stats.last6Months}
+              {timeframeBadgeText}
             </Text>
           </View>
         </View>
@@ -327,7 +333,12 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
           </View>
 
           {/* Month Columns */}
-          <View style={styles.columnsContainer}>
+          <View
+            style={[
+              styles.columnsContainer,
+              displayMonths.length <= 3 && { justifyContent: 'center', gap: 28 },
+            ]}
+          >
             {displayMonths.map((m) => {
               const isSelected = activeMonthKey === m.monthKey;
               const totalVal =
@@ -355,7 +366,10 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
               return (
                 <TouchableOpacity
                   key={m.monthKey}
-                  style={styles.columnTouchable}
+                  style={[
+                    styles.columnTouchable,
+                    displayMonths.length <= 3 && { flex: 0, width: 56 },
+                  ]}
                   onPress={() => setActiveMonthKey(isSelected ? null : m.monthKey)}
                   activeOpacity={0.7}
                 >
