@@ -39,7 +39,7 @@ export const StatsScreen: React.FC<{
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
-  const { strings, t } = useTranslation();
+  const { strings, t, language } = useTranslation();
   const { showAlert } = useAlert();
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -75,15 +75,15 @@ export const StatsScreen: React.FC<{
       const tData = getAllTrophiesStatus();
       setTrophiesData(tData);
 
-      const insights = computeProInsights();
+      const insights = computeProInsights(language);
       setProInsights(insights);
 
       const xp = getUserXP();
-      setUserLevel(getLevelInfo(xp));
+      setUserLevel(getLevelInfo(xp, language));
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     loadStats();

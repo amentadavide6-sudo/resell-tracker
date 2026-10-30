@@ -1,6 +1,7 @@
 import { getDatabase } from './db';
 import { isProUser, activateProPass } from './proManager';
 import { SupportedLanguage } from '../i18n/types';
+import { getSavedLanguage } from '../i18n/LanguageContext';
 import { it } from '../i18n/it';
 import { en } from '../i18n/en';
 import { fr } from '../i18n/fr';
@@ -39,9 +40,9 @@ const BASE_LEVEL_METADATA = [
   { levelNumber: 10, badge: '👑', badgeColor: '#EAB308', minXP: 8000, maxXP: 999999 },
 ];
 
-export function getLevels(lang: SupportedLanguage = 'it'): LevelDefinition[] {
-  const dict = DICTIONARIES[lang] || DICTIONARIES.it;
-  const transLevels = dict.gamification?.levels || DICTIONARIES.it.gamification.levels;
+export function getLevels(lang: SupportedLanguage = getSavedLanguage()): LevelDefinition[] {
+  const dict = DICTIONARIES[lang] || DICTIONARIES.en;
+  const transLevels = dict.gamification?.levels || DICTIONARIES.en.gamification.levels;
   return BASE_LEVEL_METADATA.map((base, idx) => ({
     ...base,
     title: transLevels[idx]?.title || `Level ${base.levelNumber}`,
@@ -78,7 +79,7 @@ export function getUserXP(): number {
   }
 }
 
-export function getLevelInfo(xp: number, lang: SupportedLanguage = 'it'): LevelInfo {
+export function getLevelInfo(xp: number, lang: SupportedLanguage = getSavedLanguage()): LevelInfo {
   const levels = getLevels(lang);
   const currentLvl =
     levels.slice().reverse().find((lvl) => xp >= lvl.minXP) || levels[0];

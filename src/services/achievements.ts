@@ -2,6 +2,8 @@ import { getDatabase, getAllInventoryItems } from './db';
 import { calculateResellProfit } from './feeCalculator';
 import { addXP } from './gamification';
 import { getCSVExportCount } from './proManager';
+import { SupportedLanguage } from '../i18n/types';
+import { getSavedLanguage } from '../i18n/LanguageContext';
 
 export interface TrophyDefinition {
   id: string;
@@ -318,12 +320,20 @@ export interface ProBusinessInsights {
   fastFlipsCount: number;
 }
 
-export function computeProInsights(): ProBusinessInsights {
+const DAYS_BY_LANG: Record<SupportedLanguage, string[]> = {
+  it: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  fr: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+  es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+  de: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+};
+
+export function computeProInsights(lang: SupportedLanguage = getSavedLanguage()): ProBusinessInsights {
   const allItems = getAllInventoryItems('all');
   const soldItems = allItems.filter((i) => i.status === 'sold');
   const activeItems = allItems.filter((i) => i.status === 'listed');
 
-  const daysItalian = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+  const daysNames = DAYS_BY_LANG[lang] || DAYS_BY_LANG.en;
   const dayStats: Record<number, { count: number; profit: number }> = {
     0: { count: 0, profit: 0 },
     1: { count: 0, profit: 0 },
@@ -389,7 +399,7 @@ export function computeProInsights(): ProBusinessInsights {
   const bestDayOfWeek =
     maxCount > 0
       ? {
-          dayName: daysItalian[bestDayIdx],
+          dayName: daysNames[bestDayIdx],
           dayIndex: bestDayIdx,
           salesCount: dayStats[bestDayIdx].count,
           totalProfit: Math.round(dayStats[bestDayIdx].profit * 100) / 100,

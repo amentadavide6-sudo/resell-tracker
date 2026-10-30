@@ -28,7 +28,7 @@ export function getDeviceLanguage(): SupportedLanguage {
   } catch (e) {
     console.warn('Error reading device locale:', e);
   }
-  return 'it';
+  return 'en'; // Universal international fallback (Kazakhstan, Poland, China, etc.)
 }
 
 export function getSavedLanguage(): SupportedLanguage {
@@ -130,7 +130,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [languageMode]);
 
   const strings = useMemo(() => {
-    return DICTIONARIES[activeLanguage] || it;
+    return DICTIONARIES[activeLanguage] || en;
   }, [activeLanguage]);
 
   const t = (path: string, params?: Record<string, string | number>): string => {

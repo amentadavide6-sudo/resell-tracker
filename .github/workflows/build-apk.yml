@@ -56,35 +56,36 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.8.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.8.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.9.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.9.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.8-binaries
+          name: resell-tracker-v1.3.9-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.8
-          name: ResellTracker v1.3.8 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.9
+          name: ResellTracker v1.3.9 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.3.8 Release - Critical Crash Fix on "Segna come venduto"
+            ### 📱 ResellTracker v1.3.9 Release - Universal International English Fallback & Multilingual Smart Push
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.8.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.8.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.9.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.9.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 🛠️ **Risolto Crash Crash su "Segna come venduto"**: eliminata la violazione delle Regole degli Hook di React in `MarkSoldModal` (il hook `useMemo` era posizionato dopo un early return condizionale, provocando la chiusura forzata dell'app su Android al tocco del pulsante).
-            - 🛡️ **Guarda di Montaggio Condizionale**: protetto il rendering del modal con un controllo attivo su `itemToSell`, assicurando un'apertura e chiusura ultra-stabile e fulminea.
-            - ✨ **Coriandoli Fluctuanti (3,4s) con Fade-in**: animazione celebrativa rilassante con protezione anti-restart.
+            - 🌍 **Fallback Internazionale in Inglese**: gli utenti che scaricano l'app da paesi come Polonia, Kazakistan, Cina, Brasile o qualsiasi nazione la cui lingua non sia esplicitamente tra le 5 supportate, vedranno automaticamente l'app in **Inglese** (invece che in italiano).
+            - 🇮🇹 **Italiano Garantito al 100%**: per tutti i dispositivi in lingua italiana (o che scelgono Italiano nelle Impostazioni), l'app resta nativamente in italiano.
+            - 🔔 **Notifiche Push Intelligenti Multilingue**: i promemoria domenicali di riepilogo vendite e gli avvisi di giacenza armadio vengono ora generati nella lingua attiva dell'utente con fallback in inglese.
+            - 📊 **Pro Insights & Giorni della Settimana Tradotti**: il "Giorno d'Oro" e i livelli del Reseller Club si traducono dinamicamente in tutte le 5 lingue.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.8.apk
-            build-output/resell-tracker-v1.3.8.aab
+            build-output/resell-tracker-v1.3.9.apk
+            build-output/resell-tracker-v1.3.9.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

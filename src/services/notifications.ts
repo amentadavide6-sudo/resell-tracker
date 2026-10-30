@@ -80,11 +80,38 @@ export async function scheduleSmartNotifications(): Promise<void> {
     // Clear previously scheduled notifications to avoid duplicates
     await Notifications.cancelAllScheduledNotificationsAsync();
 
+    const lang = getSavedLanguage();
+
+    const weeklyTexts = {
+      it: {
+        title: '📈 ResellTracker • Weekend di Vendite',
+        body: 'Fine settimana terminato! Apri l\'app per registrare i tuoi profitti, aggiornare lo stock e scalare i livelli del Reseller Club ⚡',
+      },
+      en: {
+        title: '📈 ResellTracker • Weekend Sales Recap',
+        body: 'Weekend is over! Open the app to log your profits, update inventory, and level up in the Reseller Club ⚡',
+      },
+      fr: {
+        title: '📈 ResellTracker • Bilan des Ventes',
+        body: 'Le week-end est terminé ! Enregistrez vos bénéfices, mettez à jour votre stock et grimpez dans le Reseller Club ⚡',
+      },
+      es: {
+        title: '📈 ResellTracker • Resumen de Ventas',
+        body: '¡Fin de semana terminado! Registra tus ganancias, actualiza tu inventario y sube de nivel en el Reseller Club ⚡',
+      },
+      de: {
+        title: '📈 ResellTracker • Wochenend-Verkäufe',
+        body: 'Wochenende vorbei! Trage deine Gewinne ein, aktualisiere deinen Bestand und steige im Reseller Club auf ⚡',
+      },
+    };
+
+    const weekly = weeklyTexts[lang] || weeklyTexts.en;
+
     // 1. Sunday Evening Weekly Recap (Every Sunday at 20:30)
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '📈 ResellTracker • Weekend di Vendite',
-        body: 'Fine settimana terminato! Apri l\'app per registrare i tuoi profitti, aggiornare lo stock e scalare i livelli del Reseller Club ⚡',
+        title: weekly.title,
+        body: weekly.body,
         sound: true,
         data: { screen: 'inventory' },
       },
@@ -108,10 +135,35 @@ export async function scheduleSmartNotifications(): Promise<void> {
     });
 
     if (staleItems.length > 0) {
+      const staleTexts = {
+        it: (n: number) => ({
+          title: '📦 Consiglio Reseller: Giacenza Armadio',
+          body: `Hai ${n} capi in vendita da oltre un mese. Un ribasso del 10% su Vinted o eBay riattiva subito l'algoritmo di visibilità!`,
+        }),
+        en: (n: number) => ({
+          title: '📦 Reseller Tip: Stale Inventory',
+          body: `You have ${n} items listed for over a month. A 10% price drop on Vinted or eBay re-triggers marketplace search algorithms!`,
+        }),
+        fr: (n: number) => ({
+          title: '📦 Conseil Reseller : Stock Dormant',
+          body: `Vous avez ${n} articles en vente depuis plus d'un mois. Une baisse de 10% relance l'algorithme des plateformes !`,
+        }),
+        es: (n: number) => ({
+          title: '📦 Consejo Reseller: Stock Antiguo',
+          body: `Tienes ${n} artículos a la venta desde hace más de un mes. ¡Una rebaja del 10% reactiva el algoritmo de búsqueda!`,
+        }),
+        de: (n: number) => ({
+          title: '📦 Reseller-Tipp: Lagerhüter',
+          body: `Du hast ${n} Artikel seit über einem Monat gelistet. Eine Preissenkung um 10% reaktiviert den Suchalgorithmus!`,
+        }),
+      };
+
+      const stale = (staleTexts[lang] || staleTexts.en)(staleItems.length);
+
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: '📦 Consiglio Reseller: Giacenza Armadio',
-          body: `Hai ${staleItems.length} capi in vendita da oltre un mese. Un ribasso del 10% su Vinted o eBay riattiva subito l'algoritmo di visibilità!`,
+          title: stale.title,
+          body: stale.body,
           sound: true,
           data: { screen: 'inventory' },
         },
@@ -155,7 +207,7 @@ export async function sendTestNotification(): Promise<boolean> {
       },
     };
 
-    const notif = texts[lang] || texts.it;
+    const notif = texts[lang] || texts.en;
 
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -220,7 +272,7 @@ export async function sendDac7PushNotification(
       },
     };
 
-    const notif = dac7Texts[lang] || dac7Texts.it;
+    const notif = dac7Texts[lang] || dac7Texts.en;
 
     await Notifications.scheduleNotificationAsync({
       content: {
