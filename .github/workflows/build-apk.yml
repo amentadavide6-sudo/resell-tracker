@@ -56,34 +56,35 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.7.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.7.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.8.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.8.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.7-binaries
+          name: resell-tracker-v1.3.8-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.7
-          name: ResellTracker v1.3.7 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.8
+          name: ResellTracker v1.3.8 (APK + Google Play AAB Bundle)
           body: |
-            ### 📱 ResellTracker v1.3.7 Release - Smooth Float Confetti Celebration
+            ### 📱 ResellTracker v1.3.8 Release - Critical Crash Fix on "Segna come venduto"
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.7.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.7.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.8.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.8.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - ✨ **Coriandoli Più Soffici & Eleganti (3,4s)**: eliminata la comparsa improvvisa; i coriandoli sbocciano morbidamente con fade-in all'innesco, salgono con parabola dolce e scendono volteggiando con oscillazione orizzontale per 3,4 secondi rilassanti.
-            - 🔒 **Protezione Anti-Restart**: confermando più vendite in rapida successione, l'animazione attiva non scatta né ricomincia da capo bruscamente, ma scorre indisturbata e fluida.
+            - 🛠️ **Risolto Crash Crash su "Segna come venduto"**: eliminata la violazione delle Regole degli Hook di React in `MarkSoldModal` (il hook `useMemo` era posizionato dopo un early return condizionale, provocando la chiusura forzata dell'app su Android al tocco del pulsante).
+            - 🛡️ **Guarda di Montaggio Condizionale**: protetto il rendering del modal con un controllo attivo su `itemToSell`, assicurando un'apertura e chiusura ultra-stabile e fulminea.
+            - ✨ **Coriandoli Fluctuanti (3,4s) con Fade-in**: animazione celebrativa rilassante con protezione anti-restart.
             - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.7.apk
-            build-output/resell-tracker-v1.3.7.aab
+            build-output/resell-tracker-v1.3.8.apk
+            build-output/resell-tracker-v1.3.8.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

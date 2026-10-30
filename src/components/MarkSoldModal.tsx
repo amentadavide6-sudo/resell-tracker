@@ -48,6 +48,8 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
   const [soldQuantity, setSoldQuantity] = useState<number>(1);
   const isPro = isProUser();
 
+  const allPlatforms = useMemo(() => getAllAvailablePlatforms(), [visible]);
+
   const totalAvailableQty = item?.quantity && item.quantity > 0 ? item.quantity : 1;
   const activePlatforms = useMemo(() => {
     if (!item) return [];
@@ -65,7 +67,6 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
 
   if (!item) return null;
 
-  const allPlatforms = useMemo(() => getAllAvailablePlatforms(), []);
   const currentPlatformConfig = allPlatforms.find((p) => p.id === soldPlatform) || allPlatforms[0];
   const numericUnitPrice = parseFloat(actualPrice.replace(',', '.')) || 0;
 

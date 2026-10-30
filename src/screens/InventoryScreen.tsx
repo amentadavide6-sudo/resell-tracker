@@ -841,23 +841,27 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
       />
 
       {/* Mark As Sold Custom Modal */}
-      <MarkSoldModal
-        visible={itemToSell !== null}
-        item={itemToSell}
-        onClose={() => setItemToSell(null)}
-        onSuccess={() => {
-          setItemToSell(null);
-          loadData();
-          setShowConfetti(true);
-        }}
-      />
+      {itemToSell && (
+        <MarkSoldModal
+          visible={itemToSell !== null}
+          item={itemToSell}
+          onClose={() => setItemToSell(null)}
+          onSuccess={() => {
+            setItemToSell(null);
+            loadData();
+            setShowConfetti(true);
+          }}
+        />
+      )}
 
       {/* Social Proof Story Card Modal */}
-      <SocialProofModal
-        visible={socialProofItem !== null}
-        item={socialProofItem}
-        onClose={() => setSocialProofItem(null)}
-      />
+      {socialProofItem && (
+        <SocialProofModal
+          visible={socialProofItem !== null}
+          item={socialProofItem}
+          onClose={() => setSocialProofItem(null)}
+        />
+      )}
 
       {/* Confetti Cannon Celebration on Sold */}
       <ConfettiCannon
