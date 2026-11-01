@@ -17,9 +17,8 @@ import { setProUser, isProUser } from './proManager';
  * 'pro'
  */
 
-// Replace with your RevenueCat Google Public API Key from:
-// https://app.revenuecat.com/ -> Project Settings -> API Keys -> Public app-specific API keys
-export const REVENUECAT_GOOGLE_API_KEY = 'goog_reselltracker_prod_placeholder';
+// Official RevenueCat Google Public API Key for ResellTracker
+export const REVENUECAT_GOOGLE_API_KEY = 'goog_QJXQUJHazInfFziDvjpXJlVEngz';
 
 export const ENTITLEMENT_ID = 'pro';
 export const SKU_PRO_LIFETIME = 'reselltracker_pro_lifetime';
@@ -67,6 +66,23 @@ export const PLAN_CONFIGS: Record<PurchasePlanId, PlanConfig> = {
 
 let isIapInitialized = false;
 
+/**
+ * Safely verify if customer has active Pro entitlement regardless of exact identifier or casing.
+ */
+export function checkHasProEntitlement(customerInfo?: CustomerInfo | null): boolean {
+  if (!customerInfo || !customerInfo.entitlements || !customerInfo.entitlements.active) {
+    return false;
+  }
+  const active = customerInfo.entitlements.active;
+  return (
+    typeof active[ENTITLEMENT_ID] !== 'undefined' ||
+    typeof active['pro'] !== 'undefined' ||
+    typeof active['reselltracker_pro'] !== 'undefined' ||
+    typeof active['ResellTracker Pro'] !== 'undefined' ||
+    Object.keys(active).length > 0
+  );
+}
+
 function isLiveKeyConfigured(): boolean {
   return (
     typeof REVENUECAT_GOOGLE_API_KEY === 'string' &&
@@ -89,13 +105,13 @@ export async function initIapConnection(): Promise<boolean> {
 
       // Automatically sync active subscription status
       Purchases.addCustomerInfoUpdateListener((customerInfo: CustomerInfo) => {
-        const hasPro = typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
+        const hasPro = checkHasProEntitlement(customerInfo);
         setProUser(hasPro);
       });
 
       // Check current customer info on boot
       const info = await Purchases.getCustomerInfo();
-      const hasPro = typeof info.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
+      const hasPro = checkHasProEntitlement(info);
       if (hasPro) {
         setProUser(true);
       }
@@ -148,8 +164,7 @@ export async function purchaseProProduct(planId: PurchasePlanId = 'lifetime'): P
 
       if (packageToBuy) {
         const { customerInfo } = await Purchases.purchasePackage(packageToBuy);
-        const isEntitled =
-          typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
+        const isEntitled = checkHasProEntitlement(customerInfo);
         if (isEntitled) {
           setProUser(true);
           return true;
@@ -162,8 +177,7 @@ export async function purchaseProProduct(planId: PurchasePlanId = 'lifetime'): P
         );
         if (products.length > 0) {
           const { customerInfo } = await Purchases.purchaseStoreProduct(products[0]);
-          const isEntitled =
-            typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
+          const isEntitled = checkHasProEntitlement(customerInfo);
           if (isEntitled) {
             setProUser(true);
             return true;
@@ -195,8 +209,7 @@ export async function restoreProPurchases(): Promise<boolean> {
   try {
     if (Platform.OS === 'android' && isLiveKeyConfigured()) {
       const customerInfo = await Purchases.restorePurchases();
-      const isEntitled =
-        typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
+      const isEntitled = checkHasProEntitlement(customerInfo);
       if (isEntitled) {
         setProUser(true);
         return true;

@@ -56,36 +56,35 @@ jobs:
       - name: 🏷️ Collect Release Binaries
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.9.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.9.aab
+          cp android/app/build/outputs/apk/release/app-release.apk build-output/resell-tracker-v1.3.10.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-output/resell-tracker-v1.3.10.aab
 
       - name: 📤 Upload Binaries Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: resell-tracker-v1.3.9-binaries
+          name: resell-tracker-v1.3.10-binaries
           path: build-output/*
           retention-days: 30
 
       - name: 🚀 Release APK & AAB to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.9
-          name: ResellTracker v1.3.9 (APK + Google Play AAB Bundle)
+          tag_name: v1.3.10
+          name: ResellTracker v1.3.10 (Live RevenueCat Billing & Google Play AAB)
           body: |
-            ### 📱 ResellTracker v1.3.9 Release - Universal International English Fallback & Multilingual Smart Push
+            ### 📱 ResellTracker v1.3.10 Release - Official Google Play Billing & RevenueCat Integration
 
             #### 📦 File inclusi:
-            - **`resell-tracker-v1.3.9.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
-            - **`resell-tracker-v1.3.9.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
+            - **`resell-tracker-v1.3.10.aab`**: Android App Bundle per **Google Play Console** (Closed Testing & Produzione).
+            - **`resell-tracker-v1.3.10.apk`**: Pacchetto APK installabile direttamente su qualsiasi smartphone Android.
 
             #### 🚀 Novità e Risoluzioni:
-            - 🌍 **Fallback Internazionale in Inglese**: gli utenti che scaricano l'app da paesi come Polonia, Kazakistan, Cina, Brasile o qualsiasi nazione la cui lingua non sia esplicitamente tra le 5 supportate, vedranno automaticamente l'app in **Inglese** (invece che in italiano).
-            - 🇮🇹 **Italiano Garantito al 100%**: per tutti i dispositivi in lingua italiana (o che scelgono Italiano nelle Impostazioni), l'app resta nativamente in italiano.
-            - 🔔 **Notifiche Push Intelligenti Multilingue**: i promemoria domenicali di riepilogo vendite e gli avvisi di giacenza armadio vengono ora generati nella lingua attiva dell'utente con fallback in inglese.
-            - 📊 **Pro Insights & Giorni della Settimana Tradotti**: il "Giorno d'Oro" e i livelli del Reseller Club si traducono dinamicamente in tutte le 5 lingue.
-            - 🛡️ **Firma Ufficiale Google Play**: Entrambi i binari sono firmati con il Keystore di produzione ufficiale.
+            - 💳 **Integrazione Google Play Billing Ufficiale**: collegata la chiave pubblica di produzione RevenueCat per la gestione acquisti in-app (Lifetime 5,99 € e Mensile 1,99 €).
+            - 🧪 **Licence Testing con Carta Fittizia (0,00 €)**: i tester del gruppo `reselltracker-testers@googlegroups.com` possono collaudare l'acquisto Pro con il metodo di pagamento di test a costo zero.
+            - 🛡️ **Rilevamento Intelligente Entitlement**: sblocco Pro difensivo automatico compatibile con tutti gli identificatori RevenueCat.
+            - 🔒 **Firma Ufficiale Google Play**: Binari firmati con il Keystore di produzione ufficiale.
           files: |
-            build-output/resell-tracker-v1.3.9.apk
-            build-output/resell-tracker-v1.3.9.aab
+            build-output/resell-tracker-v1.3.10.apk
+            build-output/resell-tracker-v1.3.10.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
