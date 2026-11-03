@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardTypeOptions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface CustomInputProps {
   label: string;
@@ -31,9 +32,10 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   inputRef,
 }) => {
   const { colors, isDark } = useTheme();
+  const { currencySymbol } = useCurrency();
 
   const effectivePlaceholder = placeholder !== undefined ? placeholder : (isCurrency ? '0.00' : '');
-  const effectivePrefix = prefix !== undefined ? prefix : (isCurrency ? '€' : undefined);
+  const effectivePrefix = prefix !== undefined ? prefix : (isCurrency ? currencySymbol : undefined);
   const effectiveKeyboardType = keyboardType || (isCurrency ? 'decimal-pad' : 'default');
 
   const handleQuickAdd = (amount: number) => {
@@ -129,7 +131,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
                   isDark && { color: '#94A3B8' },
                 ]}
               >
-                +{amt}€
+                +{amt}{currencySymbol}
               </Text>
             </TouchableOpacity>
           ))}

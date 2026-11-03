@@ -399,7 +399,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             {/* Input final price */}
             <View style={styles.inputSection}>
               <CustomInput
-                label={totalAvailableQty > 1 ? "Prezzo Finale di Vendita Unitario (€)" : "Prezzo di Vendita Finale Effettivo (€)"}
+                label={totalAvailableQty > 1 ? "Prezzo Finale di Vendita Unitario" : "Prezzo di Vendita Finale Effettivo"}
                 subtitle="Se hai fatto uno sconto o accettato un'offerta, modificalo qui"
                 value={actualPrice}
                 onChangeValue={setActualPrice}

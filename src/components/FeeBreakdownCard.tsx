@@ -202,7 +202,7 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
           <View style={styles.detailRow}>
             <Text style={[styles.detailTextSub, { color: colors.textSecondary }]}>Protezione pagata dall'acquirente</Text>
             <Text style={[styles.detailValueSub, { color: colors.textSecondary }]}>
-              {result.buyerProtectionFee > 0 ? `+${formatEuro(result.buyerProtectionFee)}` : '0,00 €'}
+              {result.buyerProtectionFee > 0 ? `+${formatEuro(result.buyerProtectionFee)}` : formatEuro(0)}
             </Text>
           </View>
 

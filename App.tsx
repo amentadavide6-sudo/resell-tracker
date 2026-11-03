@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LanguageProvider, useTranslation } from './src/i18n';
+import { CurrencyProvider } from './src/context/CurrencyContext';
 import { AlertProvider, useAlert } from './src/context/AlertContext';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { InventoryScreen } from './src/screens/InventoryScreen';
@@ -209,7 +210,9 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <LanguageProvider>
-          <MainApp />
+          <CurrencyProvider>
+            <MainApp />
+          </CurrencyProvider>
         </LanguageProvider>
       </ThemeProvider>
     </SafeAreaProvider>

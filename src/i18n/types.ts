@@ -311,6 +311,8 @@ export interface TranslationDictionary {
     step3Desc: string;
     step4Title: string;
     step4Desc: string;
+    step5Title: string;
+    step5Desc: string;
     next: string;
     skip: string;
     finish: string;

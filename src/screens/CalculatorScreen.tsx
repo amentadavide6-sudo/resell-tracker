@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
+import { useCurrency } from '../context/CurrencyContext';
 import { useAlert } from '../context/AlertContext';
 import { PlatformSelector } from '../components/PlatformSelector';
 import { CustomInput } from '../components/CustomInput';
@@ -36,6 +37,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { strings, language } = useTranslation();
+  const { currencySymbol } = useCurrency();
   const { showAlert } = useAlert();
 
   const [availablePlatforms, setAvailablePlatforms] = useState<PlatformConfig[]>(() =>
@@ -103,7 +105,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
 
     showAlert({
       title: strings.common.success,
-      message: `"${trimmed}" (${feePct}% + ${fixFee.toFixed(2)}€) ${strings.calculator.customPlatformsListTitle.toLowerCase()}`,
+      message: `"${trimmed}" (${feePct}% + ${fixFee.toFixed(2)}${currencySymbol}) ${strings.calculator.customPlatformsListTitle.toLowerCase()}`,
       type: 'success',
     });
   };
@@ -298,7 +300,8 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                 {isFeeModified
                   ? strings.calculator.feeModifiedDesc
                       .replace('{defaultPct}', selectedPlatform.sellerFeePercent.toString())
-                      .replace('{defaultFix}', selectedPlatform.sellerFixedFee.toFixed(2))
+                      .replace('{defaultFix}€', `${selectedPlatform.sellerFixedFee.toFixed(2)}${currencySymbol}`)
+                      .replace('{defaultFix}', `${selectedPlatform.sellerFixedFee.toFixed(2)}${currencySymbol}`)
                   : strings.calculator.platformFeeSubtitle}
               </Text>
 
@@ -314,7 +317,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                 </View>
                 <View style={styles.col}>
                   <CustomInput
-                    label={strings.calculator.customFixedFee}
+                    label={`${strings.calculator.customFixedFee} (${currencySymbol})`}
                     value={feeFixed}
                     onChangeValue={setFeeFixed}
                     placeholder={selectedPlatform.sellerFixedFee.toString()}
@@ -355,7 +358,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                 </View>
                 <View style={styles.col}>
                   <CustomInput
-                    label={strings.calculator.customFixedFee}
+                    label={`${strings.calculator.customFixedFee} (${currencySymbol})`}
                     value={customFixed}
                     onChangeValue={setCustomFixed}
                     placeholder="0.50"
@@ -392,7 +395,7 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
                           {cp.name}
                         </Text>
                         <Text style={[styles.savedCustomFee, isDark && { color: '#C7D2FE' }]}>
-                          ({cp.sellerFeePercent}% + {cp.sellerFixedFee.toFixed(2)}€)
+                          ({cp.sellerFeePercent}% + {cp.sellerFixedFee.toFixed(2)}{currencySymbol})
                         </Text>
                       </View>
                       <View style={styles.savedCustomActions}>

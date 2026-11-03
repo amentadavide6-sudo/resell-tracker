@@ -22,6 +22,7 @@ import { addXP, XP_REWARDS } from '../services/gamification';
 import { getProPassInfo, FREE_TIER_ITEM_LIMIT } from '../services/proManager';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
+import { useCurrency } from '../context/CurrencyContext';
 import { useAlert } from '../context/AlertContext';
 import { getAllAvailablePlatforms } from '../services/customPlatformManager';
 import { InventoryItem, ItemStatus, PlatformConfig, PlatformId, PlatformFeeOverrides } from '../types';
@@ -49,6 +50,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const { strings, language } = useTranslation();
+  const { currencySymbol } = useCurrency();
   const { showAlert } = useAlert();
   const scrollViewRef = useRef<any>(null);
   const titleInputRef = useRef<any>(null);
@@ -499,7 +501,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                     </View>
                     <View style={styles.col}>
                       <CustomInput
-                        label={`€ Fissa (${activePlatformConfig.name})`}
+                        label={`${currencySymbol} Fissa (${activePlatformConfig.name})`}
                         value={curFixed}
                         onChangeValue={(v) => handleUpdatePlatformFee(activeFeeTab, 'fixed', v)}
                         placeholder={activePlatformConfig.sellerFixedFee.toString()}

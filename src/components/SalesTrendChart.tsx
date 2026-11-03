@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
+import { useCurrency } from '../context/CurrencyContext';
 import { MonthlyStat } from '../services/analytics';
 import { formatEuro } from '../services/feeCalculator';
 import { PlatformConfig } from '../types';
@@ -26,6 +27,7 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const { strings, t, language } = useTranslation();
+  const { currencySymbol } = useCurrency();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('profit');
 
   // Display from the first recorded sale onwards, keeping at most the last 6 months once history grows
@@ -156,8 +158,8 @@ export const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
 
   const formatMetricValue = (val: number) => {
     if (selectedMetric === 'count') return `${Math.round(val)}`;
-    if (val >= 1000) return `€${(val / 1000).toFixed(1)}k`;
-    return `€${Math.round(val)}`;
+    if (val >= 1000) return `${currencySymbol}${(val / 1000).toFixed(1)}k`;
+    return `${currencySymbol}${Math.round(val)}`;
   };
 
   // Grid guides

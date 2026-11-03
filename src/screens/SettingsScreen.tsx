@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeMode, AccentTheme } from '../context/ThemeContext';
 import { useTranslation, LanguageMode } from '../i18n';
+import { useCurrency } from '../context/CurrencyContext';
 import { useAlert } from '../context/AlertContext';
 import { exportBackup, importBackup } from '../services/backup';
 import { addXP, XP_REWARDS, getUserXP, getLevelInfo } from '../services/gamification';
@@ -107,6 +108,7 @@ export const SettingsScreen: React.FC<{
   const insets = useSafeAreaInsets();
   const { themeMode, setThemeMode, accentTheme, setAccentTheme, colors, isDark } = useTheme();
   const { strings, languageMode, setLanguageMode } = useTranslation();
+  const { currencyPreference, setCurrencyPreference } = useCurrency();
   const { showAlert } = useAlert();
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -114,7 +116,6 @@ export const SettingsScreen: React.FC<{
   const [isPro, setIsPro] = useState<boolean>(() => isProUser());
   const [notificationsActive, setNotificationsActive] = useState<boolean>(() => areNotificationsEnabled());
   const [fiscalMode, setFiscalModeState] = useState<FiscalSettingMode>(() => getSavedFiscalMode());
-  const [currencyPref, setCurrencyPrefState] = useState<CurrencyPreference>(() => getSavedCurrencyPreference());
 
   const handleSelectFiscalMode = (mode: FiscalSettingMode) => {
     setFiscalModeState(mode);
@@ -122,7 +123,6 @@ export const SettingsScreen: React.FC<{
   };
 
   const handleSelectCurrency = (pref: CurrencyPreference) => {
-    setCurrencyPrefState(pref);
     setCurrencyPreference(pref);
   };
 
@@ -592,7 +592,7 @@ export const SettingsScreen: React.FC<{
               { id: 'USD' as const, label: strings.settings.currencyUsd },
               { id: 'GBP' as const, label: strings.settings.currencyGbp },
             ].map((item) => {
-              const isSelected = currencyPref === item.id;
+              const isSelected = currencyPreference === item.id;
               return (
                 <TouchableOpacity
                   key={item.id}
