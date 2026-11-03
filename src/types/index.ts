@@ -1,4 +1,13 @@
-export type PlatformId = 'vinted' | 'ebay' | 'subito' | 'wallapop' | 'depop' | 'custom' | (string & {});
+export type PlatformId =
+  | 'vinted'
+  | 'ebay'
+  | 'subito'
+  | 'wallapop'
+  | 'depop'
+  | 'poshmark'
+  | 'mercari'
+  | 'custom'
+  | (string & {});
 
 export type ItemStatus = 'listed' | 'sold' | 'shipped' | 'draft';
 

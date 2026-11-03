@@ -3,6 +3,7 @@ import { calculateResellProfit } from './feeCalculator';
 import { PLATFORMS } from '../constants/platforms';
 import { getAllAvailablePlatforms } from './customPlatformManager';
 import { InventoryItem, PlatformId } from '../types';
+import { getActiveFiscalRegime, FiscalRegime, getActiveCurrencySymbol } from './fiscalManager';
 
 export interface PlatformStat {
   platformId: PlatformId;
@@ -29,18 +30,22 @@ export interface MonthlyStat {
   platformBreakdown: Record<string, MonthlyPlatformBreakdown>;
 }
 
-export interface Dac7Stat {
+export interface FiscalStat {
+  regime: FiscalRegime;
   year: number;
   soldCount: number;
-  maxSales: number; // 30
+  maxSales: number | null; // 30 for DAC7/HMRC, null for US 1099-K
   grossRevenue: number;
-  maxRevenue: number; // 2000 €
+  maxRevenue: number; // 2000 € (DAC7), 5000 $ (US 1099-K), 1000 £ (UK HMRC)
   salesProgress: number; // 0 to 1
   revenueProgress: number; // 0 to 1
   remainingSales: number;
   remainingRevenue: number;
   status: 'safe' | 'warning' | 'exceeded';
+  currencySymbol: string;
 }
+
+export type Dac7Stat = FiscalStat;
 
 export interface AnalyticsSummary {
   totalSoldItems: number;
@@ -146,23 +151,57 @@ export function computeAnalytics(): AnalyticsSummary {
     }
   });
 
-  // DAC7 calculation
-  const dac7SalesProgress = Math.min(1, dac7SoldCount / 30);
-  const dac7RevenueProgress = Math.min(1, dac7GrossRevenue / 2000);
-  const isDac7Exceeded = dac7SoldCount >= 30 || dac7GrossRevenue >= 2000;
-  const isDac7Warning = !isDac7Exceeded && (dac7SoldCount >= 24 || dac7GrossRevenue >= 1600);
+  // Fiscal / DAC7 calculation according to active regional regime
+  const fiscalRegime = getActiveFiscalRegime();
+  const currencySymbol = getActiveCurrencySymbol();
 
-  const dac7: Dac7Stat = {
+  let maxSales: number | null = 30;
+  let maxRevenue = 2000;
+  let warningSales = 24;
+  let warningRevenue = 1600;
+
+  if (fiscalRegime === 'us_1099k') {
+    maxSales = null; // US 1099-K is based purely on dollar threshold
+    maxRevenue = 5000; // Federal transition threshold
+    warningSales = 0;
+    warningRevenue = 4000;
+  } else if (fiscalRegime === 'uk_hmrc') {
+    maxSales = 30;
+    maxRevenue = 1000; // UK Trading Allowance threshold
+    warningSales = 24;
+    warningRevenue = 800;
+  } else if (fiscalRegime === 'none') {
+    maxSales = null;
+    maxRevenue = 0;
+    warningSales = 0;
+    warningRevenue = 0;
+  }
+
+  const dac7SalesProgress = maxSales ? Math.min(1, dac7SoldCount / maxSales) : 0;
+  const dac7RevenueProgress = maxRevenue > 0 ? Math.min(1, dac7GrossRevenue / maxRevenue) : 0;
+
+  const isDac7Exceeded =
+    fiscalRegime !== 'none' &&
+    ((maxSales !== null && dac7SoldCount >= maxSales) || (maxRevenue > 0 && dac7GrossRevenue >= maxRevenue));
+
+  const isDac7Warning =
+    fiscalRegime !== 'none' &&
+    !isDac7Exceeded &&
+    ((maxSales !== null && dac7SoldCount >= warningSales) || (maxRevenue > 0 && dac7GrossRevenue >= warningRevenue));
+
+  const dac7: FiscalStat = {
+    regime: fiscalRegime,
     year: currentYear,
     soldCount: dac7SoldCount,
-    maxSales: 30,
+    maxSales,
     grossRevenue: Math.round(dac7GrossRevenue * 100) / 100,
-    maxRevenue: 2000,
+    maxRevenue,
     salesProgress: dac7SalesProgress,
     revenueProgress: dac7RevenueProgress,
-    remainingSales: Math.max(0, 30 - dac7SoldCount),
-    remainingRevenue: Math.max(0, Math.round((2000 - dac7GrossRevenue) * 100) / 100),
+    remainingSales: maxSales !== null ? Math.max(0, maxSales - dac7SoldCount) : 0,
+    remainingRevenue: maxRevenue > 0 ? Math.max(0, Math.round((maxRevenue - dac7GrossRevenue) * 100) / 100) : 0,
     status: isDac7Exceeded ? 'exceeded' : isDac7Warning ? 'warning' : 'safe',
+    currencySymbol,
   };
 
   // Calculate platform statistics

@@ -1,5 +1,6 @@
 import { CalculationInput, CalculationResult, PlatformConfig } from '../types';
 import { getPlatformById } from './customPlatformManager';
+import { getActiveCurrencySymbol } from './fiscalManager';
 
 export function calculateResellProfit(input: CalculationInput): CalculationResult {
   const {
@@ -88,10 +89,32 @@ export function roundCurrency(val: number): number {
   return Math.round((val + Number.EPSILON) * 100) / 100;
 }
 
-export function formatEuro(val: number): string {
+export function formatCurrency(val: number, customSymbol?: string): string {
   const safeVal = typeof val === 'number' && !isNaN(val) ? val : 0;
+  const symbol = customSymbol || getActiveCurrencySymbol();
+
+  if (symbol === '$') {
+    return `$${safeVal.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+  if (symbol === '£') {
+    return `£${safeVal.toLocaleString('en-GB', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+
   return `${safeVal.toLocaleString('it-IT', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} €`;
+}
+
+/**
+ * Backwards-compatible alias for formatCurrency
+ */
+export function formatEuro(val: number): string {
+  return formatCurrency(val);
 }

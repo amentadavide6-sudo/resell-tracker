@@ -22,6 +22,14 @@ import {
   scheduleSmartNotifications,
   sendTestNotification,
 } from '../services/notifications';
+import {
+  getSavedFiscalMode,
+  setFiscalMode,
+  FiscalSettingMode,
+  getSavedCurrencyPreference,
+  setCurrencyPreference,
+  CurrencyPreference,
+} from '../services/fiscalManager';
 
 interface FAQItem {
   question: string;
@@ -105,6 +113,18 @@ export const SettingsScreen: React.FC<{
   const [isImporting, setIsImporting] = useState(false);
   const [isPro, setIsPro] = useState<boolean>(() => isProUser());
   const [notificationsActive, setNotificationsActive] = useState<boolean>(() => areNotificationsEnabled());
+  const [fiscalMode, setFiscalModeState] = useState<FiscalSettingMode>(() => getSavedFiscalMode());
+  const [currencyPref, setCurrencyPrefState] = useState<CurrencyPreference>(() => getSavedCurrencyPreference());
+
+  const handleSelectFiscalMode = (mode: FiscalSettingMode) => {
+    setFiscalModeState(mode);
+    setFiscalMode(mode);
+  };
+
+  const handleSelectCurrency = (pref: CurrencyPreference) => {
+    setCurrencyPrefState(pref);
+    setCurrencyPreference(pref);
+  };
 
   const userLevel = useMemo(() => getLevelInfo(getUserXP()), []);
   const currentLevel = userLevel.levelNumber;
@@ -493,6 +513,104 @@ export const SettingsScreen: React.FC<{
                       : isLockedForLevel
                       ? `Livello ${theme.requiredLevel} XP`
                       : 'Sbloccato ✨'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Fiscal Regime Monitor Card */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={styles.cardHeaderRow}>
+            <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.settings.fiscalRegimeTitle}</Text>
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            {strings.settings.fiscalRegimeDesc}
+          </Text>
+
+          <View style={styles.langGrid}>
+            {[
+              { id: 'auto' as const, label: strings.settings.fiscalAuto, flag: '🌐' },
+              { id: 'eu_dac7' as const, label: strings.settings.fiscalEu, flag: '🇪🇺' },
+              { id: 'us_1099k' as const, label: strings.settings.fiscalUs, flag: '🇺🇸' },
+              { id: 'uk_hmrc' as const, label: strings.settings.fiscalUk, flag: '🇬🇧' },
+              { id: 'none' as const, label: strings.settings.fiscalNone, flag: '🚫' },
+            ].map((item) => {
+              const isSelected = fiscalMode === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.langChip,
+                    {
+                      backgroundColor: isDark ? '#111827' : '#F1F5F9',
+                      borderColor: isSelected ? colors.primary : (isDark ? '#1F2937' : '#E2E8F0'),
+                    },
+                    isSelected && {
+                      backgroundColor: isDark ? '#1E1B4B' : '#EEF2FF',
+                      borderWidth: 1.5,
+                    },
+                  ]}
+                  onPress={() => handleSelectFiscalMode(item.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.langFlag}>{item.flag}</Text>
+                  <Text
+                    style={[
+                      styles.langText,
+                      { color: isSelected ? colors.primary : colors.textPrimary },
+                      isSelected && { fontWeight: '800' },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                  {isSelected && (
+                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} style={{ marginLeft: 'auto' }} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Currency Preference Card */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={styles.cardHeaderRow}>
+            <Ionicons name="cash-outline" size={20} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.settings.currencyTitle}</Text>
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            {strings.settings.currencyDesc}
+          </Text>
+
+          <View style={[styles.themePillsRow, { backgroundColor: isDark ? '#111827' : '#F1F5F9' }]}>
+            {[
+              { id: 'auto' as const, label: strings.settings.currencyAuto },
+              { id: 'EUR' as const, label: strings.settings.currencyEur },
+              { id: 'USD' as const, label: strings.settings.currencyUsd },
+              { id: 'GBP' as const, label: strings.settings.currencyGbp },
+            ].map((item) => {
+              const isSelected = currencyPref === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.themePill,
+                    isSelected && { backgroundColor: colors.card, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
+                  ]}
+                  onPress={() => handleSelectCurrency(item.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.themePillText,
+                      { color: isSelected ? colors.textPrimary : colors.textMuted },
+                      isSelected && { fontWeight: '700' },
+                    ]}
+                  >
+                    {item.label}
                   </Text>
                 </TouchableOpacity>
               );

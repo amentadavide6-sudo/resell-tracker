@@ -101,19 +101,22 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
         markItemAsSold(item.id, finalUnitPrice, soldPlatform);
       }
 
-      // Check DAC7 threshold changes
+      // Check Fiscal / DAC7 threshold changes
       const newAnalytics = getAnalyticsData();
+      const fiscalRegime = newAnalytics.dac7.regime;
       const status = newAnalytics.dac7.status;
       const crossedThreshold =
+        fiscalRegime !== 'none' &&
         status !== prevAnalytics.dac7.status &&
         (status === 'warning' || status === 'exceeded');
 
-      if (crossedThreshold && (status === 'warning' || status === 'exceeded')) {
+      if (crossedThreshold) {
         // Trigger push notification immediately
         sendDac7PushNotification(
           status,
           newAnalytics.dac7.soldCount,
-          newAnalytics.dac7.grossRevenue
+          newAnalytics.dac7.grossRevenue,
+          fiscalRegime
         );
       }
 
@@ -132,12 +135,29 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
 
       if (crossedThreshold) {
         const isExceeded = newAnalytics.dac7.status === 'exceeded';
-        showAlert({
-          title: isExceeded ? strings.dac7Alert.exceededTitle : strings.dac7Alert.warningTitle,
-          message: (isExceeded ? strings.dac7Alert.exceededMessage : strings.dac7Alert.warningMessage)
+        let alertTitle = '';
+        let alertMessage = '';
+
+        if (fiscalRegime === 'us_1099k') {
+          alertTitle = isExceeded ? strings.dac7Alert.irsExceededTitle : strings.dac7Alert.irsWarningTitle;
+          alertMessage = (isExceeded ? strings.dac7Alert.irsExceededMessage : strings.dac7Alert.irsWarningMessage)
+            .replace('{revenue}', newAnalytics.dac7.grossRevenue.toFixed(2));
+        } else if (fiscalRegime === 'uk_hmrc') {
+          alertTitle = isExceeded ? strings.dac7Alert.hmrcExceededTitle : strings.dac7Alert.hmrcWarningTitle;
+          alertMessage = (isExceeded ? strings.dac7Alert.hmrcExceededMessage : strings.dac7Alert.hmrcWarningMessage)
+            .replace('{count}', newAnalytics.dac7.soldCount.toString())
+            .replace('{revenue}', newAnalytics.dac7.grossRevenue.toFixed(2));
+        } else {
+          alertTitle = isExceeded ? strings.dac7Alert.exceededTitle : strings.dac7Alert.warningTitle;
+          alertMessage = (isExceeded ? strings.dac7Alert.exceededMessage : strings.dac7Alert.warningMessage)
             .replace('{count}', newAnalytics.dac7.soldCount.toString())
             .replace('{revenue}', newAnalytics.dac7.grossRevenue.toFixed(2))
-            .replace('{year}', new Date().getFullYear().toString()),
+            .replace('{year}', new Date().getFullYear().toString());
+        }
+
+        showAlert({
+          title: alertTitle,
+          message: alertMessage,
           type: 'info',
           buttons: [
             {

@@ -194,156 +194,168 @@ export const StatsScreen: React.FC<{
           </View>
         </View>
 
-        {/* DAC7 European Fiscal Monitor Card */}
-        <View
-          style={[
-            styles.dac7Card,
-            { backgroundColor: colors.card, borderColor: colors.cardBorder },
-            stats.dac7.status === 'warning' && { borderColor: '#F59E0B' },
-            stats.dac7.status === 'exceeded' && { borderColor: '#6366F1' },
-          ]}
-        >
-          <View style={styles.dac7HeaderRow}>
-            <View style={styles.dac7TitleGroup}>
+        {/* Adaptive Fiscal Monitor Card (EU DAC7 / US 1099-K / UK HMRC) */}
+        {stats.dac7.regime !== 'none' && (
+          <View
+            style={[
+              styles.dac7Card,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+              stats.dac7.status === 'warning' && { borderColor: '#F59E0B' },
+              stats.dac7.status === 'exceeded' && { borderColor: '#6366F1' },
+            ]}
+          >
+            <View style={styles.dac7HeaderRow}>
+              <View style={styles.dac7TitleGroup}>
+                <View
+                  style={[
+                    styles.dac7IconWrap,
+                    {
+                      backgroundColor:
+                        stats.dac7.status === 'safe'
+                          ? (isDark ? '#064E3B' : '#ECFDF5')
+                          : stats.dac7.status === 'warning'
+                          ? (isDark ? '#451A03' : '#FFFBEB')
+                          : (isDark ? '#312E81' : '#EEF2FF'),
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={
+                      stats.dac7.status === 'safe'
+                        ? 'shield-checkmark'
+                        : stats.dac7.status === 'warning'
+                        ? 'alert-circle'
+                        : 'document-text'
+                    }
+                    size={20}
+                    color={
+                      stats.dac7.status === 'safe'
+                        ? '#10B981'
+                        : stats.dac7.status === 'warning'
+                        ? '#F59E0B'
+                        : '#6366F1'
+                    }
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.dac7BadgeTitle, { color: colors.textSecondary }]}>
+                    {stats.dac7.regime === 'us_1099k'
+                      ? t('stats.irs1099Header', { year: stats.dac7.year })
+                      : stats.dac7.regime === 'uk_hmrc'
+                      ? t('stats.hmrcHeader', { year: stats.dac7.year })
+                      : t('stats.dac7DirectiveHeader', { year: stats.dac7.year })}
+                  </Text>
+                  <Text style={[styles.dac7MainTitle, { color: colors.textPrimary }]}>
+                    {stats.dac7.status === 'safe'
+                      ? strings.stats.dac7StatusBelow
+                      : stats.dac7.status === 'warning'
+                      ? strings.stats.dac7StatusNear
+                      : strings.stats.dac7StatusOver}
+                  </Text>
+                </View>
+              </View>
+
               <View
                 style={[
-                  styles.dac7IconWrap,
+                  styles.dac7StatusPill,
                   {
                     backgroundColor:
                       stats.dac7.status === 'safe'
                         ? (isDark ? '#064E3B' : '#ECFDF5')
                         : stats.dac7.status === 'warning'
-                        ? (isDark ? '#451A03' : '#FFFBEB')
+                        ? (isDark ? '#451A03' : '#FEF3C7')
                         : (isDark ? '#312E81' : '#EEF2FF'),
                   },
                 ]}
               >
-                <Ionicons
-                  name={
-                    stats.dac7.status === 'safe'
-                      ? 'shield-checkmark'
-                      : stats.dac7.status === 'warning'
-                      ? 'alert-circle'
-                      : 'document-text'
-                  }
-                  size={20}
-                  color={
-                    stats.dac7.status === 'safe'
-                      ? '#10B981'
-                      : stats.dac7.status === 'warning'
-                      ? '#F59E0B'
-                      : '#6366F1'
-                  }
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.dac7BadgeTitle, { color: colors.textSecondary }]}>
-                  {t('stats.dac7DirectiveHeader', { year: stats.dac7.year })}
-                </Text>
-                <Text style={[styles.dac7MainTitle, { color: colors.textPrimary }]}>
-                  {stats.dac7.status === 'safe'
-                    ? strings.stats.dac7StatusBelow
-                    : stats.dac7.status === 'warning'
-                    ? strings.stats.dac7StatusNear
-                    : strings.stats.dac7StatusOver}
-                </Text>
-              </View>
-            </View>
-
-            <View
-              style={[
-                styles.dac7StatusPill,
-                {
-                  backgroundColor:
-                    stats.dac7.status === 'safe'
-                      ? (isDark ? '#064E3B' : '#ECFDF5')
-                      : stats.dac7.status === 'warning'
-                      ? (isDark ? '#451A03' : '#FEF3C7')
-                      : (isDark ? '#312E81' : '#EEF2FF'),
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.dac7StatusPillText,
-                  {
-                    color:
-                      stats.dac7.status === 'safe'
-                        ? '#059669'
-                        : stats.dac7.status === 'warning'
-                        ? '#D97706'
-                        : '#6366F1',
-                  },
-                ]}
-              >
-                {stats.dac7.status === 'safe' ? strings.stats.dac7Safe : stats.dac7.status === 'warning' ? strings.stats.dac7Warning : strings.stats.dac7Report}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={[styles.dac7Explanation, { color: colors.textSecondary }]}>
-            {strings.stats.dac7ExplanationText}
-          </Text>
-
-          {/* Progress Indicators */}
-          <View style={styles.dac7MetricsContainer}>
-            {/* Sales Count */}
-            <View style={styles.dac7MetricItem}>
-              <View style={styles.dac7MetricHeader}>
-                <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
-                  {strings.stats.dac7SalesLabel} <Text style={{ fontWeight: '800' }}>{stats.dac7.soldCount} / {stats.dac7.maxSales}</Text>
-                </Text>
-                <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
-                  {stats.dac7.remainingSales > 0 ? t('stats.dac7RemainingSales', { n: stats.dac7.remainingSales }) : strings.stats.dac7ThresholdReached}
-                </Text>
-              </View>
-              <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
-                <View
+                <Text
                   style={[
-                    styles.dac7Fill,
+                    styles.dac7StatusPillText,
                     {
-                      width: `${Math.round(stats.dac7.salesProgress * 100)}%`,
-                      backgroundColor:
-                        stats.dac7.salesProgress >= 1
-                          ? '#6366F1'
-                          : stats.dac7.salesProgress >= 0.8
-                          ? '#F59E0B'
-                          : '#10B981',
+                      color:
+                        stats.dac7.status === 'safe'
+                          ? '#059669'
+                          : stats.dac7.status === 'warning'
+                          ? '#D97706'
+                          : '#6366F1',
                     },
                   ]}
-                />
+                >
+                  {stats.dac7.status === 'safe' ? strings.stats.dac7Safe : stats.dac7.status === 'warning' ? strings.stats.dac7Warning : strings.stats.dac7Report}
+                </Text>
               </View>
             </View>
 
-            {/* Gross Revenue */}
-            <View style={styles.dac7MetricItem}>
-              <View style={styles.dac7MetricHeader}>
-                <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
-                  {strings.stats.dac7RevenueLabel} <Text style={{ fontWeight: '800' }}>{formatEuro(stats.dac7.grossRevenue)} / {formatEuro(stats.dac7.maxRevenue)}</Text>
-                </Text>
-                <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
-                  {stats.dac7.remainingRevenue > 0 ? t('stats.dac7RemainingRevenue', { amount: formatEuro(stats.dac7.remainingRevenue) }) : strings.stats.dac7ThresholdReached}
-                </Text>
-              </View>
-              <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
-                <View
-                  style={[
-                    styles.dac7Fill,
-                    {
-                      width: `${Math.round(stats.dac7.revenueProgress * 100)}%`,
-                      backgroundColor:
-                        stats.dac7.revenueProgress >= 1
-                          ? '#6366F1'
-                          : stats.dac7.revenueProgress >= 0.8
-                          ? '#F59E0B'
-                          : '#10B981',
-                    },
-                  ]}
-                />
+            <Text style={[styles.dac7Explanation, { color: colors.textSecondary }]}>
+              {stats.dac7.regime === 'us_1099k'
+                ? strings.stats.irs1099Explanation
+                : stats.dac7.regime === 'uk_hmrc'
+                ? strings.stats.hmrcExplanation
+                : strings.stats.dac7ExplanationText}
+            </Text>
+
+            {/* Progress Indicators */}
+            <View style={styles.dac7MetricsContainer}>
+              {/* Sales Count */}
+              {stats.dac7.maxSales !== null && (
+                <View style={styles.dac7MetricItem}>
+                  <View style={styles.dac7MetricHeader}>
+                    <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
+                      {strings.stats.dac7SalesLabel} <Text style={{ fontWeight: '800' }}>{stats.dac7.soldCount} / {stats.dac7.maxSales}</Text>
+                    </Text>
+                    <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
+                      {stats.dac7.remainingSales > 0 ? t('stats.dac7RemainingSales', { n: stats.dac7.remainingSales }) : strings.stats.dac7ThresholdReached}
+                    </Text>
+                  </View>
+                  <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
+                    <View
+                      style={[
+                        styles.dac7Fill,
+                        {
+                          width: `${Math.round(stats.dac7.salesProgress * 100)}%`,
+                          backgroundColor:
+                            stats.dac7.salesProgress >= 1
+                              ? '#6366F1'
+                              : stats.dac7.salesProgress >= 0.8
+                              ? '#F59E0B'
+                              : '#10B981',
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              )}
+
+              {/* Gross Revenue */}
+              <View style={styles.dac7MetricItem}>
+                <View style={styles.dac7MetricHeader}>
+                  <Text style={[styles.dac7MetricLabel, { color: colors.textPrimary }]}>
+                    {strings.stats.dac7RevenueLabel} <Text style={{ fontWeight: '800' }}>{formatEuro(stats.dac7.grossRevenue)} / {formatEuro(stats.dac7.maxRevenue)}</Text>
+                  </Text>
+                  <Text style={[styles.dac7MetricRemaining, { color: colors.textMuted }]}>
+                    {stats.dac7.remainingRevenue > 0 ? t('stats.dac7RemainingRevenue', { amount: formatEuro(stats.dac7.remainingRevenue) }) : strings.stats.dac7ThresholdReached}
+                  </Text>
+                </View>
+                <View style={[styles.dac7Track, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
+                  <View
+                    style={[
+                      styles.dac7Fill,
+                      {
+                        width: `${Math.round(stats.dac7.revenueProgress * 100)}%`,
+                        backgroundColor:
+                          stats.dac7.revenueProgress >= 1
+                            ? '#6366F1'
+                            : stats.dac7.revenueProgress >= 0.8
+                            ? '#F59E0B'
+                            : '#10B981',
+                      },
+                    ]}
+                  />
+                </View>
               </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* Best Platform Highlight Banner */}
         {stats.bestPlatform && stats.bestPlatform.soldCount > 0 && (

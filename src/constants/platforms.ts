@@ -72,6 +72,34 @@ export const PLATFORMS: PlatformConfig[] = [
     description: 'Commissione di vendita del 10% + fee di elaborazione pagamento (2.9% + 0.30€).'
   },
   {
+    id: 'poshmark',
+    name: 'Poshmark',
+    tagline: '20% fee standard',
+    color: '#8E1632',
+    badgeBg: '#FCE7EB',
+    sellerFeePercent: 20,
+    sellerFixedFee: 0,
+    buyerProtectionPercent: 0,
+    buyerProtectionFixed: 0,
+    paymentProcessingPercent: 0,
+    paymentProcessingFixed: 0,
+    description: 'La piattaforma #1 in USA per moda e streetwear. Commissione fissa del 20% su vendite >= $15.'
+  },
+  {
+    id: 'mercari',
+    name: 'Mercari',
+    tagline: '10% + 0.50$ vendita',
+    color: '#4B67F5',
+    badgeBg: '#EEF2FF',
+    sellerFeePercent: 10,
+    sellerFixedFee: 0.50,
+    buyerProtectionPercent: 0,
+    buyerProtectionFixed: 0,
+    paymentProcessingPercent: 2.9,
+    paymentProcessingFixed: 0.30,
+    description: 'Marketplace diffuso negli USA e in Giappone per moda, collezionismo, sneakers e tech.'
+  },
+  {
     id: 'custom',
     name: 'Personalizzato',
     tagline: 'Configura a piacere',

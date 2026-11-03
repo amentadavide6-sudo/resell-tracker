@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { getAllInventoryItems, getDatabase } from './db';
 import { getSavedLanguage } from '../i18n';
+import { getActiveFiscalRegime, FiscalRegime } from './fiscalManager';
 
 // Configure how notifications appear when app is in foreground
 Notifications.setNotificationHandler({
@@ -230,54 +231,77 @@ export async function sendTestNotification(): Promise<boolean> {
 export async function sendDac7PushNotification(
   status: 'warning' | 'exceeded',
   count: number,
-  revenue: number
+  revenue: number,
+  regime: FiscalRegime = getActiveFiscalRegime()
 ): Promise<void> {
   try {
+    if (regime === 'none') return;
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) return;
 
     const lang = getSavedLanguage();
     const isExceeded = status === 'exceeded';
 
-    const dac7Texts = {
-      it: {
-        exceededTitle: '📈 Traguardo Vendite & Direttiva DAC7',
-        warningTitle: 'ℹ️ Promemoria Direttiva DAC7',
-        exceededBody: `Hai raggiunto ${count} vendite o ${revenue.toFixed(2)} € quest'anno. Ti ricordiamo che le piattaforme trasmettono un riepilogo annuale previsto dalla normativa DAC7.`,
-        warningBody: `Sei a quota ${count} vendite / ${revenue.toFixed(2)} € (soglia annua delle piattaforme: 30 vendite o 2.000 €).`,
-      },
-      en: {
-        exceededTitle: '📈 Sales Milestone & DAC7 Directive',
-        warningTitle: 'ℹ️ DAC7 Directive Reminder',
-        exceededBody: `You reached ${count} sales or €${revenue.toFixed(2)} this year. As a reminder, selling platforms submit an annual DAC7 summary to tax authorities.`,
-        warningBody: `You are at ${count} sales / €${revenue.toFixed(2)} (annual platform monitoring threshold: 30 sales or €2,000).`,
-      },
-      fr: {
-        exceededTitle: '📈 Cap de Ventes & Directive DAC7',
-        warningTitle: 'ℹ️ Rappel Directive DAC7',
-        exceededBody: `Vous avez atteint ${count} ventes ou ${revenue.toFixed(2)} € cette année. Pour rappel, les plateformes transmettent un récapitulatif annuel DAC7.`,
-        warningBody: `Vous êtes à ${count} ventes / ${revenue.toFixed(2)} € (seuil annuel des plateformes : 30 ventes ou 2 000 €).`,
-      },
-      es: {
-        exceededTitle: '📈 Hito de Ventas & Directiva DAC7',
-        warningTitle: 'ℹ️ Recordatorio Directiva DAC7',
-        exceededBody: `Has alcanzado ${count} ventas o ${revenue.toFixed(2)} € este año. Te recordamos que las plataformas envían un resumen anual DAC7.`,
-        warningBody: `Llevas ${count} ventas / ${revenue.toFixed(2)} € (umbral anual de las plataformas: 30 ventas o 2.000 €).`,
-      },
-      de: {
-        exceededTitle: '📈 Verkaufsmeilenstein & DAC7-Richtlinie',
-        warningTitle: 'ℹ️ Hinweis DAC7-Richtlinie',
-        exceededBody: `Sie haben dieses Jahr ${count} Verkäufe oder ${revenue.toFixed(2)} € erreicht. Zur Erinnerung: Die Plattformen übermitteln eine jährliche DAC7-Zusammenfassung.`,
-        warningBody: `Sie haben ${count} Verkäufe / ${revenue.toFixed(2)} € erreicht (Jahresschwelle der Plattformen: 30 Verkäufe oder 2.000 €).`,
-      },
-    };
+    let title = '';
+    let body = '';
 
-    const notif = dac7Texts[lang] || dac7Texts.en;
+    if (regime === 'us_1099k') {
+      title = isExceeded
+        ? '📈 1099-K Milestone Reached'
+        : 'ℹ️ IRS Form 1099-K Reminder';
+      body = isExceeded
+        ? `You reached $${revenue.toFixed(2)} in gross sales this year, passing the $5,000 threshold. Marketplaces report annual 1099-K to IRS.`
+        : `You are at $${revenue.toFixed(2)} in sales this year, nearing the $5,000 federal 1099-K reporting threshold.`;
+    } else if (regime === 'uk_hmrc') {
+      title = isExceeded
+        ? '📈 HMRC Threshold Reached'
+        : 'ℹ️ HMRC Trading Allowance Reminder';
+      body = isExceeded
+        ? `You reached ${count} sales or £${revenue.toFixed(2)} this year. Digital platforms report annual data to HMRC.`
+        : `You reached ${count} sales / £${revenue.toFixed(2)} (HMRC threshold: 30 sales or £1,000).`;
+    } else {
+      // EU DAC7
+      const dac7Texts = {
+        it: {
+          exceededTitle: '📈 Traguardo Vendite & Direttiva DAC7',
+          warningTitle: 'ℹ️ Promemoria Direttiva DAC7',
+          exceededBody: `Hai raggiunto ${count} vendite o ${revenue.toFixed(2)} € quest'anno. Ti ricordiamo che le piattaforme trasmettono un riepilogo annuale previsto dalla normativa DAC7.`,
+          warningBody: `Sei a quota ${count} vendite / ${revenue.toFixed(2)} € (soglia annua delle piattaforme: 30 vendite o 2.000 €).`,
+        },
+        en: {
+          exceededTitle: '📈 Sales Milestone & DAC7 Directive',
+          warningTitle: 'ℹ️ DAC7 Directive Reminder',
+          exceededBody: `You reached ${count} sales or €${revenue.toFixed(2)} this year. As a reminder, selling platforms submit an annual DAC7 summary to tax authorities.`,
+          warningBody: `You are at ${count} sales / €${revenue.toFixed(2)} (annual platform monitoring threshold: 30 sales or €2,000).`,
+        },
+        fr: {
+          exceededTitle: '📈 Cap de Ventes & Directive DAC7',
+          warningTitle: 'ℹ️ Rappel Directive DAC7',
+          exceededBody: `Vous avez atteint ${count} ventes ou ${revenue.toFixed(2)} € cette année. Pour rappel, les plateformes transmettent un récapitulatif annuel DAC7.`,
+          warningBody: `Vous êtes à ${count} ventes / ${revenue.toFixed(2)} € (seuil annuel des plateformes : 30 ventes ou 2 000 €).`,
+        },
+        es: {
+          exceededTitle: '📈 Hito de Ventas & Directiva DAC7',
+          warningTitle: 'ℹ️ Recordatorio Directiva DAC7',
+          exceededBody: `Has alcanzado ${count} ventas o ${revenue.toFixed(2)} € este año. Te recordamos que las plataformas envían un resumen anual DAC7.`,
+          warningBody: `Llevas ${count} ventas / ${revenue.toFixed(2)} € (umbral anual de las plataformas: 30 ventas o 2.000 €).`,
+        },
+        de: {
+          exceededTitle: '📈 Verkaufsmeilenstein & DAC7-Richtlinie',
+          warningTitle: 'ℹ️ Hinweis DAC7-Richtlinie',
+          exceededBody: `Sie haben dieses Jahr ${count} Verkäufe oder ${revenue.toFixed(2)} € erreicht. Zur Erinnerung: Die Plattformen übermitteln eine jährliche DAC7-Zusammenfassung.`,
+          warningBody: `Sie haben ${count} Verkäufe / ${revenue.toFixed(2)} € erreicht (Jahresschwelle der Plattformen: 30 Verkäufe oder 2.000 €).`,
+        },
+      };
+      const notif = dac7Texts[lang] || dac7Texts.en;
+      title = isExceeded ? notif.exceededTitle : notif.warningTitle;
+      body = isExceeded ? notif.exceededBody : notif.warningBody;
+    }
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: isExceeded ? notif.exceededTitle : notif.warningTitle,
-        body: isExceeded ? notif.exceededBody : notif.warningBody,
+        title,
+        body,
         sound: true,
         data: { screen: 'stats' },
       },

@@ -1,6 +1,7 @@
 import { getDatabase } from './db';
 import { PlatformConfig, PlatformId } from '../types';
 import { PLATFORMS as BUILTIN_PLATFORMS } from '../constants/platforms';
+import { getRegionalPlatformOrder } from './fiscalManager';
 
 const CUSTOM_COLOR_PALETTES = [
   { color: '#8B5CF6', badgeBg: '#F3E8FF' }, // Purple
@@ -66,8 +67,17 @@ export function getAllCustomPlatforms(): PlatformConfig[] {
 
 export function getAllAvailablePlatforms(): PlatformConfig[] {
   const custom = getAllCustomPlatforms();
-  // Filter out the legacy single placeholder 'custom' if actual custom platforms exist, or keep it
-  const base = BUILTIN_PLATFORMS.filter((p) => p.id !== 'custom');
+  const regionalOrder = getRegionalPlatformOrder();
+
+  // Sort builtin platforms by regional preference so local market leaders appear first
+  const base = BUILTIN_PLATFORMS.filter((p) => p.id !== 'custom').sort((a, b) => {
+    const idxA = regionalOrder.indexOf(a.id);
+    const idxB = regionalOrder.indexOf(b.id);
+    const orderA = idxA === -1 ? 999 : idxA;
+    const orderB = idxB === -1 ? 999 : idxB;
+    return orderA - orderB;
+  });
+
   return [...base, ...custom, BUILTIN_PLATFORMS.find((p) => p.id === 'custom')!];
 }
 
