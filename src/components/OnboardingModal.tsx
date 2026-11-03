@@ -12,6 +12,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
 import { useCurrency } from '../context/CurrencyContext';
 import { setSeenOnboarding } from '../services/onboarding';
+import { FiscalSettingsSheet } from './FiscalSettingsSheet';
 
 interface OnboardingModalProps {
   visible: boolean;
@@ -23,6 +24,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onClo
   const { strings } = useTranslation();
   const { formatCurrency } = useCurrency();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [fiscalSheetVisible, setFiscalSheetVisible] = useState(false);
 
   const totalSteps = 5;
   const isLastSlide = currentIndex === totalSteps - 1;
@@ -181,12 +183,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onClo
                 <View style={[styles.mockFiscalBarFill, { width: '40%' }]} />
               </View>
             </View>
-            <View style={styles.spotlightCalloutBox}>
-              <Ionicons name="lock-closed" size={13} color="#6366F1" />
-              <Text style={styles.spotlightCalloutText} numberOfLines={1}>
-                Architettura 100% Offline. I tuoi dati non lasciano mai il telefono!
+            {/* Configure Fiscal Settings button */}
+            <TouchableOpacity
+              style={styles.fiscalConfigBtn}
+              onPress={() => setFiscalSheetVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="globe-outline" size={14} color="#FFFFFF" />
+              <Text style={styles.fiscalConfigBtnText}>
+                {strings.fiscalSheet?.configureFiscalBtn ?? 'Configure Fiscal Settings & Currency'}
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
         );
 
@@ -258,10 +265,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onClo
   };
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={handleSkip}>
-      <View style={styles.overlay}>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+    <>
+      <Modal visible={visible} animationType="fade" transparent onRequestClose={handleSkip}>
+        <View style={styles.overlay}>
+          <SafeAreaView style={styles.safeArea}>
+            <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             {/* Header with Step Counter and Skip */}
             <View style={styles.cardHeaderRow}>
               <View style={styles.stepIndicatorPill}>
@@ -353,9 +361,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onClo
               </View>
             </View>
           </View>
-        </SafeAreaView>
-      </View>
-    </Modal>
+          </SafeAreaView>
+        </View>
+      </Modal>
+      <FiscalSettingsSheet
+        visible={fiscalSheetVisible}
+        onClose={() => setFiscalSheetVisible(false)}
+      />
+    </>
   );
 };
 
@@ -766,6 +779,22 @@ const styles = StyleSheet.create({
   },
   nextBtnText: {
     fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  fiscalConfigBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#6366F1',
+    borderRadius: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    marginTop: 8,
+  },
+  fiscalConfigBtnText: {
+    fontSize: 11,
     fontWeight: '800',
     color: '#FFFFFF',
   },

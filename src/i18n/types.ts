@@ -318,6 +318,16 @@ export interface TranslationDictionary {
     finish: string;
     stepIndicator: string;
   };
+  fiscalSheet?: {
+    title: string;
+    subtitle: string;
+    euDesc: string;
+    usDesc: string;
+    ukDesc: string;
+    noneDesc: string;
+    footerNote: string;
+    configureFiscalBtn: string;
+  };
   addItemModal: {
     modalTitle: string;
     takePhoto: string;
