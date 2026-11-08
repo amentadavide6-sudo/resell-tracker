@@ -324,7 +324,7 @@ export const SettingsScreen: React.FC<{
               <View style={styles.proActiveTitleGroup}>
                 <Ionicons name="shield-checkmark" size={20} color="#10B981" />
                 <Text style={[styles.proActiveTitle, { color: isDark ? '#A7F3D0' : '#065F46' }]}>
-                  ResellTracker Pro Attivo
+                  {strings.settings.proActiveTitle}
                 </Text>
               </View>
               <View style={styles.proActiveBadge}>
@@ -332,7 +332,7 @@ export const SettingsScreen: React.FC<{
               </View>
             </View>
             <Text style={[styles.proActiveDesc, { color: isDark ? '#D1FAE5' : '#047857' }]}>
-              Inventario illimitato, statistiche avanzate, esportazioni e zero annunci pubblicitari.
+              {strings.settings.proActiveDesc}
             </Text>
 
             <TouchableOpacity
@@ -341,7 +341,7 @@ export const SettingsScreen: React.FC<{
               activeOpacity={0.7}
             >
               <Text style={[styles.manageSubscriptionText, { color: isDark ? '#6EE7B7' : '#059669' }]}>
-                Gestisci o disdici abbonamento su Google Play
+                {strings.settings.manageSubscription}
               </Text>
               <Ionicons name="open-outline" size={12} color={isDark ? '#6EE7B7' : '#059669'} />
             </TouchableOpacity>
@@ -455,18 +455,18 @@ export const SettingsScreen: React.FC<{
           <View style={styles.cardHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
               <Ionicons name="color-palette" size={20} color="#F59E0B" />
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Temi VIP & Stile (Pro)</Text>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.settings.vipThemesTitle}</Text>
             </View>
             <View style={[styles.proBadgeMini, { backgroundColor: isPro ? (isDark ? '#064E3B' : '#D1FAE5') : (isDark ? '#451A03' : '#FEF3C7') }]}>
               <Text style={[styles.proBadgeMiniText, { color: isPro ? '#059669' : '#D97706' }]}>
-                {isPro ? '👑 VIP Sbloccato' : '👑 Solo Pro'}
+                {isPro ? strings.settings.vipThemesProBadge : strings.settings.vipThemesLockedBadge}
               </Text>
             </View>
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
             {isPro
-              ? 'Guadagna XP vendendo capi e passa di livello per sbloccare stili estetici esclusivi per tutta l\'interfaccia.'
-              : 'I membri Pro possono personalizzare l\'interfaccia con stili estetici esclusivi sbloccabili salendo di livello.'}
+              ? strings.settings.vipThemesDescPro
+              : strings.settings.vipThemesDescFree}
           </Text>
 
           <View style={styles.accentGrid}>
@@ -503,16 +503,23 @@ export const SettingsScreen: React.FC<{
                     ) : null}
                   </View>
                   <Text style={[styles.accentName, { color: colors.textPrimary }]} numberOfLines={1}>
-                    {theme.badge} {theme.name}
+                    {theme.badge}{' '}
+                    {theme.id === 'classic'
+                      ? strings.settings.themeClassic
+                      : theme.id === 'gold'
+                      ? strings.settings.themeGold
+                      : theme.id === 'emerald'
+                      ? strings.settings.themeEmerald
+                      : strings.settings.themeCyberpunk}
                   </Text>
                   <Text style={[styles.accentRequirement, { color: isLocked ? colors.textMuted : '#10B981' }]}>
                     {theme.id === 'classic'
-                      ? 'Predefinito'
+                      ? strings.settings.themeDefault
                       : isLockedForPro
-                      ? 'Richiede Pro'
+                      ? strings.settings.themeRequiresPro
                       : isLockedForLevel
-                      ? `Livello ${theme.requiredLevel} XP`
-                      : 'Sbloccato ✨'}
+                      ? strings.settings.themeLevelXp.replace('{level}', theme.requiredLevel.toString())
+                      : strings.settings.themeUnlocked}
                   </Text>
                 </TouchableOpacity>
               );

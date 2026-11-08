@@ -52,7 +52,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
-        BACHEECA TROFEI & PRESTIGIO RESELLER
+        {strings.trophiesShowcase.sectionHeading}
       </Text>
 
       {/* Main Trophies Card */}
@@ -64,9 +64,12 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
               <Ionicons name="trophy" size={18} color="#F59E0B" />
             </View>
             <View>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Trofei Reseller</Text>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{strings.trophiesShowcase.cardTitle}</Text>
               <Text style={[styles.cardSub, { color: colors.textSecondary }]}>
-                {unlockedCount} di {totalCount} Conquistati ({progressPercent}%)
+                {strings.trophiesShowcase.conqueredCount
+                  .replace('{unlocked}', unlockedCount.toString())
+                  .replace('{total}', totalCount.toString())
+                  .replace('{percent}', progressPercent.toString())}
               </Text>
             </View>
           </View>
@@ -77,7 +80,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
             activeOpacity={0.7}
           >
             <Ionicons name="logo-instagram" size={13} color="#E1306C" />
-            <Text style={styles.shareRankText}>Condividi Rango</Text>
+            <Text style={styles.shareRankText}>{strings.trophiesShowcase.shareRank}</Text>
           </TouchableOpacity>
         </View>
 
@@ -97,6 +100,8 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
         {/* Trophies 2-Column Grid */}
         <View style={styles.trophiesGrid}>
           {trophies.map((t) => {
+            const itemTrans = strings.trophiesShowcase.items[t.id];
+            const displayTitle = itemTrans ? itemTrans.title : t.title;
             return (
               <TouchableOpacity
                 key={t.id}
@@ -138,7 +143,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
                     ]}
                     numberOfLines={1}
                   >
-                    {t.title}
+                    {displayTitle}
                   </Text>
                   <Text
                     style={[
@@ -146,7 +151,9 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
                       { color: t.isUnlocked ? t.badgeColor : colors.textMuted },
                     ]}
                   >
-                    {t.isUnlocked ? `Sbloccato! (+${t.xpReward} XP)` : `+${t.xpReward} XP`}
+                    {t.isUnlocked
+                      ? strings.trophiesShowcase.unlockedReward.replace('{xp}', t.xpReward.toString())
+                      : `+${t.xpReward} XP`}
                   </Text>
                 </View>
 
@@ -161,18 +168,18 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
 
       {/* ADVANCED PRO BUSINESS INSIGHTS */}
       <Text style={[styles.sectionHeading, { color: colors.textSecondary, marginTop: 18 }]}>
-        INSIGHT STRATEGICI RESELLER PRO
+        {strings.trophiesShowcase.insightsHeading}
       </Text>
 
       <View style={styles.insightsContainer}>
-        {/* Insight 1: Giorno d'Oro (Sbloccato a Livello 3 o 3 Trofei per utenti Pro) */}
+        {/* Insight 1: Giorno d'Oro */}
         <View style={[styles.insightCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.insightHeaderRow}>
             <View style={styles.insightTitleRow}>
               <View style={[styles.insightIconBox, { backgroundColor: isDark ? '#312E81' : '#EEF2FF' }]}>
                 <Ionicons name="calendar" size={16} color="#6366F1" />
               </View>
-              <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>Il Tuo Giorno d'Oro</Text>
+              <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>{strings.trophiesShowcase.dayInsightTitle}</Text>
             </View>
             <View style={[
               styles.insightLevelPill,
@@ -190,7 +197,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
                   ? { color: '#059669' }
                   : { color: colors.textMuted }
               ]}>
-                {!isPro ? '🔒 Esclusiva Pro' : hasUnlockedDayInsight ? 'Sbloccato ✨' : '🔒 Livello 3'}
+                {!isPro ? strings.trophiesShowcase.proExclusive : hasUnlockedDayInsight ? strings.trophiesShowcase.unlockedStatus : strings.trophiesShowcase.lockedLevel.replace('{level}', '3')}
               </Text>
             </View>
           </View>
@@ -198,11 +205,11 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
           {!isPro ? (
             <View>
               <Text style={[styles.insightLockedText, { color: colors.textSecondary }]}>
-                Analizza quale giorno della settimana registra il picco di incassi e vendite per massimizzare il profitto delle tue nuove inserzioni.
+                {strings.trophiesShowcase.dayInsightLockedSub}
               </Text>
               <TouchableOpacity style={styles.proUnlockBtn} onPress={onOpenProModal} activeOpacity={0.8}>
                 <Ionicons name="sparkles" size={13} color="#FFFFFF" />
-                <Text style={styles.proUnlockBtnText}>Sblocca con ResellTracker Pro 👑</Text>
+                <Text style={styles.proUnlockBtnText}>{strings.trophiesShowcase.dayInsightUnlockBtn}</Text>
               </TouchableOpacity>
             </View>
           ) : hasUnlockedDayInsight ? (
@@ -212,29 +219,31 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
                   {proInsights.bestDayOfWeek.dayName}
                 </Text>
                 <Text style={[styles.insightDesc, { color: colors.textSecondary }]}>
-                  È il giorno in cui concludi più vendite in assoluto ({proInsights.bestDayOfWeek.salesCount} vendite, con {formatEuro(proInsights.bestDayOfWeek.totalProfit)} di profitto generato). Concentra le tue nuove inserzioni e sconti verso questo giorno!
+                  {strings.trophiesShowcase.dayInsightDesc
+                    .replace('{count}', proInsights.bestDayOfWeek.salesCount.toString())
+                    .replace('{profit}', formatEuro(proInsights.bestDayOfWeek.totalProfit))}
                 </Text>
               </View>
             ) : (
               <Text style={[styles.insightEmptyText, { color: colors.textMuted }]}>
-                Registra le tue prime vendite per calcolare il giorno statisticamente più profittevole.
+                {strings.trophiesShowcase.dayInsightEmpty}
               </Text>
             )
           ) : (
             <Text style={[styles.insightLockedText, { color: colors.textMuted }]}>
-              Raggiungi il Livello 3 (o conquista 3 trofei) con i tuoi punti XP per sbloccare l'analisi del giorno della settimana più redditizio per le tue vendite.
+              {strings.trophiesShowcase.dayInsightLevelReq}
             </Text>
           )}
         </View>
 
-        {/* Insight 2: Velocità di Vendita / Velocity (Sbloccato a Livello 5 o 5 Trofei per utenti Pro) */}
+        {/* Insight 2: Velocità di Vendita / Velocity */}
         <View style={[styles.insightCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.insightHeaderRow}>
             <View style={styles.insightTitleRow}>
               <View style={[styles.insightIconBox, { backgroundColor: isDark ? '#431407' : '#FFEDD5' }]}>
                 <Ionicons name="flash" size={16} color="#F97316" />
               </View>
-              <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>Velocità Media di Vendita (Velocity)</Text>
+              <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>{strings.trophiesShowcase.velocityTitle}</Text>
             </View>
             <View style={[
               styles.insightLevelPill,
@@ -252,7 +261,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
                   ? { color: '#059669' }
                   : { color: colors.textMuted }
               ]}>
-                {!isPro ? '🔒 Esclusiva Pro' : hasUnlockedVelocityInsight ? 'Sbloccato ✨' : '🔒 Livello 5'}
+                {!isPro ? strings.trophiesShowcase.proExclusive : hasUnlockedVelocityInsight ? strings.trophiesShowcase.unlockedStatus : strings.trophiesShowcase.lockedLevel.replace('{level}', '5')}
               </Text>
             </View>
           </View>
@@ -260,43 +269,43 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
           {!isPro ? (
             <View>
               <Text style={[styles.insightLockedText, { color: colors.textSecondary }]}>
-                Traccia esattamente quanti giorni impiegano i tuoi articoli ad essere venduti e monitora i tuoi affari lampo conclusi in 48 ore.
+                {strings.trophiesShowcase.velocityLockedSub}
               </Text>
               <TouchableOpacity style={styles.proUnlockBtn} onPress={onOpenProModal} activeOpacity={0.8}>
                 <Ionicons name="sparkles" size={13} color="#FFFFFF" />
-                <Text style={styles.proUnlockBtnText}>Sblocca con ResellTracker Pro 👑</Text>
+                <Text style={styles.proUnlockBtnText}>{strings.trophiesShowcase.dayInsightUnlockBtn}</Text>
               </TouchableOpacity>
             </View>
           ) : hasUnlockedVelocityInsight ? (
             proInsights && proInsights.averageDaysToSell !== null ? (
               <View style={styles.insightBody}>
                 <Text style={[styles.insightHighlight, { color: '#F97316' }]}>
-                  {proInsights.averageDaysToSell} Giorni
+                  {strings.trophiesShowcase.velocityDays.replace('{days}', proInsights.averageDaysToSell.toString())}
                 </Text>
                 <Text style={[styles.insightDesc, { color: colors.textSecondary }]}>
-                  Tempo medio impiegato da un tuo articolo dal caricamento alla vendita. Hai concluso {proInsights.fastFlipsCount} vendite lampo in meno di 48 ore!
+                  {strings.trophiesShowcase.velocityDesc.replace('{count}', proInsights.fastFlipsCount.toString())}
                 </Text>
               </View>
             ) : (
               <Text style={[styles.insightEmptyText, { color: colors.textMuted }]}>
-                Calcolo in corso man mano che accumuli date di acquisto e vendita.
+                {strings.trophiesShowcase.velocityEmpty}
               </Text>
             )
           ) : (
             <Text style={[styles.insightLockedText, { color: colors.textMuted }]}>
-              Raggiungi il Livello 5 (o conquista 5 trofei) con i tuoi punti XP per sbloccare il monitoraggio della velocità media di rotazione dei tuoi capi.
+              {strings.trophiesShowcase.velocityLevelReq}
             </Text>
           )}
         </View>
 
-        {/* Insight 3: Tasso di Rotazione Stock (Sbloccato a Livello 8 o 8 Trofei per utenti Pro) */}
+        {/* Insight 3: Tasso di Rotazione Stock */}
         <View style={[styles.insightCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           <View style={styles.insightHeaderRow}>
             <View style={styles.insightTitleRow}>
               <View style={[styles.insightIconBox, { backgroundColor: isDark ? '#064E3B' : '#D1FAE5' }]}>
                 <Ionicons name="repeat" size={16} color="#10B981" />
               </View>
-              <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>Rotazione del Magazzino</Text>
+              <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>{strings.trophiesShowcase.turnoverTitle}</Text>
             </View>
             <View style={[
               styles.insightLevelPill,
@@ -314,7 +323,7 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
                   ? { color: '#059669' }
                   : { color: colors.textMuted }
               ]}>
-                {!isPro ? '🔒 Esclusiva Pro' : hasUnlockedTurnoverInsight ? 'Sbloccato ✨' : '🔒 Livello 8'}
+                {!isPro ? strings.trophiesShowcase.proExclusive : hasUnlockedTurnoverInsight ? strings.trophiesShowcase.unlockedStatus : strings.trophiesShowcase.lockedLevel.replace('{level}', '8')}
               </Text>
             </View>
           </View>
@@ -322,94 +331,99 @@ export const TrophiesShowcase: React.FC<TrophiesShowcaseProps> = ({
           {!isPro ? (
             <View>
               <Text style={[styles.insightLockedText, { color: colors.textSecondary }]}>
-                Scopri l'efficienza con cui trasformi i capi fermi in magazzino in pura liquidità netta per reinvestire nei tuoi affari.
+                {strings.trophiesShowcase.turnoverLockedSub}
               </Text>
               <TouchableOpacity style={styles.proUnlockBtn} onPress={onOpenProModal} activeOpacity={0.8}>
                 <Ionicons name="sparkles" size={13} color="#FFFFFF" />
-                <Text style={styles.proUnlockBtnText}>Sblocca con ResellTracker Pro 👑</Text>
+                <Text style={styles.proUnlockBtnText}>{strings.trophiesShowcase.dayInsightUnlockBtn}</Text>
               </TouchableOpacity>
             </View>
           ) : hasUnlockedTurnoverInsight ? (
             proInsights ? (
               <View style={styles.insightBody}>
                 <Text style={[styles.insightHighlight, { color: '#10B981' }]}>
-                  {proInsights.stockTurnoverRate}% del Catalogo Liquidato
+                  {strings.trophiesShowcase.turnoverRateLabel.replace('{rate}', proInsights.stockTurnoverRate.toString())}
                 </Text>
                 <Text style={[styles.insightDesc, { color: colors.textSecondary }]}>
-                  Indica l'efficienza con cui trasformi i capi fermi in liquidità netta. Un tasso superiore al 50% identifica un reseller ad altissima efficienza.
+                  {strings.trophiesShowcase.turnoverDesc}
                 </Text>
               </View>
             ) : null
           ) : (
             <Text style={[styles.insightLockedText, { color: colors.textMuted }]}>
-              Raggiungi il Livello 8 con i tuoi punti XP per monitorare la liquidità e il tasso di rotazione del magazzino.
+              {strings.trophiesShowcase.turnoverLevelReq}
             </Text>
           )}
         </View>
       </View>
 
       {/* Trophy Detail Popup Modal */}
-      {selectedTrophy && (
-        <Modal visible transparent animationType="fade" onRequestClose={() => setSelectedTrophy(null)}>
-          <View style={styles.detailModalOverlay}>
-            <View style={[styles.detailModalCard, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: colors.cardBorder }]}>
-              <View style={[styles.detailIconBox, { backgroundColor: selectedTrophy.isUnlocked ? `${selectedTrophy.badgeColor}22` : (isDark ? '#1E293B' : '#E2E8F0'), borderColor: selectedTrophy.badgeColor }]}>
-                <Ionicons
-                  name={selectedTrophy.isUnlocked ? (selectedTrophy.icon as any) : 'lock-closed'}
-                  size={36}
-                  color={selectedTrophy.isUnlocked ? selectedTrophy.badgeColor : colors.textMuted}
-                />
-              </View>
-
-              <Text style={[styles.detailTitle, { color: colors.textPrimary }]}>{selectedTrophy.title}</Text>
-              <Text style={[styles.detailDesc, { color: colors.textSecondary }]}>{selectedTrophy.description}</Text>
-
-              {/* Progress info */}
-              <View style={[styles.detailProgressBox, { backgroundColor: isDark ? '#161F30' : '#F1F5F9' }]}>
-                <Text style={[styles.detailProgressLabel, { color: colors.textSecondary }]}>
-                  Progresso: <Text style={{ fontWeight: '800', color: colors.textPrimary }}>{selectedTrophy.currentProgress} / {selectedTrophy.targetCount} {selectedTrophy.unit || ''}</Text>
-                </Text>
-                <View style={[styles.detailTrack, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
-                  <View
-                    style={[
-                      styles.detailFill,
-                      {
-                        width: `${Math.round(selectedTrophy.progressPercent * 100)}%`,
-                        backgroundColor: selectedTrophy.badgeColor,
-                      },
-                    ]}
+      {selectedTrophy && (() => {
+        const itemTrans = strings.trophiesShowcase.items[selectedTrophy.id];
+        const displayTitle = itemTrans ? itemTrans.title : selectedTrophy.title;
+        const displayDesc = itemTrans ? itemTrans.description : selectedTrophy.description;
+        return (
+          <Modal visible transparent animationType="fade" onRequestClose={() => setSelectedTrophy(null)}>
+            <View style={styles.detailModalOverlay}>
+              <View style={[styles.detailModalCard, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: colors.cardBorder }]}>
+                <View style={[styles.detailIconBox, { backgroundColor: selectedTrophy.isUnlocked ? `${selectedTrophy.badgeColor}22` : (isDark ? '#1E293B' : '#E2E8F0'), borderColor: selectedTrophy.badgeColor }]}>
+                  <Ionicons
+                    name={selectedTrophy.isUnlocked ? (selectedTrophy.icon as any) : 'lock-closed'}
+                    size={36}
+                    color={selectedTrophy.isUnlocked ? selectedTrophy.badgeColor : colors.textMuted}
                   />
                 </View>
-              </View>
 
-              <View style={styles.detailActionsRow}>
-                {selectedTrophy.isUnlocked && (
+                <Text style={[styles.detailTitle, { color: colors.textPrimary }]}>{displayTitle}</Text>
+                <Text style={[styles.detailDesc, { color: colors.textSecondary }]}>{displayDesc}</Text>
+
+                {/* Progress info */}
+                <View style={[styles.detailProgressBox, { backgroundColor: isDark ? '#161F30' : '#F1F5F9' }]}>
+                  <Text style={[styles.detailProgressLabel, { color: colors.textSecondary }]}>
+                    {selectedTrophy.isUnlocked ? strings.trophiesShowcase.trophyUnlockedOn : strings.trophiesShowcase.trophyLockedHint}
+                  </Text>
+                  <View style={[styles.detailTrack, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}>
+                    <View
+                      style={[
+                        styles.detailFill,
+                        {
+                          width: `${Math.round(selectedTrophy.progressPercent * 100)}%`,
+                          backgroundColor: selectedTrophy.badgeColor,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.detailActionsRow}>
+                  {selectedTrophy.isUnlocked && (
+                    <TouchableOpacity
+                      style={styles.detailShareBtn}
+                      onPress={() => {
+                        const t = selectedTrophy;
+                        setSelectedTrophy(null);
+                        onShareTrophy(t);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="logo-instagram" size={16} color="#FFFFFF" />
+                      <Text style={styles.detailShareBtnText}>{strings.trophiesShowcase.shareTrophyBtn}</Text>
+                    </TouchableOpacity>
+                  )}
+
                   <TouchableOpacity
-                    style={styles.detailShareBtn}
-                    onPress={() => {
-                      const t = selectedTrophy;
-                      setSelectedTrophy(null);
-                      onShareTrophy(t);
-                    }}
-                    activeOpacity={0.8}
+                    style={[styles.detailCloseBtn, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}
+                    onPress={() => setSelectedTrophy(null)}
+                    activeOpacity={0.7}
                   >
-                    <Ionicons name="logo-instagram" size={16} color="#FFFFFF" />
-                    <Text style={styles.detailShareBtnText}>Condividi Storia</Text>
+                    <Text style={[styles.detailCloseBtnText, { color: colors.textPrimary }]}>{strings.trophiesShowcase.closeBtn}</Text>
                   </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={[styles.detailCloseBtn, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]}
-                  onPress={() => setSelectedTrophy(null)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.detailCloseBtnText, { color: colors.textPrimary }]}>Chiudi</Text>
-                </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
     </View>
   );
 };

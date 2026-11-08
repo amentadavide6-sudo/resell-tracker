@@ -452,32 +452,42 @@ export const StatsScreen: React.FC<{
         {/* Platform Breakdown */}
         {stats.platformStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>DISTRIBUZIONE PROFITTO PER PIATTAFORMA</Text>
+            <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
+              {strings.stats.platformBreakdownTitle}
+            </Text>
             <View style={[styles.breakdownCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-              {stats.platformStats.map((p) => (
-                <View key={p.platformId} style={styles.platformRow}>
-                  <View style={styles.platformLabelRow}>
-                    <View style={styles.platformNameGroup}>
-                      <View style={[styles.platformDot, { backgroundColor: p.color }]} />
-                      <Text style={[styles.platformName, { color: colors.textPrimary }]}>{p.name}</Text>
-                      <Text style={[styles.platformCount, { color: colors.textMuted }]}>({p.soldCount} venduti)</Text>
+              {stats.platformStats.map((p) => {
+                const displayName =
+                  p.platformId === 'custom' && (p.name === 'Personalizzato' || p.name === 'Custom')
+                    ? strings.platforms.customName
+                    : p.name;
+                return (
+                  <View key={p.platformId} style={styles.platformRow}>
+                    <View style={styles.platformLabelRow}>
+                      <View style={styles.platformNameGroup}>
+                        <View style={[styles.platformDot, { backgroundColor: p.color }]} />
+                        <Text style={[styles.platformName, { color: colors.textPrimary }]}>{displayName}</Text>
+                        <Text style={[styles.platformCount, { color: colors.textMuted }]}>
+                          ({p.soldCount} {strings.stats.soldItemsCount})
+                        </Text>
+                      </View>
+                      <Text style={[styles.platformProfit, { color: colors.textPrimary }]}>{formatEuro(p.totalProfit)}</Text>
                     </View>
-                    <Text style={[styles.platformProfit, { color: colors.textPrimary }]}>{formatEuro(p.totalProfit)}</Text>
-                  </View>
 
-                  <View style={[styles.progressBarTrack, isDark && { backgroundColor: '#111827' }]}>
-                    <View
-                      style={[
-                        styles.progressBarFill,
-                        {
-                          width: `${Math.max(5, p.percentageOfProfit)}%`,
-                          backgroundColor: p.color,
-                        },
-                      ]}
-                    />
+                    <View style={[styles.progressBarTrack, isDark && { backgroundColor: '#111827' }]}>
+                      <View
+                        style={[
+                          styles.progressBarFill,
+                          {
+                            width: `${Math.max(5, p.percentageOfProfit)}%`,
+                            backgroundColor: p.color,
+                          },
+                        ]}
+                      />
+                    </View>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         )}
@@ -485,14 +495,18 @@ export const StatsScreen: React.FC<{
         {/* Monthly Breakdown History */}
         {stats.monthlyStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>CRONOLOGIA MENSILE VENDITE</Text>
+            <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>
+              {strings.stats.monthlyHistoryTitle}
+            </Text>
             <View style={styles.monthlyList}>
               {stats.monthlyStats.map((m) => (
                 <View key={m.monthKey} style={[styles.monthlyCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                   <View>
                     <Text style={[styles.monthlyLabel, { color: colors.textPrimary }]}>{m.monthLabel}</Text>
                     <Text style={[styles.monthlySub, { color: colors.textSecondary }]}>
-                      {m.soldCount} capi venduti • Ricavo: {formatEuro(m.totalRevenue)}
+                      {strings.stats.monthlyHistorySubtitle
+                        .replace('{count}', m.soldCount.toString())
+                        .replace('{revenue}', formatEuro(m.totalRevenue))}
                     </Text>
                   </View>
                   <Text style={styles.monthlyProfit}>{formatEuro(m.totalProfit)}</Text>
