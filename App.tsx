@@ -229,13 +229,13 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    paddingTop: 8,
+    paddingTop: 11,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 4,
   },
   tabLabel: {
     fontSize: 11,

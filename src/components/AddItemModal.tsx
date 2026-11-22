@@ -491,7 +491,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                   <View style={styles.row}>
                     <View style={styles.col}>
                       <CustomInput
-                        label={`% Commissione (${activePlatformConfig.name})`}
+                        label={strings.addItemModal.percentFeeLabel.replace('{platform}', activePlatformConfig.name)}
                         value={curPercent}
                         onChangeValue={(v) => handleUpdatePlatformFee(activeFeeTab, 'percent', v)}
                         placeholder={activePlatformConfig.sellerFeePercent.toString()}
@@ -501,7 +501,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                     </View>
                     <View style={styles.col}>
                       <CustomInput
-                        label={`${currencySymbol} Fissa (${activePlatformConfig.name})`}
+                        label={strings.addItemModal.fixedFeeLabel.replace('{currency}', currencySymbol).replace('{platform}', activePlatformConfig.name)}
                         value={curFixed}
                         onChangeValue={(v) => handleUpdatePlatformFee(activeFeeTab, 'fixed', v)}
                         placeholder={activePlatformConfig.sellerFixedFee.toString()}

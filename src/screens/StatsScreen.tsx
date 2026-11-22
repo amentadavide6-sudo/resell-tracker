@@ -124,12 +124,17 @@ export const StatsScreen: React.FC<{
           type: 'success',
         });
       }
-    } else if (result.message !== 'Nessun file selezionato.') {
-      showAlert({
-        title: 'Esportazione Registro',
-        message: result.message,
-        type: 'info',
-      });
+    } else {
+      const msg = result.message === "Non ci sono articoli nell'inventario da esportare."
+        ? strings.stats.exportCsvEmpty
+        : result.message;
+      if (msg !== 'Nessun file selezionato.') {
+        showAlert({
+          title: strings.stats.salesRegisterHeader,
+          message: msg,
+          type: 'info',
+        });
+      }
     }
   };
 

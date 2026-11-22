@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Linking,
   Switch,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -789,7 +790,12 @@ export const SettingsScreen: React.FC<{
 
         {/* App Info & Privacy */}
         <View style={styles.infoCard}>
-          <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>ResellTracker v1.2.5</Text>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.appLogo}
+            resizeMode="cover"
+          />
+          <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>ResellTracker v1.3.12</Text>
           <Text style={[styles.infoSub, { color: colors.textMuted }]}>
             Progettata per venditori indipendenti su Vinted, eBay, Wallapop e Subito.
           </Text>
@@ -1150,6 +1156,14 @@ const styles = StyleSheet.create({
   infoCard: {
     alignItems: 'center',
     paddingVertical: 16,
+  },
+  appLogo: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.25)',
   },
   infoTitle: {
     fontSize: 13,

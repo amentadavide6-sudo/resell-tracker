@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -223,6 +224,13 @@ export const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onSaveItemSu
           <View style={styles.headerTitles}>
             <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{strings.calculator.headerSubtitle}</Text>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{strings.calculator.headerTitle}</Text>
+          </View>
+          <View style={[styles.logoWrap, { borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.headerLogo}
+              resizeMode="cover"
+            />
           </View>
         </View>
 
@@ -580,6 +588,22 @@ const styles = StyleSheet.create({
   },
   headerTitles: {
     flex: 1,
+  },
+  logoWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  headerLogo: {
+    width: '100%',
+    height: '100%',
   },
   headerSubtitle: {
     fontSize: 11,

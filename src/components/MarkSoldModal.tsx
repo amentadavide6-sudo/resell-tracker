@@ -165,7 +165,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
               style: 'cancel',
             },
             {
-              text: 'Condividi Affare 🚀',
+              text: strings.markSoldModal.shareDealBtn,
               onPress: () => {
                 shareSoldProfit(item, totalNetProfit, unitBreakdown.roiPercent);
               },
@@ -176,39 +176,39 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
         const isUserPro = isProUser();
         const levelMsg = isUserPro
           ? `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n✨ Hai sbloccato il nuovo Rango Prestigio e nuovi trofei nella tua bacheca!${
-              isMulti ? `\n\n⚠️ Promemoria Delist: Ricordati di rimuovere l'annuncio da: ${otherNames}` : ''
+              isMulti ? `\n\n${strings.markSoldModal.delistNoticeTitle}\n${strings.markSoldModal.delistNoticeBody.replace('{platforms}', otherNames)}` : ''
             }`
           : `Congratulazioni! Sei salito al livello ${xpResult.newLevel.levelNumber}: ${xpResult.newLevel.badge} ${xpResult.newLevel.title}!\n\n🎁 Hai sbloccato ${xpResult.proPassAwardedHours} ORE DI PRO PASS GRATIS!\nGoditi capi illimitati ed export completi!${
-              isMulti ? `\n\n⚠️ Promemoria Delist: Ricordati di rimuovere l'annuncio da: ${otherNames}` : ''
+              isMulti ? `\n\n${strings.markSoldModal.delistNoticeTitle}\n${strings.markSoldModal.delistNoticeBody.replace('{platforms}', otherNames)}` : ''
             }`;
 
         showAlert({
-          title: isUserPro ? '🎉 LIVELLO RESELLER SUPERATO!' : '🎉 LIVELLO SUPERATO & PRO PASS SBLOCCATO!',
+          title: isUserPro ? strings.markSoldModal.levelUpProTitle : strings.markSoldModal.levelUpTitle,
           message: levelMsg,
           type: 'success',
           buttons: [
             {
-              text: 'Condividi Affare 🚀',
+              text: strings.markSoldModal.shareDealBtn,
               onPress: () => {
                 shareSoldProfit(item, totalNetProfit, unitBreakdown.roiPercent);
               },
             },
-            { text: 'Continua', style: 'cancel' },
+            { text: strings.markSoldModal.continueBtn, style: 'cancel' },
           ],
         });
       } else if (isMulti) {
         showAlert({
-          title: '🎉 Vendita Registrata con Successo!',
-          message: `Hai guadagnato +${xpResult.earnedXP} XP nel Reseller Club!\n\n⚠️ Promemoria Delist Assistant:\nRicordati di eliminare o disattivare subito l'annuncio da:\n👉 ${otherNames}\nper evitare doppie vendite accidentali e reclami.`,
+          title: strings.markSoldModal.successTitle,
+          message: `${strings.markSoldModal.delistNoticeTitle}\n${strings.markSoldModal.delistNoticeBody.replace('{platforms}', otherNames)}`,
           type: 'success',
           buttons: [
             {
-              text: 'Condividi Affare 🚀',
+              text: strings.markSoldModal.shareDealBtn,
               onPress: () => {
                 shareSoldProfit(item, totalNetProfit, unitBreakdown.roiPercent);
               },
             },
-            { text: 'Ho Capito', style: 'cancel' },
+            { text: strings.markSoldModal.gotItBtn, style: 'cancel' },
           ],
         });
       }
@@ -255,7 +255,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             <View style={styles.titleContainer}>
               <View style={[styles.soldBadge, { backgroundColor: '#10B981' }]}>
                 <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
-                <Text style={styles.soldBadgeText}>REGISTRA VENDITA</Text>
+                <Text style={styles.soldBadgeText}>{strings.markSoldModal.soldBadge}</Text>
               </View>
               <Text
                 style={[styles.itemTitle, { color: colors.textPrimary }]}
@@ -291,16 +291,16 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
                   {totalAvailableQty > 1 && (
                     <View style={[styles.qtyBadge, { backgroundColor: isDark ? '#312E81' : '#EEF2FF' }]}>
                       <Text style={[styles.qtyBadgeText, { color: '#6366F1' }]}>
-                        Stock: {totalAvailableQty} pz
+                        {strings.markSoldModal.stockBadge.replace('{n}', totalAvailableQty.toString())}
                       </Text>
                     </View>
                   )}
                 </View>
                 <Text style={[styles.priceTag, { color: colors.textSecondary }]}>
-                  Prezzo listino unitario: <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{formatEuro(item.targetSellingPrice)}</Text>
+                  {strings.markSoldModal.unitListPrice} <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{formatEuro(item.targetSellingPrice)}</Text>
                 </Text>
                 <Text style={[styles.priceTag, { color: colors.textMuted }]}>
-                  Costo acquisto unitario: {formatEuro(item.purchaseCost)}
+                  {strings.markSoldModal.unitCostPrice} {formatEuro(item.purchaseCost)}
                 </Text>
               </View>
             </View>
@@ -308,7 +308,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             {/* Platform Selection if cross-listed on multiple platforms */}
             {activePlatforms.length > 1 && (
               <View style={styles.sectionBox}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>DOVE HAI VENDUTO L'ARTICOLO?</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{strings.markSoldModal.whereSoldTitle}</Text>
                 <View style={styles.platformOptionsRow}>
                   {activePlatforms.map((pid) => {
                     const pConfig = allPlatforms.find((p) => p.id === pid) || allPlatforms[0];
@@ -339,9 +339,9 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             {totalAvailableQty > 1 && (
               <View style={styles.sectionBox}>
                 <View style={styles.qtyHeaderRow}>
-                  <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>QUANTE UNITÀ HAI VENDUTO?</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{strings.markSoldModal.howManySoldTitle}</Text>
                   <Text style={[styles.qtySubText, { color: colors.textMuted }]}>
-                    Disponibili: {totalAvailableQty} pz
+                    {strings.markSoldModal.availablePieces.replace('{n}', totalAvailableQty.toString())}
                   </Text>
                 </View>
 
@@ -356,7 +356,9 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
 
                   <View style={styles.stepperCenter}>
                     <Text style={[styles.stepperNumber, { color: colors.textPrimary }]}>{soldQuantity}</Text>
-                    <Text style={[styles.stepperUnit, { color: colors.textMuted }]}>su {totalAvailableQty} pezzi</Text>
+                    <Text style={[styles.stepperUnit, { color: colors.textMuted }]}>
+                      {strings.markSoldModal.outOfPieces.replace('{n}', totalAvailableQty.toString())}
+                    </Text>
                   </View>
 
                   <TouchableOpacity
@@ -389,7 +391,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
                     onPress={() => setSoldQuantity(totalAvailableQty)}
                   >
                     <Text style={[styles.quickQtyBtnText, soldQuantity === totalAvailableQty && { color: '#FFFFFF', fontWeight: '700' }]}>
-                      Tutti ({totalAvailableQty}x)
+                      {strings.markSoldModal.allPieces.replace('{n}', totalAvailableQty.toString())}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -399,8 +401,8 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             {/* Input final price */}
             <View style={styles.inputSection}>
               <CustomInput
-                label={totalAvailableQty > 1 ? "Prezzo Finale di Vendita Unitario" : "Prezzo di Vendita Finale Effettivo"}
-                subtitle="Se hai fatto uno sconto o accettato un'offerta, modificalo qui"
+                label={totalAvailableQty > 1 ? strings.markSoldModal.unitPriceInputLabel : strings.markSoldModal.finalPriceInputLabel}
+                subtitle={strings.markSoldModal.discountSubtitle}
                 value={actualPrice}
                 onChangeValue={setActualPrice}
                 quickAddAmounts={[5, 10, 20]}
@@ -413,10 +415,14 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
               <View style={styles.profitRow}>
                 <View>
                   <Text style={[styles.profitLabel, { color: isDark ? '#A7F3D0' : '#047857' }]}>
-                    {soldQuantity > 1 ? `GUADAGNO TOTALE (${soldQuantity} PEZZI)` : 'GUADAGNO NETTO REALE'}
+                    {soldQuantity > 1
+                      ? strings.markSoldModal.totalProfitLabel.replace('{n}', soldQuantity.toString())
+                      : strings.markSoldModal.netProfitLabel}
                   </Text>
                   <Text style={[styles.profitSub, { color: isDark ? '#6EE7B7' : '#065F46' }]}>
-                    Incasso lordo: {formatEuro(totalRevenue)} | Fee: -{formatEuro(unitBreakdown.totalSellerFees * soldQuantity)}
+                    {strings.markSoldModal.grossIncome
+                      .replace('{revenue}', formatEuro(totalRevenue))
+                      .replace('{fee}', formatEuro(unitBreakdown.totalSellerFees * soldQuantity))}
                   </Text>
                 </View>
                 <Text style={[styles.profitValue, { color: totalNetProfit >= 0 ? (isDark ? '#34D399' : '#059669') : '#EF4444' }]}>
@@ -426,7 +432,9 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
 
               <View style={styles.xpPill}>
                 <Text style={styles.xpPillText}>
-                  ⭐ +{isPro ? '200' : '100'} XP Reseller per questa vendita {isPro ? '⚡' : ''}
+                  {strings.markSoldModal.xpEarnedNotice
+                    .replace('{xp}', isPro ? '200' : '100')
+                    .replace('{pro}', isPro ? '⚡' : '')}
                 </Text>
               </View>
             </View>
@@ -439,7 +447,7 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Annulla</Text>
+              <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>{strings.markSoldModal.cancelBtn}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -449,7 +457,9 @@ export const MarkSoldModal: React.FC<MarkSoldModalProps> = ({
             >
               <Ionicons name="checkmark-done" size={18} color="#FFFFFF" />
               <Text style={styles.confirmBtnText}>
-                {soldQuantity < totalAvailableQty ? `Vendi ${soldQuantity} pz (Split)` : 'Conferma Vendita'}
+                {soldQuantity < totalAvailableQty
+                  ? strings.markSoldModal.splitSoldBtn.replace('{n}', soldQuantity.toString())
+                  : strings.markSoldModal.confirmSoldBtn}
               </Text>
             </TouchableOpacity>
           </View>

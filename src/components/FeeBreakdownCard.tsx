@@ -158,15 +158,21 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
 
       {showDetails && (
         <View style={[styles.detailsCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.detailsTitle, { color: colors.textMuted }]}>DETTAGLIO TRASPARENTE</Text>
+          <Text style={[styles.detailsTitle, { color: colors.textMuted }]}>
+            {strings.calculator.breakdownTransparentTitle}
+          </Text>
 
           <View style={styles.detailRow}>
-            <Text style={[styles.detailText, { color: colors.textPrimary }]}>Prezzo di vendita fissato</Text>
+            <Text style={[styles.detailText, { color: colors.textPrimary }]}>
+              {strings.calculator.breakdownSellingPriceSet}
+            </Text>
             <Text style={[styles.detailValueBold, { color: colors.textPrimary }]}>{formatEuro(result.sellingPrice)}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={[styles.detailText, { color: colors.textPrimary }]}>Commissione venditore {platform.name}</Text>
+            <Text style={[styles.detailText, { color: colors.textPrimary }]}>
+              {strings.calculator.breakdownSellerFee.replace('{platform}', platform.name)}
+            </Text>
             <Text style={[styles.detailValue, { color: '#EF4444' }]}>
               -{formatEuro(result.sellerPlatformFee)}
             </Text>
@@ -174,7 +180,9 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
 
           {result.paymentFee > 0 && (
             <View style={styles.detailRow}>
-              <Text style={[styles.detailText, { color: colors.textPrimary }]}>Costi gestione pagamento / PayPal</Text>
+              <Text style={[styles.detailText, { color: colors.textPrimary }]}>
+                {strings.calculator.breakdownPaymentFee}
+              </Text>
               <Text style={[styles.detailValue, { color: '#EF4444' }]}>
                 -{formatEuro(result.paymentFee)}
               </Text>
@@ -182,7 +190,9 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
           )}
 
           <View style={styles.detailRow}>
-            <Text style={[styles.detailText, { color: colors.textPrimary }]}>Costo d'acquisto articolo</Text>
+            <Text style={[styles.detailText, { color: colors.textPrimary }]}>
+              {strings.calculator.breakdownPurchaseCost}
+            </Text>
             <Text style={[styles.detailValue, { color: '#F59E0B' }]}>
               -{formatEuro(result.purchaseCost)}
             </Text>
@@ -190,7 +200,9 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
 
           {(result.sellerShippingCost > 0 || result.packagingCost > 0) && (
             <View style={styles.detailRow}>
-              <Text style={[styles.detailText, { color: colors.textPrimary }]}>Spedizione / Imballaggio a tuo carico</Text>
+              <Text style={[styles.detailText, { color: colors.textPrimary }]}>
+                {strings.calculator.breakdownShippingPackaging}
+              </Text>
               <Text style={[styles.detailValue, { color: '#FB923C' }]}>
                 -{formatEuro(result.sellerShippingCost + result.packagingCost)}
               </Text>
@@ -200,14 +212,18 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
           <View style={[styles.divider, { backgroundColor: colors.cardBorder }]} />
 
           <View style={styles.detailRow}>
-            <Text style={[styles.detailTextSub, { color: colors.textSecondary }]}>Protezione pagata dall'acquirente</Text>
+            <Text style={[styles.detailTextSub, { color: colors.textSecondary }]}>
+              {strings.calculator.breakdownBuyerProtection}
+            </Text>
             <Text style={[styles.detailValueSub, { color: colors.textSecondary }]}>
               {result.buyerProtectionFee > 0 ? `+${formatEuro(result.buyerProtectionFee)}` : formatEuro(0)}
             </Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={[styles.detailTextSub, { color: colors.textSecondary }]}>Totale speso dall'acquirente (stimato)</Text>
+            <Text style={[styles.detailTextSub, { color: colors.textSecondary }]}>
+              {strings.calculator.breakdownBuyerTotal}
+            </Text>
             <Text style={[styles.detailValueSub, { color: colors.textSecondary }]}>{formatEuro(result.buyerTotalEstimated)}</Text>
           </View>
 

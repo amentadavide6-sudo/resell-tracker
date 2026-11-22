@@ -111,7 +111,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
             <View style={styles.modalHeaderTitleGroup}>
               <Ionicons name="logo-instagram" size={20} color="#E1306C" />
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-                Anteprima Storia Instagram
+                {strings.storyCardModal.modalTitle}
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -121,7 +121,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
-              Ecco la grafica in formato 9:16 pronta per essere condivisa nelle tue storie per mostrare i tuoi successi:
+              {strings.storyCardModal.modalSubtitle}
             </Text>
 
             {/* THE INSTAGRAM STORY CANVAS (Captured by view-shot) */}
@@ -144,12 +144,12 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                   {isPro ? (
                     <View style={[styles.verifiedBadge, styles.verifiedBadgePro]}>
                       <Ionicons name="shield-checkmark" size={13} color="#F59E0B" />
-                      <Text style={[styles.verifiedText, styles.verifiedTextPro]}>👑 Verified Pro Reseller</Text>
+                      <Text style={[styles.verifiedText, styles.verifiedTextPro]}>{strings.storyCardModal.verifiedPro}</Text>
                     </View>
                   ) : (
                     <View style={styles.verifiedBadge}>
                       <Ionicons name="checkmark-circle" size={13} color="#10B981" />
-                      <Text style={styles.verifiedText}>Reseller Club</Text>
+                      <Text style={styles.verifiedText}>{strings.storyCardModal.resellerClub}</Text>
                     </View>
                   )}
                 </View>
@@ -162,12 +162,14 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                     </View>
                     <View style={[styles.tagPill, { backgroundColor: '#312E81' }]}>
                       <Ionicons name="sparkles" size={12} color="#A5B4FC" />
-                      <Text style={styles.tagPillText}>NUOVO TROFEO SBLOCCATO</Text>
+                      <Text style={styles.tagPillText}>{strings.storyCardModal.newTrophyUnlocked}</Text>
                     </View>
-                    <Text style={styles.mainTitle}>{trophy.title}</Text>
-                    <Text style={styles.mainDesc}>{trophy.description}</Text>
+                    <Text style={styles.mainTitle}>{strings.trophiesShowcase?.items?.[trophy.id]?.title || trophy.title}</Text>
+                    <Text style={styles.mainDesc}>{strings.trophiesShowcase?.items?.[trophy.id]?.description || trophy.description}</Text>
                     <View style={styles.xpBadgeLarge}>
-                      <Text style={styles.xpBadgeLargeText}>+{trophy.xpReward} XP Guadagnati</Text>
+                      <Text style={styles.xpBadgeLargeText}>
+                        {strings.storyCardModal.xpEarned.replace('{xp}', trophy.xpReward.toString())}
+                      </Text>
                     </View>
                   </View>
                 )}
@@ -179,11 +181,13 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                     </View>
                     <View style={[styles.tagPill, { backgroundColor: '#431407' }]}>
                       <Ionicons name="flame" size={12} color="#F97316" />
-                      <Text style={[styles.tagPillText, { color: '#FED7AA' }]}>LIVELLO RESELLER RAGGIUNTO</Text>
+                      <Text style={[styles.tagPillText, { color: '#FED7AA' }]}>{strings.storyCardModal.levelReached}</Text>
                     </View>
-                    <Text style={styles.mainTitle}>Livello {levelInfo.levelNumber}</Text>
+                    <Text style={styles.mainTitle}>
+                      {strings.storyCardModal.levelNumber.replace('{n}', levelInfo.levelNumber.toString())}
+                    </Text>
                     <Text style={[styles.rankTitle, { color: levelInfo.badgeColor }]}>{levelInfo.title}</Text>
-                    <Text style={styles.mainDesc}>Rango conquistato tracciando acquisti e vendite con precisione.</Text>
+                    <Text style={styles.mainDesc}>{strings.storyCardModal.rankSubtitle}</Text>
                   </View>
                 )}
 
@@ -194,7 +198,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                     </View>
                     <View style={[styles.tagPill, { backgroundColor: '#064E3B' }]}>
                       <Ionicons name="trending-up" size={12} color="#34D399" />
-                      <Text style={[styles.tagPillText, { color: '#A7F3D0' }]}>AFFARE CONCLUSO</Text>
+                      <Text style={[styles.tagPillText, { color: '#A7F3D0' }]}>{strings.storyCardModal.dealClosed}</Text>
                     </View>
                     <Text style={styles.dealItemTitle} numberOfLines={2}>
                       {itemDeal.item.title}
@@ -203,7 +207,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                       +{formatEuro(itemDeal.netProfit)}
                     </Text>
                     <Text style={styles.dealProfitSub}>
-                      Guadagno Netto Pulito (ROI +{Math.round(itemDeal.roiPercent)}%)
+                      {strings.storyCardModal.cleanProfitRoi.replace('{roi}', Math.round(itemDeal.roiPercent).toString())}
                     </Text>
                   </View>
                 )}
@@ -213,17 +217,17 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                   <View style={styles.statsCardBox}>
                     <View style={styles.statCol}>
                       <Text style={styles.statVal}>{formatEuro(overallStats.totalProfit)}</Text>
-                      <Text style={styles.statLab}>Profitto Netto</Text>
+                      <Text style={styles.statLab}>{strings.storyCardModal.netProfit}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statCol}>
                       <Text style={styles.statVal}>{overallStats.totalSold}</Text>
-                      <Text style={styles.statLab}>Capi Venduti</Text>
+                      <Text style={styles.statLab}>{strings.storyCardModal.itemsSold}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statCol}>
                       <Text style={styles.statVal}>{overallStats.avgMargin}%</Text>
-                      <Text style={styles.statLab}>Margine Medio</Text>
+                      <Text style={styles.statLab}>{strings.storyCardModal.avgMargin}</Text>
                     </View>
                   </View>
                 )}
@@ -233,7 +237,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
                   <View style={styles.footerLine} />
                   <View style={styles.footerRow}>
                     <View>
-                      <Text style={styles.footerTitle}>Tracciato con precisione su</Text>
+                      <Text style={styles.footerTitle}>{strings.storyCardModal.trackedWith}</Text>
                       <Text style={styles.footerBrand}>ResellTracker App</Text>
                     </View>
                     <View style={styles.playBadge}>
@@ -257,7 +261,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
               ) : (
                 <>
                   <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
-                  <Text style={styles.shareBtnText}>Condividi Storia su Instagram 🚀</Text>
+                  <Text style={styles.shareBtnText}>{strings.storyCardModal.shareStoryBtn}</Text>
                 </>
               )}
             </TouchableOpacity>
