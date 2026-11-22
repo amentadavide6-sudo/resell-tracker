@@ -31,6 +31,16 @@ export const en: TranslationDictionary = {
     depopTag: '10% + 2.9% trans.',
     customName: '+ Custom',
     customTag: 'Custom fees',
+    descriptions: {
+      vinted: 'Buyer protection (0.70€ + 5%) is paid by the buyer. The seller receives 100% of the set price.',
+      ebay: 'Standard private seller fee for most categories.',
+      wallapop: 'Shipping and protection are paid by the buyer (unless special promo applies).',
+      subito: 'Buyer pays the protection fee. Seller receives 100% of the sale.',
+      depop: '10% marketplace fee + payment processing fee (2.9% + 0.30€).',
+      poshmark: 'Top US platform for fashion & streetwear. Flat 20% commission on sales >= $15.',
+      mercari: 'Popular US & Japan marketplace for fashion, sneakers, and electronics.',
+      custom: 'Set custom percentage and fixed fees for any other marketplace or shop.',
+    },
   },
   calculator: {
     headerSubtitle: 'PROFIT CALCULATOR',

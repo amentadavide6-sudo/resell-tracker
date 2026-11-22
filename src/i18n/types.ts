@@ -32,6 +32,16 @@ export interface TranslationDictionary {
     depopTag: string;
     customName: string;
     customTag: string;
+    descriptions?: {
+      vinted: string;
+      ebay: string;
+      wallapop: string;
+      subito: string;
+      depop: string;
+      poshmark: string;
+      mercari: string;
+      custom: string;
+    };
   };
   calculator: {
     headerSubtitle: string;

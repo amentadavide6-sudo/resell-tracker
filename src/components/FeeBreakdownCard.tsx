@@ -227,7 +227,9 @@ export const FeeBreakdownCard: React.FC<FeeBreakdownCardProps> = ({
             <Text style={[styles.detailValueSub, { color: colors.textSecondary }]}>{formatEuro(result.buyerTotalEstimated)}</Text>
           </View>
 
-          <Text style={[styles.platformNote, isDark && { backgroundColor: '#111827', color: '#94A3B8' }]}>{platform.description}</Text>
+          <Text style={[styles.platformNote, isDark && { backgroundColor: '#111827', color: '#94A3B8' }]}>
+            {(strings.platforms?.descriptions && (strings.platforms.descriptions as any)[platform.id]) || platform.description}
+          </Text>
         </View>
       )}
     </View>

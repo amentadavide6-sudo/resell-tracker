@@ -31,6 +31,16 @@ export const de: TranslationDictionary = {
     depopTag: '10% + 2,9% Transakt.',
     customName: '+ Neu',
     customTag: 'Frei konfigurieren',
+    descriptions: {
+      vinted: 'Der Käuferschutz (0,70 € + 5 %) wird vom Käufer bezahlt. Der Verkäufer erhält 100 % des festgelegten Preises.',
+      ebay: 'Standard-Verkäufergebühr für die meisten Kategorien.',
+      wallapop: 'Versand und Schutz werden vom Käufer getragen (sofern keine Sonderaktion gilt).',
+      subito: 'Der Käuferschutz wird vom Käufer gezahlt. 100 % Auszahlung an den Verkäufer.',
+      depop: '10 % Plattformgebühr + Zahlungsabwicklung (2,9 % + 0,30 €).',
+      poshmark: 'Top-US-Plattform für Mode und Kleidung. Pauschal 20 % Gebühr bei Verkäufen >= 15 $.',
+      mercari: 'Beliebter US- und Japan-Marktplatz für Mode, Sneaker und Elektronik.',
+      custom: 'Legen Sie individuelle prozentuale und feste Gebühren für andere Marktplätze fest.',
+    },
   },
   calculator: {
     headerSubtitle: 'GEWINN-RECHNER',

@@ -31,6 +31,16 @@ export const it: TranslationDictionary = {
     depopTag: '10% + 2.9% trans.',
     customName: '+ Nuova',
     customTag: 'Configura a piacere',
+    descriptions: {
+      vinted: 'La protezione acquisti (0,70€ + 5%) è pagata dall\'acquirente. Il venditore incassa il 100% del prezzo fissato.',
+      ebay: 'Commissione standard venditore privato per la maggior parte delle categorie in Italia.',
+      wallapop: 'La spedizione e assicurazione sono a carico dell\'acquirente (salvo offerte speciali).',
+      subito: 'Con TuttoSubito la protezione è pagata dal compratore. Incasso al 100% per il venditore.',
+      depop: 'Commissione di vendita del 10% + fee di elaborazione pagamento (2.9% + 0.30€).',
+      poshmark: 'La piattaforma #1 in USA per moda e streetwear. Commissione fissa del 20% su vendite >= $15.',
+      mercari: 'Marketplace diffuso negli USA e in Giappone per moda, collezionismo, sneakers e tech.',
+      custom: 'Imposta percentuali e costi fissi personalizzati per qualsiasi altro mercatino o negozio.',
+    },
   },
   calculator: {
     headerSubtitle: 'CALCOLA PROFITTO',
