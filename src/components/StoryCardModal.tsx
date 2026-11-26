@@ -80,21 +80,21 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
       if (isAvailable) {
         await Sharing.shareAsync(uri, {
           mimeType: 'image/png',
-          dialogTitle: 'Condividi Storia ResellTracker',
+          dialogTitle: strings.storyCardModal.shareStoryBtn,
           UTI: 'public.png',
         });
       } else {
         showAlert({
-          title: 'Condivisione non disponibile',
-          message: 'La condivisione file non è supportata su questo dispositivo.',
+          title: strings.common.attention,
+          message: strings.settings.backupShareNotSupported,
           type: 'warning',
         });
       }
     } catch (err) {
       console.error('Error generating story card:', err);
       showAlert({
-        title: 'Errore',
-        message: 'Impossibile generare la grafica per la storia.',
+        title: strings.common.error,
+        message: strings.common.error,
         type: 'error',
       });
     } finally {

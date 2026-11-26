@@ -92,14 +92,13 @@ export const StatsScreen: React.FC<{
   const handleExportCSV = async () => {
     if (!isPro && exportCount >= 1) {
       showAlert({
-        title: 'Esportazione Fiscale Excel & CSV',
-        message:
-          'Hai già usufruito del tuo 1° export dimostrativo gratuito.\n\nPassa a ResellTracker Pro per esportare registri contabili completi Excel e CSV illimitati in qualsiasi momento!',
+        title: strings.stats.salesRegisterHeader,
+        message: strings.stats.exportCsvProLimitMsg,
         type: 'warning',
         buttons: [
-          { text: 'Annulla', style: 'cancel' },
+          { text: strings.common.cancel, style: 'cancel' },
           {
-            text: 'Passa a Pro ⚡',
+            text: strings.inventory.passToPro,
             onPress: () => {
               if (onOpenProModal) onOpenProModal();
             },
@@ -118,9 +117,8 @@ export const StatsScreen: React.FC<{
       if (!isPro && exportCount === 0) {
         incrementCSVExportCount();
         showAlert({
-          title: '🎉 1° Export Gratuito Completato!',
-          message:
-            'Il registro Excel/CSV è stato generato e condiviso con successo.\n\nQuesto primo export completo era in omaggio: i successivi export sono illimitati con il piano ResellTracker Pro.',
+          title: strings.stats.exportCsvFirstFreeSuccessTitle,
+          message: strings.stats.exportCsvFirstFreeSuccessMsg,
           type: 'success',
         });
       }

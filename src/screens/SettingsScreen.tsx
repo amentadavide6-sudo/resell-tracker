@@ -138,13 +138,13 @@ export const SettingsScreen: React.FC<{
 
     if (!isPro) {
       showAlert({
-        title: '👑 TEMA RISERVATO AI MEMBRI PRO',
-        message: `Il tema estetico "${theme.name}" è un'esclusiva per i membri ResellTracker Pro.\n\nSblocca il Pro per personalizzare l'aspetto dell'app e distinguerti!`,
+        title: strings.settings.themeProReservedTitle,
+        message: strings.settings.themeProReservedMsg.replace('{name}', theme.name),
         type: 'warning',
         buttons: [
-          { text: 'Annulla', style: 'cancel' },
+          { text: strings.common.cancel, style: 'cancel' },
           {
-            text: 'Sblocca con Pro 👑',
+            text: strings.inventory.unlockWithProBtn,
             onPress: () => {
               if (onOpenProModal) onOpenProModal();
             },
@@ -156,20 +156,22 @@ export const SettingsScreen: React.FC<{
 
     if (currentLevel < theme.requiredLevel) {
       showAlert({
-        title: '🔒 LIVELLO NON ANCORA RAGGIUNTO',
-        message: `Questo tema VIP richiede il Livello ${theme.requiredLevel}!\n\nAttualmente sei al Livello ${currentLevel}. Continua a vendere per guadagnare XP e sbloccarlo!`,
+        title: strings.settings.themeLevelLockedTitle,
+        message: strings.settings.themeLevelLockedMsg
+          .replace('{required}', theme.requiredLevel.toString())
+          .replace('{current}', currentLevel.toString()),
         type: 'info',
-        buttons: [{ text: 'Ho Capito', style: 'cancel' }],
+        buttons: [{ text: strings.common.understood, style: 'cancel' }],
       });
       return;
     }
 
     setAccentTheme(theme.id);
     showAlert({
-      title: '✨ TEMA VIP ATTIVATO!',
-      message: `Hai attivato con successo il tema "${theme.name}"! L'interfaccia dell'app si è trasformata con il tuo nuovo stile.`,
+      title: strings.settings.themeActivatedTitle,
+      message: strings.settings.themeActivatedMsg.replace('{name}', theme.name),
       type: 'success',
-      buttons: [{ text: 'Ottimo!', style: 'cancel' }],
+      buttons: [{ text: strings.common.success, style: 'cancel' }],
     });
   };
 
@@ -183,14 +185,14 @@ export const SettingsScreen: React.FC<{
     const sent = await sendTestNotification();
     if (sent) {
       showAlert({
-        title: 'Notifica Inviata! 🔔',
-        message: 'Controlla la tendina delle notifiche del telefono tra 2 secondi.',
+        title: strings.settings.notifSentTitle,
+        message: strings.settings.notifSentMsg,
         type: 'success',
       });
     } else {
       showAlert({
-        title: 'Permesso Notifiche',
-        message: 'Abilita i permessi di notifica nelle impostazioni di Android per ricevere avvisi strategici.',
+        title: strings.settings.notifPermissionTitle,
+        message: strings.settings.notifPermissionMsg,
         type: 'warning',
       });
     }
@@ -214,15 +216,15 @@ export const SettingsScreen: React.FC<{
         await Linking.openURL(mailtoUrl);
       } else {
         showAlert({
-          title: 'Email di Supporto',
-          message: `Puoi scriverci direttamente a:\n\n${supportEmail}`,
+          title: strings.settings.supportEmailTitle,
+          message: strings.settings.supportEmailMsg.replace('{email}', supportEmail),
           type: 'info',
         });
       }
     } catch {
       showAlert({
-        title: 'Email di Supporto',
-        message: `Puoi scriverci a:\n\n${supportEmail}`,
+        title: strings.settings.supportEmailTitle,
+        message: strings.settings.supportEmailMsg.replace('{email}', supportEmail),
         type: 'info',
       });
     }
@@ -235,14 +237,18 @@ export const SettingsScreen: React.FC<{
       if (res.success) {
         addXP(XP_REWARDS.BACKUP_SAVED, 'Backup archivio');
         showAlert({
-          title: 'Backup Salvato! 💾',
+          title: strings.settings.backupSavedTitle,
           message: res.message,
           type: 'success',
         });
       } else {
         showAlert({
-          title: 'Backup',
-          message: res.message,
+          title: strings.settings.backupTitle,
+          message: res.message === 'La condivisione file non è supportata su questo dispositivo.'
+            ? strings.settings.backupShareNotSupported
+            : res.message === 'Il tuo inventario è vuoto: inserisci almeno un articolo prima di creare il backup.'
+            ? strings.settings.backupEmptyMsg
+            : res.message,
           type: 'warning',
         });
       }
@@ -261,9 +267,16 @@ export const SettingsScreen: React.FC<{
         // L'utente ha chiuso il picker di sistema senza selezionare file
         return;
       }
+      let finalMessage = res.message;
+      if (res.success) {
+        finalMessage = strings.settings.restoreSuccessMsg.replace('{count}', res.count.toString());
+      } else if (res.message === 'Formato file non valido. Seleziona un backup valido di ResellTracker (.json).') {
+        finalMessage = strings.settings.backupInvalidFormatMsg;
+      }
+
       showAlert({
-        title: res.success ? 'Ripristino Completato! ✅' : 'Attenzione',
-        message: res.message,
+        title: res.success ? strings.settings.restoreSuccessTitle : strings.common.attention,
+        message: finalMessage,
         type: res.success ? 'success' : 'error',
       });
       if (res.success && onDataRestored) {
@@ -272,7 +285,7 @@ export const SettingsScreen: React.FC<{
     } catch (err: any) {
       console.error('Import error:', err);
       showAlert({
-        title: 'Attenzione',
+        title: strings.common.attention,
         message: err?.message || 'Errore durante il ripristino del backup.',
         type: 'error',
       });

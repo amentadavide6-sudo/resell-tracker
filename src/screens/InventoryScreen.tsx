@@ -167,21 +167,23 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
 
       setAlertConfig({
         visible: true,
-        title: 'Elimina Capo Venduto',
-        message: `Attenzione: eliminando questo capo venduto rimuoverai anche il relativo profitto (+${formatEuro(calc.netProfit * qty)}) dalle statistiche, dal registro vendite e perderai ${xpDeduct} XP.\n\nPassa a Pro per archiviare capi illimitati senza perdere lo storico delle tue vendite!`,
+        title: strings.inventory.deleteSoldItemTitle,
+        message: strings.inventory.deleteSoldItemDesc
+          .replace('{profit}', formatEuro(calc.netProfit * qty))
+          .replace('{xp}', xpDeduct.toString()),
         icon: 'warning',
         iconColor: '#F59E0B',
         iconBgColor: isDark ? '#451A03' : '#FEF3C7',
         buttons: [
           {
-            text: 'Passa a Pro ⚡',
+            text: strings.inventory.passToPro,
             style: 'primary',
             onPress: () => {
               if (onOpenProModal) onOpenProModal();
             },
           },
           {
-            text: 'Elimina comunque (perdi dati)',
+            text: strings.inventory.deleteAnywayBtn,
             style: 'destructive',
             onPress: () => {
               deleteInventoryItem(item.id!);
@@ -189,20 +191,22 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               loadData();
             },
           },
-          { text: 'Annulla', style: 'cancel' },
+          { text: strings.common.cancel, style: 'cancel' },
         ],
       });
     } else {
       setAlertConfig({
         visible: true,
-        title: 'Elimina Articolo',
-        message: `Vuoi davvero eliminare "${item.title}" dall'inventario?\nPerderai ${XP_REWARDS.ITEM_ADDED} XP guadagnati per l'inserimento.`,
+        title: strings.inventory.deleteConfirmTitle,
+        message: strings.inventory.deleteConfirmDesc
+          .replace('{title}', item.title)
+          .replace('{xp}', XP_REWARDS.ITEM_ADDED.toString()),
         icon: 'trash',
         iconColor: '#EF4444',
         iconBgColor: isDark ? '#450A0A' : '#FEE2E2',
         buttons: [
           {
-            text: 'Elimina Articolo',
+            text: strings.inventory.deleteConfirmTitle,
             style: 'destructive',
             onPress: () => {
               deleteInventoryItem(item.id!);
@@ -210,7 +214,7 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
               loadData();
             },
           },
-          { text: 'Annulla', style: 'cancel' },
+          { text: strings.common.cancel, style: 'cancel' },
         ],
       });
     }
@@ -220,20 +224,20 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     if (!canAddMoreItems(totalDbCount)) {
       setAlertConfig({
         visible: true,
-        title: 'Limite Piano Free Raggiunto',
-        message: `Hai raggiunto il limite di ${FREE_TIER_ITEM_LIMIT} articoli della versione gratuita.\n\nPassa a ResellTracker Pro per sbloccare l'inventario capi illimitato!`,
+        title: strings.inventory.freeLimitReachedTitle,
+        message: strings.inventory.freeLimitReachedDesc.replace('{limit}', FREE_TIER_ITEM_LIMIT.toString()),
         icon: 'lock-closed',
         iconColor: '#6366F1',
         iconBgColor: isDark ? '#1E1B4B' : '#EEF2FF',
         buttons: [
           {
-            text: 'Passa a Pro ⚡',
+            text: strings.inventory.passToPro,
             style: 'primary',
             onPress: () => {
               if (onOpenProModal) onOpenProModal();
             },
           },
-          { text: 'Più tardi', style: 'cancel' },
+          { text: strings.calculator.later, style: 'cancel' },
         ],
       });
       return;
@@ -248,20 +252,20 @@ export const InventoryScreen: React.FC<{ onOpenProModal?: () => void }> = ({ onO
     if (isFrozen) {
       setAlertConfig({
         visible: true,
-        title: '🔒 Articolo Congelato',
-        message: `Questo capo fa parte del tuo stock oltre la soglia gratuita di ${FREE_TIER_ITEM_LIMIT} articoli.\n\nI tuoi dati sono al sicuro sul telefono! Sbloccalo subito passando a ResellTracker Pro per registrare la vendita e aggiornare i tuoi guadagni.`,
+        title: strings.inventory.itemFrozenModalTitle,
+        message: strings.inventory.itemFrozenModalDesc.replace('{limit}', FREE_TIER_ITEM_LIMIT.toString()),
         icon: 'lock-closed',
         iconColor: '#F59E0B',
         iconBgColor: isDark ? '#451A03' : '#FEF3C7',
         buttons: [
           {
-            text: 'Sblocca con Pro ⚡',
+            text: strings.inventory.unlockWithProBtn,
             style: 'primary',
             onPress: () => {
               if (onOpenProModal) onOpenProModal();
             },
           },
-          { text: 'Più tardi', style: 'cancel' },
+          { text: strings.calculator.later, style: 'cancel' },
         ],
       });
       return;
