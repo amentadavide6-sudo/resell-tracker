@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.reselltracker.app",
-      "versionCode": 36,
+      "versionCode": 37,
       "adaptiveIcon": {
         "backgroundColor": "#0F172A",
         "foregroundImage": "./assets/android-icon-foreground.png",
